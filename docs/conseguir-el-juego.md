@@ -148,6 +148,29 @@ Soluciones, en orden:
 3. Correr el parche **como administrador** (necesario para escribir en
    `Program Files`).
 
+### `ERROR: unable to apply patch to file '...\shadowstrike.mdx'` / "no corresponde con la suma de comprobación"
+
+**Este error no es del parche: es de la instalación.** El parche aplica
+deltas binarios sobre los archivos que están adentro de los MPQ, así que
+necesita que esos archivos estén byte a byte como los dejó Blizzard. Un
+checksum que no coincide significa que la instalación **no es limpia**:
+carpeta copiada de otra máquina, repack, MPQ modificados, mods instalados,
+o un parcheo anterior que quedó a medias.
+
+`shadowstrike.mdx` (un modelo de Night Elf dentro de `war3.mpq`) es el
+archivo donde falla clásicamente, pero el archivo puntual da igual: es el
+primero que el parche toca y encuentra distinto.
+
+**Señal delatora**: si el juego está en `C:\Program Files\Warcraft III` en un
+Windows de 64 bits, la instalación fue **copiada, no instalada**. El
+instalador de Blizzard es de 32 bits y siempre cae en
+`C:\Program Files (x86)\Warcraft III`.
+
+No se arregla parcheando de nuevo, ni con permisos de administrador, ni
+bajando el parche otra vez. La única salida es **partir de una instalación
+limpia**: desde los CDs, o desde los Legacy Downloaders oficiales de la
+Ruta B (que además ya vienen en 1.27a y no necesitan parche).
+
 ### El parche se niega a instalarse
 
 Los parches **solo van hacia adelante**. Si ya tenés 1.27a, 1.28 o superior,
