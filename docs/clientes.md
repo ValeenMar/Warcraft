@@ -4,7 +4,8 @@
 
 1. **Warcraft III: The Frozen Throne 1.26a** instalado (RoC + TFT). La
    instalación la consigue cada uno por su lado; este proyecto no distribuye
-   archivos del juego.
+   archivos del juego. El camino concreto (incluido el parche 1.26a oficial
+   que Blizzard sigue publicando gratis) está en **docs/conseguir-el-juego.md**.
 2. La **IP (o dominio) del servidor**: la `WC3_PUBLIC_IP` del `.env`.
 3. Para mapas grandes: el **map pack** descomprimido en
    `Warcraft III/Maps/Download/` (ver docs/mapas.md).
@@ -15,11 +16,19 @@ El cliente de W3 trae hardcodeadas las direcciones de Battle.net oficiales
 ("gateways"). Para entrar a un server PvPGN hay que agregar/redirigir un
 gateway. Opciones, de la más simple a la más manual:
 
-### Opción A: editor de gateways (recomendada)
+### Opción A: loader o editor de gateways (recomendada)
 
-Herramientas clásicas de la escena PvPGN ("BNGatewayEditor", "W3 Gateway
-Editor" y equivalentes) agregan una entrada nueva sin tocar nada más. Datos a
-cargar:
+Dos herramientas libres, verificadas vigentes en 2026:
+
+- **Warcraft 3 Loader (w3l)** — https://pvpgn.pro/w3l.html — GPL v3, no
+  distribuye nada del juego: parchea en memoria tu `war3.exe` para que apunte
+  a un PvPGN. Soporta de 1.22a a 1.28f.
+- **Warcraft Feature Extender (WFE)** — https://github.com/UnryzeC/WFE-Release
+  — soporta 1.26a explícitamente y además suma widescreen, borderless y
+  smartcast.
+
+También sirven los editores de gateway clásicos ("BNGatewayEditor", "W3
+Gateway Editor"). Datos a cargar:
 
 - **Nombre**: WC3 Revival (o el `WC3_REALM_NAME` que quede en el .env)
 - **Dirección**: la IP pública del VPS

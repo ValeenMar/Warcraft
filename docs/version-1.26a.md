@@ -55,7 +55,10 @@ registry con `status: descartado`).
 ## La alternativa documentada: 1.28.5
 
 **1.28.5** (2017) es la última versión razonablemente "clásica" (pre-1.29,
-que rompió compatibilidad con muchos mapas y bots):
+que rompió compatibilidad con muchos mapas y bots) y, dato importante
+verificado en 2026-08, **es el techo de PvPGN**: no existe soporte de PvPGN
+para 1.29 ni superior. O sea que la elección real es 1.26a o 1.28.5, y nada
+más arriba.
 
 - A favor: mapas más grandes (límite de 128 MB), fixes de estabilidad en
   máquinas modernas, widescreen razonable.
@@ -75,3 +78,11 @@ Todo lo dependiente de versión está detrás de variables; migrar a 1.28.5 es:
    (el de fábrica trae `W3XP_128A`... **TODO(verificar): confirmar el tag
    exacto para 1.28.5 en el archivo instalado antes de migrar**).
 5. Redistribuir a los jugadores el cliente 1.28.5 (todos migran o nadie).
+
+## Trampa a evitar: el cliente "Legacy TFT 1.29" de Battle.net
+
+En abril de 2026 Blizzard agregó a la app de Battle.net un cliente clásico
+llamado "Warcraft III – Legacy TFT 1.29". **No sirve para este proyecto**:
+es 1.29 (por encima del techo de PvPGN), Blizzard lo declara "offline and
+LAN play only", y no comparte hashes con 1.26a. Es fácil confundirlo con
+"volvió el Warcraft clásico"; ver docs/conseguir-el-juego.md.

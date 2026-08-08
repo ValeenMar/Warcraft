@@ -10,8 +10,10 @@ máquina.
 
 - [ ] VPS Ubuntu 24.04 LTS, 2 vCPU / 2-4 GB, en São Paulo o Buenos Aires,
       con IP pública propia (no CGNAT) y acceso SSH por clave.
-- [ ] Instalación de W3 TFT **1.26a**: de ella salen `war3.exe`, `storm.dll`,
-      `game.dll` y `War3Patch.mpq` para `/opt/wc3/mpq/`.
+- [ ] Instalación de W3 TFT **1.26a**: de ella salen `war3.exe`, `Storm.dll`,
+      `Game.dll` y `War3Patch.mpq` para `/opt/wc3/mpq/`. El parche oficial
+      1.26a sigue publicado gratis por Blizzard; el paso a paso está en
+      **docs/conseguir-el-juego.md**.
 - [ ] Los primeros 3 mapas (sugeridos: DotA 6.83d, Footmen Frenzy, Sheep Tag
       — los tres `verde` en el registry).
 - [ ] Dos personas con el juego instalado para la prueba de sincronía.

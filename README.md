@@ -43,6 +43,7 @@ El paso a paso real, con criterios de "listo" por fase, está en
 | `maps/registry.yaml` | **el catálogo**: 21 mapas con estado y riesgo 1.24+ |
 | `scripts/inspect-map.py` | lee un `.w3x` y alimenta el registry |
 | `scripts/validate.sh` | valida TODO en seco; tiene que estar en verde |
+| `docs/conseguir-el-juego.md` | cómo llegar a una instalación 1.26a (parche oficial de Blizzard) |
 | `docs/` | versión 1.26a y return bug, mapas, clientes, operación, Docker futuro |
 
 ## Layout en el servidor
