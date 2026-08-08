@@ -24,7 +24,7 @@ máquina.
 
 ```bash
 # en el VPS, como root:
-git clone <este-repo> && cd wc3-classic-revival
+git clone https://github.com/ValeenMar/Warcraft.git wc3 && cd wc3
 ./install/00-bootstrap-vps.sh tuusuario      # prepara el sistema
 # reconectarse como tuusuario si entraste como root
 cp .env.example .env && nano .env            # IP publica, passwords, realm
