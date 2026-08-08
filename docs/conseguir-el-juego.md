@@ -70,6 +70,41 @@ salidas:
   soportan. Si vas por acá, `WC3_WAR3_VERSION=27` en el `.env` y hay que
   reverificar el versioncheck de PvPGN.
 
+## Ruta C: no tenés ni los CDs ni licencia en Battle.net
+
+Es el caso más incómodo y conviene decirlo derecho: **no hay ningún camino
+legítimo y gratis**. El canje de CD keys clásicas cerró el 21/11/2025 y
+Reforged no sirve como fuente (usa CASC, no tiene los MPQ ni los ejecutables
+que necesita el bot, y el cliente Legacy que habilita es 1.29, por encima del
+techo de PvPGN).
+
+Lo que sí queda, y es barato: **comprar una copia física usada**. Warcraft III
+Reign of Chaos + The Frozen Throne se consiguen sin problema en el mercado de
+segunda mano argentino (MercadoLibre) por ser un juego de hace más de 20 años.
+
+Lo que hay que tener en cuenta al comprar:
+
+- **Hacen falta los DOS**: Reign of Chaos *y* The Frozen Throne. TFT es una
+  expansión y no instala sin el juego base. Muchas publicaciones venden el
+  combo.
+- **Comprar la caja física con la CD key impresa**, no publicaciones
+  "digitales". Las que ofrecen el juego "en formato digital" suelen ser keys
+  compartidas, keys ya canjeadas (que desde noviembre de 2025 ya no se pueden
+  canjear de nuevo) o directamente copias piratas.
+- Verificar con el vendedor que **la clave de 26 dígitos esté presente y
+  legible** — es lo único realmente imprescindible.
+
+Con la caja en la mano hay dos formas de instalar:
+
+1. **Desde los discos**, si tenés lectora óptica.
+2. **Sin lectora**: bajar el instalador oficial con los Legacy Downloaders de
+   la Ruta B y meterle la clave impresa en la caja. El instalador clásico
+   valida la clave localmente (por algoritmo), no contra un servidor de
+   Blizzard, así que sirve aunque la clave haya estado registrada antes en
+   otra cuenta. Esta ruta te deja en 1.27a sin parchear nada.
+
+Comprar una caja que traiga **discos y clave** deja las dos puertas abiertas.
+
 ## Los 4 archivos que necesita el hostbot
 
 En una instalación 1.26a están **planos en la raíz** (no hay subcarpetas ni
