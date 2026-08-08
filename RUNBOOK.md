@@ -27,18 +27,77 @@ máquina.
 
 ## Fase 1: PvPGN + 1 bot + 3 mapas, probado con dos clientes reales
 
-### Instalación
+### 1.a — Crear el VPS en Vultr
+
+Precios verificados contra `api.vultr.com/v2/plans` el 2026-08-08.
+
+| Campo del formulario | Qué elegir |
+|---|---|
+| Type | **Cloud Compute – Shared CPU** |
+| CPU & Storage Technology | **Regular Performance** (Intel; es la familia `vc2`) |
+| Location | **Santiago, Chile** |
+| Image | **Ubuntu 24.04 LTS x64** |
+| Plan | **`vc2-1c-2gb` — USD 10/mes**: 1 vCPU, 2 GB RAM, 55 GB NVMe, 2 TB |
+| Auto Backups | **Off** (cuesta extra; ya tenemos `scripts/backup.sh`) |
+| Cloud Firewall | **NO habilitarlo** — el firewall lo maneja `ufw` desde el bootstrap |
+| SSH Keys | agregar la clave pública propia (ver abajo) |
+| Hostname / Label | `wc3-revival` |
+
+Si más adelante hace falta margen, `vc2-2c-4gb` son USD 20/mes y se
+redimensiona sin reinstalar.
+
+**Generar la clave SSH en Windows** (PowerShell, el OpenSSH ya viene incluido):
+
+```powershell
+ssh-keygen -t ed25519 -C "wc3"
+type $env:USERPROFILE\.ssh\id_ed25519.pub    # esto es lo que se pega en Vultr
+```
+
+### 1.b — Acceso al repositorio desde el VPS
+
+El repositorio es **privado**, así que el VPS necesita permiso para clonarlo.
+Dos caminos:
+
+- **Hacerlo público** (lo más simple). El repo está diseñado para no contener
+  nada sensible: los secretos viven solo en `.env`, que está en `.gitignore`,
+  y `validate.sh` verifica que no haya material del juego commiteado.
+- **Deploy key** (si se prefiere mantenerlo privado): generar una clave en el
+  VPS con `ssh-keygen -t ed25519 -f ~/.ssh/deploy -N ""`, pegar
+  `~/.ssh/deploy.pub` en GitHub → Settings del repo → Deploy keys (solo
+  lectura), y clonar por SSH con `git@github.com:ValeenMar/Warcraft.git`.
+
+### 1.c — Instalación
 
 ```bash
-# en el VPS, como root:
-git clone https://github.com/ValeenMar/Warcraft.git wc3 && cd wc3
-./install/00-bootstrap-vps.sh tuusuario      # prepara el sistema
-# reconectarse como tuusuario si entraste como root
-cp .env.example .env && nano .env            # IP publica, passwords, realm
-make build                                   # compila PvPGN y Aura (~10 min)
-sudo ./install/30-setup-mysql.sh             # base + usuario
-make render-config                           # configs finales
+# --- Como root, en el VPS recién creado -----------------------------------
+apt-get update && apt-get install -y git
+git clone https://github.com/ValeenMar/Warcraft.git /opt/wc3-repo
+cd /opt/wc3-repo
+./install/00-bootstrap-vps.sh valen     # usuario, ufw, fail2ban, swap, deps
+
+# OJO: el bootstrap DESACTIVA el login de root por SSH. Antes de cerrar esta
+# sesión, abrí otra terminal y comprobá que podés entrar como el usuario
+# nuevo. Si no podés, todavía estás a tiempo de arreglarlo desde acá.
 ```
+
+```bash
+# --- Reconectado como el usuario nuevo -------------------------------------
+ssh valen@<IP-del-VPS>
+
+sudo chown -R valen:valen /opt/wc3-repo
+cd /opt/wc3-repo
+
+cp .env.example .env
+openssl rand -base64 24                 # generar la password de MySQL
+nano .env                               # WC3_PUBLIC_IP, WC3_DB_PASS, WC3_BOT_PASSWORD
+
+make build                              # compila PvPGN y Aura (~10 min)
+sudo ./install/30-setup-mysql.sh        # base + usuario
+make render-config                      # configs finales
+```
+
+Lo mínimo a completar en `.env`: `WC3_PUBLIC_IP` (la IP que asignó Vultr),
+`WC3_DB_PASS` y `WC3_BOT_PASSWORD`. El resto tiene defaults razonables.
 
 ### Archivos del juego
 
