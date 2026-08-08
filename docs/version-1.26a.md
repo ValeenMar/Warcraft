@@ -44,12 +44,16 @@ registry con `status: descartado`).
 
 ## Límites de tamaño de mapa
 
-- **4 MB**: techo de transferencia in-lobby en 1.26a y anteriores. Un mapa
-  más grande no se puede descargar del bot al entrar al lobby: el jugador
-  tiene que tenerlo de antemano. De ahí el **map pack versionado** de la
-  fase 2 (los AoS de anime del catálogo casi todos superan los 4 MB).
-- **8 MB**: techo absoluto de mapa que el cliente 1.26a carga (límite del
-  formato/motor de la época). Mapas de más de 8 MB requieren 1.27+.
+- **8 MiB (8.388.608 bytes)**: es el techo real en 1.26a, tanto para cargar
+  el mapa como para hostearlo. El famoso límite de **4 MB era PRE-1.24**: el
+  parche 1.24 lo subió a 8 MB. (Corrección verificada 2026-08-08; una versión
+  anterior de este documento decía 4 MB.)
+- **No existe un tope duro de 4 MB para la transferencia in-lobby**, pero la
+  transferencia es lentísima, así que en la práctica todo lo que pase de
+  ~2-3 MB conviene repartirlo por **map pack** (fase 2) en vez de hacer
+  esperar a la gente en el lobby.
+- Dato para tener presente: **DotA 6.83d pesa 8.218.959 B**, o sea que entra
+  con apenas ~166 KB de margen. De 6.88 en adelante ya no entra.
 - 1.28.5 sube el límite de tamaño y mantiene la estética clásica.
 
 ## La alternativa documentada: 1.28.5

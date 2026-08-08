@@ -61,8 +61,9 @@ y requiere admin. Preferir la opción A.
    poner usuario/contraseña nuevos en la pantalla de login la primera vez.
 3. Entrar al canal (ej. `AoS`) donde está el bot, y usar sus comandos:
    `!games` (qué hay hosteado), o pedir una partida.
-4. Entrar a la partida desde Custom Games; si el mapa pesa <4 MB lo baja del
-   bot ahí mismo; si no, tiene que tener el map pack.
+4. Entrar a la partida desde Custom Games; si el mapa es chico (hasta ~2-3 MB)
+   lo baja del bot ahí mismo; si es más pesado, la descarga in-lobby es
+   impracticable y hace falta el map pack.
 
 ## Qué viaja por qué puerto (para diagnóstico)
 

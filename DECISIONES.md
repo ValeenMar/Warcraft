@@ -187,9 +187,10 @@ si está disponible; el bootstrap crea `/opt/wc3/venv` con mpyq+pyyaml.
    versioncheck de fábrica trae W3XP_126A; con `allow_bad_version=true` y
    `allow_unknown_version=true` (defaults) debería entrar cualquier 1.26a,
    pero solo un cliente real lo confirma.
-4. **`bot_maxdownloadspeed`/descarga in-lobby de mapas <4 MB** (fase 1-2):
-   el límite de 4 MB es del cliente 1.26a, no del bot; confirmar con un mapa
-   grande que la descarga se rechaza y el map pack es necesario.
+4. **Descarga in-lobby: hasta qué tamaño es tolerable** (fase 1-2): el techo
+   duro de 1.26a son 8 MiB (el límite de 4 MB era pre-1.24, corregido el
+   2026-08-08). Falta medir con qué tamaño la espera en el lobby se vuelve
+   insoportable y a partir de ahí el map pack es obligatorio.
 5. **Parser de war3map.w3i contra mapas reales** (fase 2): validado solo
    contra .w3i sintéticos; probar con 2-3 mapas reales (uno RoC fmt 18, uno
    TFT fmt 25, uno protegido).

@@ -36,8 +36,10 @@ pendiente -> descargado -> validado
    aparece en la lista, no carga, o crashea al iniciar → probable return bug
    u otra incompatibilidad 1.24+. Probar otra versión del mapa o descartarlo.
    Anotar el resultado en `notes`.
-4. **Tamaño vs 4 MB:** si `size_mb > 4`, marcar en `notes` que va por map
-   pack (no se transfiere in-lobby en 1.26a; ver docs/version-1.26a.md).
+4. **Tamaño vs los límites:** el techo duro de 1.26a es **8 MiB**; si el
+   mapa lo pasa, no carga y se descarta. Si pasa de ~2-3 MB, marcar en
+   `notes` que va por map pack: entra igual, pero la transferencia in-lobby
+   es tan lenta que en la práctica no sirve (ver docs/version-1.26a.md).
 5. **Alta en el bot:** copiar el .w3x a `/opt/wc3/maps/` y en el canal del
    bot: `!map ElMapa` (el bot indexa el archivo y calcula el hash/CRC con
    StormLib usando common.j/blizzard.j de los MPQ). Si el bot no puede
@@ -54,7 +56,7 @@ pendiente -> descargado -> validado
 
 ## Map pack versionado (fase 2)
 
-Los mapas >4 MB (y por comodidad, todos) se distribuyen como pack:
+Los mapas pesados (y por comodidad, todos) se distribuyen como pack:
 
 - Nombre: `wc3revival-maps-vNN.zip` (NN incremental; el contenido de un NN
   publicado no se cambia jamás, se publica NN+1).

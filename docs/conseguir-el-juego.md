@@ -114,3 +114,50 @@ todavía usa Direct3D 8, que Windows moderno emula. Anda, pero:
 **Linux con Wine**: anda bien (hay scripts de Lutris). Punto débil conocido:
 los cinemáticos fallan con DXVK activo — se desactiva DXVK y se usa OpenGL
 en modo ventana.
+
+## Errores frecuentes al aplicar el parche
+
+### `ERROR: Wrong language patch file - game: enUS - patch: esES`
+
+El juego instalado está en **inglés** y el parche que bajaste es el
+**castellano** (o al revés). Los parches de Blizzard son por idioma y no se
+mezclan. Solución: bajar el que coincida.
+
+| Juego en… | TFT | RoC |
+|---|---|---|
+| inglés (`enUS`) | `War3TFT_126a_English.exe` | `War3ROC_126a_English.exe` |
+| castellano (`esES`) | `War3TFT_126a_Castellano.exe` | `War3ROC_126a_Castellano.exe` |
+
+El propio mensaje de error te dice cuál es cuál: `game: enUS` es el idioma de
+tu instalación, `patch: esES` el del archivo que corriste.
+
+### `ERROR: unable to create file C:\...\BNUpdate.exe` / "no puede encontrar la ruta"
+
+El parche no está escribiendo en tu carpeta de Descargas: escribe en la
+carpeta de instalación del juego, que lee del registro de Windows
+(`HKLM\SOFTWARE\WOW6432Node\Blizzard Entertainment\Warcraft III\InstallPath`).
+El error significa que esa ruta **no existe**. Pasa cuando la carpeta del
+juego se movió, se renombró o se copió a mano en vez de instalarla.
+
+Soluciones, en orden:
+
+1. Verificar dónde está realmente `war3.exe` (suele ser
+   `C:\Program Files (x86)\Warcraft III\`, no `C:\Program Files\`).
+2. Si la ruta del registro apunta a otro lado, corregirla ahí, o reinstalar
+   el juego desde el CD/instalador para que quede bien registrada.
+3. Correr el parche **como administrador** (necesario para escribir en
+   `Program Files`).
+
+### El parche se niega a instalarse
+
+Los parches **solo van hacia adelante**. Si ya tenés 1.27a, 1.28 o superior,
+el 1.26a no se aplica: hay que usar la Version Switcher o reinstalar desde
+una base más vieja. Ver la sección "Ruta B" más arriba.
+
+### Cómo saber qué versión e idioma tenés
+
+- **Versión**: abrí el juego y mirá el **ángulo inferior derecho** del menú
+  principal (dice `v1.26.0.1` o similar). Sin abrirlo: clic derecho en
+  `war3.exe` → Propiedades → pestaña Detalles → *Versión del archivo*.
+- **Idioma**: si los menús del juego están en inglés, es `enUS`. También lo
+  dice el propio mensaje de error del parche.

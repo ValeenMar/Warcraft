@@ -50,7 +50,8 @@ bot_virtualhostname = ${WC3_BOT_VIRTUALHOST}
 bot_autolock = 0
 
 # 1 = los jugadores pueden bajar el mapa desde el bot (clave para mapas
-# custom; limite practico de ~4 MB en 1.26a, ver docs/version-1.26a.md).
+# custom; el techo duro de 1.26a son 8 MiB y arriba de ~2-3 MB la
+# transferencia es impracticable, ver docs/version-1.26a.md).
 bot_allowdownloads = 1
 bot_maxdownloaders = 3
 

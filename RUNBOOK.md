@@ -92,8 +92,9 @@ Para cada mapa, el protocolo completo de docs/mapas.md:
 - Conseguir y validar el resto del catálogo (los 21 del registry), en orden:
   primero los `verde`, después `amarillo`, y los `rojo` al final (con plan B
   de remakes — ver notas del registry).
-- Cada mapa pasa por el protocolo de docs/mapas.md; los >4 MB quedan
-  marcados "solo map pack".
+- Cada mapa pasa por el protocolo de docs/mapas.md; los que pasen de
+  ~2-3 MB quedan marcados "solo map pack" (el techo duro de carga son
+  8 MiB).
 - Armar `wc3revival-maps-v01.zip` con todos los `validado` (docs/mapas.md,
   sección map pack) y publicarlo donde el grupo lo baje.
 - Segunda instancia de bot arriba (`wc3-hostbot@2`, arena) con su canal.

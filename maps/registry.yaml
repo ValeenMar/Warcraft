@@ -5,12 +5,25 @@
 # quedan en null (no se inventan). scripts/inspect-map.py --update-registry
 # completa size_mb/slots/teams desde el .w3x sin pisar lo editado a mano.
 #
-# return_bug_risk: riesgo de que el mapa NO cargue en 1.24+ por el fix del
-# return bug de JASS (ver docs/version-1.26a.md):
-#   verde    = version objetivo hecha para 1.24+ o confirmada andando
-#   amarillo = sin confirmar; probar en fase 1
-#   rojo     = linaje 2006-2009 poco mantenido; probable que solo ande una
-#              version vieja o ninguna en 1.26a
+# Datos de version/tamano/slots/URL: investigados y verificados con descarga
+# real en EpicWar el 2026-08-08. Los tamanos estan en MiB reales del archivo.
+#
+# LIMITE DE TAMANO: 8 MiB (8.388.608 bytes) en 1.26a, tanto para cargar como
+# para hostear. El viejo limite de 4 MB era PRE-1.24; el parche 1.24 lo subio
+# a 8 MB. Igual la transferencia in-lobby es lentisima, asi que en la practica
+# todo lo que pase de ~2-3 MB conviene repartirlo por map pack.
+#
+# return_bug_risk: riesgo de que el mapa NO cargue en 1.26a por el fix del
+# return bug de JASS que introdujo el parche 1.24 (ver docs/version-1.26a.md):
+#   verde    = formato de editor 1.24a-1.28c confirmado en EpicWar
+#   amarillo = release posterior a junio 2009 (post-1.24) pero formato viejo;
+#              casi seguro anda, confirmar en fase 1
+#   rojo     = release pre-1.24; probar antes de publicar
+#
+# OJO con el campo "Game Version" de EpicWar: indica el formato del editor con
+# que se guardo el mapa, NO la compatibilidad de ejecucion. Prueba: DotA 6.61b
+# figura como "1.19 - 1.21b" y es notoriamente la primera compatible con 1.24.
+# Por eso el criterio principal es la FECHA de release.
 #
 # Los mapas .w3x van en este directorio en el SERVER, nunca en git.
 # ============================================================================
@@ -21,102 +34,113 @@ maps:
     aliases: [DotA, Defense of the Ancients]
     category: aos
     target_version: "6.83d"
-    versions_known: ["6.61b", "6.79e", "6.83d"]
-    size_mb: null
+    versions_known: ["6.61b", "6.67c", "6.83d"]
+    size_mb: 7.84
     slots: 10
     teams: 2
     min_patch: "1.24b"
-    return_bug_risk: verde
-    status: pendiente
-    notes: >-
-      Anterior a 6.61b NO carga en 1.24+ (return bug). 6.83d es la ultima gran
-      version clasica y esta hecha para 1.24b+; es la eleccion segura en 1.26a.
-    source_url: null
-
-  - name: Angel Arena
-    aliases: [Angel Arena Allstars, Angel Arena X]
-    category: aos
-    target_version: null
-    versions_known: null
-    size_mb: null
-    slots: null
-    teams: 2
-    min_patch: null
     return_bug_risk: amarillo
     status: pendiente
     notes: >-
-      Familia enorme de variantes (Allstars, X, Eclipse...). Las de era
-      2004-2008 probablemente pisen el return bug; buscar una variante
-      mantenida post-2009 y validar en fase 1.
-    source_url: null
+      6.83d es la ultima oficial de IceFrog y entra JUSTO en el limite de
+      1.26a: 8.218.959 B contra un techo de 8.388.608 B, apenas ~166 KB de
+      margen. De 6.88 en adelante NO entra (10,9 / 11,4 / 66,5 MiB).
+      Alternativas verificadas si se quiere algo repartible por lobby:
+      6.61b (3,67 MiB, primera compatible con 1.24, epicwar.com/maps/102224)
+      y 6.67c (6,79 MiB, epicwar.com/maps/129468). Cualquier DotA anterior a
+      6.61b no carga en 1.24+.
+    source_url: https://www.epicwar.com/maps/254544/
+
+  - name: Angel Arena
+    aliases: [Angel Arena Allstars, Angel Arena Eclipse]
+    category: aos
+    target_version: "Allstars 1.70b"
+    versions_known: ["Allstars 1.70b", "Eclipse 2017", "Eclipse 2020"]
+    size_mb: 3.02
+    slots: 12
+    teams: null
+    min_patch: "1.24"
+    return_bug_risk: amarillo
+    status: pendiente
+    notes: >-
+      La variante mantenida es Allstars 1.70b; la descripcion del propio autor
+      dice literalmente "Fix to Warcraft III 1.24+". Alternativa: Eclipse 2017
+      (5,63 MiB, epicwar.com/maps/263590); Eclipse 2020 pesa 7,69 MiB y entra
+      raspando. CUIDADO: "Eclipse REBORN" pesa 45,97 MiB, es de Reforged y NO
+      sirve.
+    source_url: https://www.epicwar.com/maps/158461/
 
   - name: Warlock
     aliases: [Warlock Brawl]
     category: aos
-    target_version: null
-    versions_known: null
-    size_mb: null
-    slots: null
+    target_version: "1.02"
+    versions_known: ["1.01b", "1.02"]
+    size_mb: 3.99
+    slots: 12
     teams: null
     min_patch: null
+    return_bug_risk: amarillo
+    status: pendiente
+    notes: >-
+      Version 1.02 de Zymoran. Todas las versiones modernas estan PROTEGIDAS
+      (inspect-map.py no va a poder leer el w3i: cargar metadata a mano). El
+      proyecto migro despues a WarlockBrawl.com. La 1.01b esta en Hive
+      (hiveworkshop.com/threads/warlock-1-01b.92687).
+    source_url: https://www.epicwar.com/maps/278295/
+
+  - name: Bleach vs One Piece
+    aliases: [BvO]
+    category: aos
+    target_version: "2.08b"
+    versions_known: ["2.08b", "2.09"]
+    size_mb: 3.95
+    slots: 12
+    teams: null
+    min_patch: null
+    return_bug_risk: amarillo
+    status: pendiente
+    notes: >-
+      2.08b es la version estandar (998k descargas). HOMONIMOS a evitar:
+      "Bleach vs Naruto vs One Piece" (9 jugadores) y "One Piece vs Bleach"
+      (hasta 10,5 MiB) son mapas DISTINTOS.
+    source_url: https://www.epicwar.com/maps/114029/
+
+  - name: DBZ Tribute
+    aliases: [Dragon Ball Z Tribute, DBZ Tribute Ultra, DBZ Tribute Elite]
+    category: aos
+    target_version: "Ultra V10b10"
+    versions_known: ["Ultra V10b10", "Elite 2.1c"]
+    size_mb: 5.51
+    slots: 12
+    teams: null
+    min_patch: "1.24"
     return_bug_risk: verde
     status: pendiente
     notes: >-
-      Mantenido activamente hasta ~2012 con versiones especificas para 1.24+;
-      elegir una version tardia (>= 0.85) y validar igual.
-    source_url: null
-
-  - name: Bleach vs One Piece
-    aliases: [BvO, Bleach vs One Piece Compilation]
-    category: aos
-    target_version: null
-    versions_known: null
-    size_mb: null
-    slots: null
-    teams: 2
-    min_patch: null
-    return_bug_risk: amarillo
-    status: pendiente
-    notes: >-
-      Las versiones tardias (3.x+) son post-2010 y suelen andar en 1.26a, pero
-      casi seguro superan los 4 MB: no se transfiere in-lobby en 1.26a, hay
-      que distribuirlo por map pack (ver docs/mapas.md).
-    source_url: null
-
-  - name: DBZ Tribute
-    aliases: [Dragon Ball Z Tribute, DBZ Tribute Elite, DBZ Tribute Ultra]
-    category: aos
-    target_version: null
-    versions_known: null
-    size_mb: null
-    slots: null
-    teams: null
-    min_patch: null
-    return_bug_risk: amarillo
-    status: pendiente
-    notes: >-
-      Linaje largo (Elite/Ultra). Versiones post-2010 deberian cargar en
-      1.26a; probable >4 MB, distribuir por map pack.
-    source_url: null
+      OJO: Elite y Ultra son DOS LINAJES DISTINTOS, no versiones del mismo
+      mapa. Recomendado Ultra V10b10 (Gotenkz/Womplord). Elite 2.1c
+      (ikcilapmada/Clan WaS, ago 2009, 4,00 MiB) esta en
+      epicwar.com/maps/105573.
+    source_url: https://www.epicwar.com/maps/133974/
 
   - name: Naruto Ninpou Storm
     aliases: [Naruto Ninpou, NNS]
     category: aos
-    target_version: null
-    versions_known: null
-    size_mb: null
-    slots: null
-    teams: 2
-    min_patch: null
-    return_bug_risk: amarillo
+    target_version: "0.9ZZZ"
+    versions_known: ["0.9ZZZ"]
+    size_mb: 7.63
+    slots: 9
+    teams: null
+    min_patch: "1.24"
+    return_bug_risk: verde
     status: pendiente
     notes: >-
-      AoS de anime clasico; verificar version exacta y tamano (probable >4 MB,
-      map pack).
-    source_url: null
+      7,63 MiB: entra pero queda cerca del techo de 8 MiB, y a esa altura la
+      transferencia in-lobby es impracticable. Solo por map pack.
+    source_url: https://www.epicwar.com/maps/222153/
 
   - name: Naruto Shinobi Battle Royal
-    aliases: [NSBR, Naruto Battle Royal]
+    aliases: [NSBR]
     category: aos
     target_version: null
     versions_known: null
@@ -125,223 +149,292 @@ maps:
     teams: null
     min_patch: null
     return_bug_risk: amarillo
-    status: pendiente
-    notes: Verificar version y tamano; probable >4 MB (map pack).
+    status: descartado
+    notes: >-
+      NO EXISTE un mapa con este nombre exacto (busqueda verificada en EpicWar
+      y Hive, 2026-08-08). Es una confusion entre tres mapas distintos, todos
+      reales: (1) "Naruto Battle Royal" v3.8 en Hive (3,97 MB, mar 2009,
+      PRE-1.24) o v1.0 en epicwar.com/maps/212931 (1,49 MiB, 2012, formato
+      1.24+, pero solo 2 slots); (2) "Naruto: 3rd Shinobi Wars" 2.41b (2009,
+      10 slots, ~4 MiB) que es el mas famoso de los tres; (3) "Shinobi Battle"
+      1.1a (2013, 8 slots, 6,49 MiB). Elegir cual se quiere y dar de alta un
+      entry nuevo con el nombre correcto.
     source_url: null
 
   - name: Anime Fight
-    aliases: [Anime Fight Ultimate, AF]
+    aliases: [Anime Fight Arena, AF]
     category: aos
-    target_version: null
-    versions_known: null
-    size_mb: null
-    slots: null
+    target_version: "Anime Fight Arena AI"
+    versions_known: ["Anime Fight Arena AI", "Beta 1.39o9"]
+    size_mb: 5.96
+    slots: 10
     teams: null
-    min_patch: null
-    return_bug_risk: amarillo
+    min_patch: "1.24"
+    return_bug_risk: verde
     status: pendiente
     notes: >-
-      Existen varios mapas con este nombre; identificar el linaje correcto
-      antes de validar. Probable >4 MB (map pack).
-    source_url: null
+      El unico del conjunto que es post-1.24 es "Anime Fight Arena AI" de
+      PrideTeam. El linaje original (Anime Fight Beta 1.39o9 de Spathis, ene
+      2008, 0,41 MiB, epicwar.com/maps/41277) es PRE-1.24 y es riesgo.
+    source_url: https://www.epicwar.com/maps/152876/
 
   - name: Custom Hero Arena
     aliases: [CHA]
     category: aos
-    target_version: null
-    versions_known: null
-    size_mb: null
-    slots: null
-    teams: 2
+    target_version: "6.2"
+    versions_known: ["6.2"]
+    size_mb: 2.24
+    slots: 12
+    teams: null
     min_patch: null
-    return_bug_risk: amarillo
+    return_bug_risk: rojo
     status: pendiente
     notes: >-
-      Muchas variantes (no confundir con Custom Hero Line Wars ni Custom Hero
-      Survival). Elegir la variante y version en fase 1.
-    source_url: null
+      6.2 de FyUoCuKhAoSlSE: PROTEGIDO y ademas PRE-1.24 (enero 2009), o sea
+      riesgo real de que no cargue. Probar antes de publicar. NO confundir con
+      Custom Hero Survival (hoihoi8s), Custom Hero Line Wars, ni con "Custom
+      Hero Arena Defense" V.1.07f (2012, 3,61 MiB), que es un cuarto mapa
+      distinto con nombre parecido.
+    source_url: https://www.epicwar.com/maps/79873/
 
   # ---------------------------------------------------------------- Arena ---
   - name: Pudge Wars
-    aliases: [Pudge Wars Original]
+    aliases: [Pudge Wars Original, Pudge War X]
     category: arena
-    target_version: null
-    versions_known: null
-    size_mb: null
-    slots: 12
-    teams: 2
+    target_version: "2.03d"
+    versions_known: ["2.03d", "Pudge War X 1.24 AI"]
+    size_mb: 0.28
+    slots: 10
+    teams: null
     min_patch: null
     return_bug_risk: amarillo
     status: pendiente
     notes: >-
-      El original es era 2006-2008 (riesgo alto); existen remakes post-2009
-      que si cargan en 1.26a. Preferir un remake mantenido.
-    source_url: null
+      Usar el remake mantenido v2.03d de Siraraz, no el original de 2006
+      (epicwar.com/maps/8426), que es PRE-1.24 y es riesgo. Otras opciones:
+      Pudge War X 1.24 AI (12 slots, epicwar.com/maps/226159; el "1.24" es la
+      version DEL MOD, no del parche) y Pudge Hook Wars v2.7d en Hive (2016).
+    source_url: https://www.epicwar.com/maps/209256/
 
   - name: Pudge Wars Advanced
     aliases: [PWA]
     category: arena
-    target_version: null
-    versions_known: null
-    size_mb: null
+    target_version: "1.26"
+    versions_known: ["1.26"]
+    size_mb: 0.65
     slots: 12
-    teams: 2
+    teams: null
     min_patch: null
     return_bug_risk: amarillo
     status: pendiente
-    notes: Variante mas mantenida que el original; validar version exacta.
-    source_url: null
+    notes: >-
+      Version 1.26 de Tossrock (pudgewars.net), octubre 2010, o sea post-1.24
+      y seguro. El "1.26" es la version DEL MAPA, no del parche del juego.
+    source_url: https://www.epicwar.com/maps/152163/
 
   - name: Axe Wars
-    aliases: [Mogul Kahn Wars]
+    aliases: ["Axe Wars [Revolution]"]
     category: arena
-    target_version: null
-    versions_known: null
-    size_mb: null
-    slots: null
-    teams: 2
-    min_patch: null
-    return_bug_risk: rojo
+    target_version: "Revolution 4.5"
+    versions_known: ["Revolution 4.5"]
+    size_mb: 1.41
+    slots: 8
+    teams: null
+    min_patch: "1.24"
+    return_bug_risk: verde
     status: pendiente
     notes: >-
-      OJO: circulan varios mapas distintos llamados "Axe Wars" que NO son el
-      spinoff de Pudge Wars. El spinoff es un mod chico y poco mantenido:
-      zona roja para 1.24+.
-    source_url: null
+      CORRECCION IMPORTANTE (verificado 2026-08-08): NO existe ningun "Axe
+      Wars" que sea spinoff de Pudge Wars. La familia canonica de spinoffs es
+      Pudge / Mirana / Nevermore / Grand Magus, SIN Axe. El unico "Axe Wars"
+      real y que anda en 1.26a es "Axe Wars [Revolution]" de E.T.Frost, un
+      hero arena tematico de fuego sin relacion con Pudge Wars. Homonimos a
+      evitar: "Axe War" / "Axe War V4" de SVP (2011, 0,04 MiB, casi sin
+      descargas) y "Axe War [Burning Fire]" del mismo autor.
+    source_url: https://www.epicwar.com/maps/215886/
 
   - name: Mirana Wars
     aliases: [Priestess of the Moon Wars, POTM Wars]
     category: arena
-    target_version: null
-    versions_known: null
-    size_mb: null
-    slots: null
-    teams: 2
-    min_patch: null
-    return_bug_risk: rojo
+    target_version: "5.09"
+    versions_known: ["5.09"]
+    size_mb: 1.57
+    slots: 10
+    teams: null
+    min_patch: "1.24"
+    return_bug_risk: verde
     status: pendiente
     notes: >-
-      Spinoff de Pudge Wars, mod chico poco mantenido: probable victima del
-      return bug. Plan B: buscar remakes post-2009.
-    source_url: null
+      Sospecha de zona roja REFUTADA: v5.09 de IceStar (playdota.ru) tiene
+      formato 1.24a-1.28c confirmado y 81k descargas. Es un mapa sano.
+    source_url: https://www.epicwar.com/maps/207144/
 
   - name: Nevermore Wars
-    aliases: [SF Wars, Shadow Fiend Wars]
+    aliases: [SF Wars, Shadow Fiend Wars, Nevermore Wars Ultimate]
     category: arena
-    target_version: null
-    versions_known: null
-    size_mb: null
-    slots: null
-    teams: 2
-    min_patch: null
-    return_bug_risk: rojo
+    target_version: "Ultimate 2.8"
+    versions_known: ["Ultimate 2.8"]
+    size_mb: 0.97
+    slots: 10
+    teams: null
+    min_patch: "1.24"
+    return_bug_risk: verde
     status: pendiente
-    notes: Spinoff de Pudge Wars, misma zona roja que Mirana Wars.
-    source_url: null
+    notes: >-
+      Sospecha de zona roja REFUTADA: Ultimate 2.8 de KraYbeN tiene formato
+      1.24a-1.28c confirmado. Bonus: el autor es hispanohablante (la
+      descripcion del mapa esta en espanol). EVITAR la version mas descargada
+      (id 118031, VER 1.18), que es la vieja.
+    source_url: https://www.epicwar.com/maps/165910/
 
   - name: Bounty Hunter Wars
     aliases: [Gondar Wars, BH Wars]
     category: arena
-    target_version: null
-    versions_known: null
-    size_mb: null
-    slots: null
-    teams: 2
-    min_patch: null
-    return_bug_risk: rojo
-    status: pendiente
-    notes: Spinoff de Pudge Wars, misma zona roja que Mirana Wars.
-    source_url: null
-
-  - name: Sheep Tag
-    aliases: [Sheep Tag ReVoLuTiOn, Sheep Tag Relapse]
-    category: arena
-    target_version: null
-    versions_known: null
-    size_mb: null
+    target_version: "3.0"
+    versions_known: ["3.0"]
+    size_mb: 0.78
     slots: 12
-    teams: 2
-    min_patch: null
+    teams: null
+    min_patch: "1.24"
     return_bug_risk: verde
     status: pendiente
     notes: >-
-      Comunidad activa mucho despues de 1.24; las variantes ReVoLuTiOn /
-      Relapse tienen versiones para 1.24+. Elegir variante en fase 1.
-    source_url: null
+      v3.0 de IdaNe/The-Shadows: formato 1.24a-1.28c confirmado, asi que carga.
+      Pero la sospecha de "poco mantenido" se confirma a medias: solo 7.069
+      descargas y ultima actualizacion en septiembre de 2010. Puede ser el
+      menos interesante del grupo.
+    source_url: https://www.epicwar.com/maps/148886/
+
+  - name: Nevermore, Mirana, Pudge, GM Wars
+    aliases: [NMPG Wars, Wars combinado]
+    category: arena
+    target_version: "4.8"
+    versions_known: ["4.8", "1.7"]
+    size_mb: 1.56
+    slots: 12
+    teams: null
+    min_patch: "1.24"
+    return_bug_risk: verde
+    status: pendiente
+    notes: >-
+      HALLAZGO BONUS: un solo mapa que junta cuatro spinoffs de Pudge Wars
+      (Nevermore, Mirana, Pudge y Grand Magus). Formato 1.24a-1.28c
+      confirmado. Puede reemplazar a 3-4 entradas del catalogo y simplificar
+      la lista de mapas del bot. Hay una v1.7 mas nueva de marzo 2022
+      (5,88 MiB, epicwar.com/maps/320978).
+    source_url: https://www.epicwar.com/maps/253650/
+
+  - name: Sheep Tag
+    aliases: [Sheep Tag Relapse, Sheep Tag ReVoLuTiOn]
+    category: arena
+    target_version: "Relapse 1.0.6"
+    versions_known: ["Relapse 1.0.6", "ReVoLuTiOn 7.7.4"]
+    size_mb: 0.55
+    slots: 12
+    teams: null
+    min_patch: "1.24"
+    return_bug_risk: verde
+    status: pendiente
+    notes: >-
+      Relapse 1.0.6 tiene formato 1.24+ confirmado. DOS TRAMPAS: Relapse 1.2.0
+      (2018) es VER 1.30 y NO sirve; y las ReVoLuTiOn modernas (v24n a v26,
+      2024-2026) son de 24 slots y VER 1.36.2, tampoco sirven. Si se quiere
+      ReVoLuTiOn, la buena es la 7.7.4 de 2015 (0,94 MiB,
+      epicwar.com/maps/254996).
+    source_url: https://www.epicwar.com/maps/262649/
 
   - name: Run Kitty Run
     aliases: [RKR]
     category: arena
     target_version: null
     versions_known: null
-    size_mb: null
-    slots: null
-    teams: 1
+    size_mb: 0.86
+    slots: 10
+    teams: null
     min_patch: null
-    return_bug_risk: amarillo
-    status: pendiente
-    notes: Mapa chico; las versiones tardias deberian andar. Validar en fase 1.
-    source_url: null
-
-  - name: Uther Party
-    aliases: [Uther Party 2, UP]
-    category: arena
-    target_version: null
-    versions_known: null
-    size_mb: null
-    slots: null
-    teams: 1
-    min_patch: null
-    return_bug_risk: amarillo
+    return_bug_risk: rojo
     status: pendiente
     notes: >-
-      El original es 2005 (riesgo return bug); Uther Party 2 tuvo versiones
-      posteriores. Empezar por UP2.
-    source_url: null
+      EL PUNTO MAS DEBIL DEL CATALOGO: no se encontro ninguna version post-1.24
+      usable. Las de 2019 son VER 1.29/1.30 y/o de 24 slots (no cargan en
+      1.26a) y las de 2020 pesan de 9 a 31 MiB (arriba del techo de 8 MiB).
+      Solo quedan los clasicos PRE-1.24: epicwar.com/maps/755 (0,86 MiB),
+      /maps/2174 (1,30 MiB) y /maps/64589 (1,34 MiB). MITIGANTE: son mapas de
+      carrera con triggers GUI simples y musica, categoria donde el return bug
+      (un truco de optimizacion JASS) practicamente no se usaba, asi que hay
+      chance real de que carguen. Probar los tres en fase 1.
+    source_url: https://www.epicwar.com/maps/755/
 
-  - name: Footmen Frenzy
-    aliases: [Footies, Footman Frenzy]
+  - name: Uther Party
+    aliases: [Uther Party Ultima-X, UP]
     category: arena
-    target_version: null
-    versions_known: null
-    size_mb: null
-    slots: 12
-    teams: 4
-    min_patch: null
+    target_version: "4.0 Official"
+    versions_known: ["4.0 Official", "Ultima-X"]
+    size_mb: 0.56
+    slots: 8
+    teams: null
+    min_patch: "1.24"
     return_bug_risk: verde
     status: pendiente
     notes: >-
-      Muy mantenido por la comunidad; hay versiones claramente hechas para
-      1.24+. Elegir la version estandar de la epoca (5.x) y validar.
-    source_url: null
+      Usar "Uther Party 4.0 Official" (el original, NO "Uther Party 2"): es el
+      unico con formato 1.24+ confirmado. "Uther Party 2" esta abandonado
+      (v0.4d, agosto 2008, 140 KB). La variante mas jugada es Ultima-X
+      (sep 2009, post-1.24, 0,60 MiB, 96k descargas,
+      epicwar.com/maps/109209).
+    source_url: https://www.epicwar.com/maps/252215/
+
+  - name: Footmen Frenzy
+    aliases: [Footies, Footman Frenzy, Footmen Frenzy AI]
+    category: arena
+    target_version: "AI 9.4"
+    versions_known: ["AI 9.4"]
+    size_mb: 0.28
+    slots: 12
+    teams: null
+    min_patch: "1.24"
+    return_bug_risk: verde
+    status: pendiente
+    notes: >-
+      NO existe una version "estandar canonica": "Footmen Frenzy" y "Footman
+      Frenzy" (sin la e) son linajes separados con decenas de forks cada uno y
+      la comunidad quedo fragmentada. AI 9.4 es la opcion mas segura porque
+      tiene formato 1.24a-1.28c confirmado. La 7.1 de NoHunters que algunos
+      citan como oficial ya es era Reforged.
+    source_url: https://www.epicwar.com/maps/206901/
 
   - name: Dodgeball
-    aliases: [Dodgeball Extreme, Dodgeball Arena]
+    aliases: [DodgeBall Extreme, Ultimate Dodgeball]
     category: arena
-    target_version: null
-    versions_known: null
-    size_mb: null
-    slots: null
-    teams: 2
-    min_patch: null
-    return_bug_risk: amarillo
+    target_version: "1.4z"
+    versions_known: ["1.4z"]
+    size_mb: 3.00
+    slots: 6
+    teams: null
+    min_patch: "1.24"
+    return_bug_risk: verde
     status: pendiente
-    notes: Varios linajes con el mismo nombre; identificar el buscado en fase 1.
-    source_url: null
+    notes: >-
+      v1.4z es la unica con formato 1.24+ confirmado, pero es de SOLO 6 SLOTS.
+      Si hacen falta 12, la opcion es "DodgeBall Extreme Final" (0,37 MiB,
+      epicwar.com/maps/158513) pero es VER 1.19-1.21b, o sea riesgo pre-1.24.
+    source_url: https://www.epicwar.com/maps/133385/
 
   # ------------------------------------------------------------------- TD ---
   - name: Marvel TD
     aliases: [Marvel Tower Defense]
     category: td
-    target_version: null
-    versions_known: null
-    size_mb: null
-    slots: null
-    teams: 1
-    min_patch: null
-    return_bug_risk: amarillo
+    target_version: "1.51 [Se]"
+    versions_known: ["1.51 [Se]"]
+    size_mb: 3.64
+    slots: 9
+    teams: null
+    min_patch: "1.24"
+    return_bug_risk: verde
     status: pendiente
     notes: >-
-      Unico TD del catalogo. Circulo ~2008-2010; verificar que la version
-      conseguida cargue en 1.26a y su tamano.
-    source_url: null
+      v1.51 [Se]: formato 1.24a-1.28c confirmado, 33k descargas. El clasico
+      v1.3 (2005, 124k descargas) es PRE-1.24 y es riesgo. Ojo con
+      "v1.56 [DK]" (2021, 6,87 MiB) que es de 10 slots, y con "v.2008b" que es
+      otro linaje distinto.
+    source_url: https://www.epicwar.com/maps/134232/
