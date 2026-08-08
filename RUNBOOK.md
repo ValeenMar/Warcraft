@@ -14,10 +14,11 @@ máquina.
       **Ubuntu 24.04 LTS x64**. Facturación por hora, así que probarlo sale
       centavos. Al crearla: subí tu clave SSH en el paso "SSH Keys" y NO
       habilites el firewall de Vultr (lo maneja `ufw` desde el bootstrap).
-- [ ] Instalación de W3 TFT **1.26a**: de ella salen `war3.exe`, `Storm.dll`,
-      `Game.dll` y `War3Patch.mpq` para `/opt/wc3/mpq/`. El parche oficial
-      1.26a sigue publicado gratis por Blizzard; el paso a paso está en
-      **docs/conseguir-el-juego.md**.
+- [ ] Instalación de W3 TFT **1.27a** (build `1.27.0.52240`): de ella salen
+      `war3.exe`, `Storm.dll`, `Game.dll` y `War3Patch.mpq` para
+      `/opt/wc3/mpq/`. Verificación rápida de que es genuina: `war3.exe` tiene
+      que pesar **514.536 bytes**. El paso a paso y los errores típicos están
+      en **docs/conseguir-el-juego.md**.
 - [ ] Los primeros 3 mapas (sugeridos: DotA 6.83d, Footmen Frenzy, Sheep Tag
       — los tres `verde` en el registry).
 - [ ] Dos personas con el juego instalado para la prueba de sincronía.
@@ -42,7 +43,7 @@ make render-config                           # configs finales
 ### Archivos del juego
 
 ```bash
-# desde tu maquina (sacados de una instalacion 1.26a):
+# desde tu maquina (sacados de una instalacion 1.27a):
 scp war3.exe storm.dll game.dll War3Patch.mpq vps:/tmp/
 # en el VPS:
 sudo mv /tmp/{war3.exe,storm.dll,game.dll,War3Patch.mpq} /opt/wc3/mpq/
@@ -71,7 +72,7 @@ journalctl -u wc3-hostbot@1 -f               # ver: login al PvPGN OK
 
 Para cada mapa, el protocolo completo de docs/mapas.md:
 
-1. Cargar en Custom Game **single player en 1.26a**; anotar que carga.
+1. Cargar en Custom Game **single player en 1.27a**; anotar que carga.
 2. `inspect-map.py --update-registry`: tamaño y slots al registry.
 3. Copiar a `/opt/wc3/maps/`, `!map ElMapa` en el canal del bot: el bot
    calcula el hash sin quejarse.

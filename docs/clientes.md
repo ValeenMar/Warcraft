@@ -2,10 +2,11 @@
 
 ## Qué necesita el jugador
 
-1. **Warcraft III: The Frozen Throne 1.26a** instalado (RoC + TFT). La
-   instalación la consigue cada uno por su lado; este proyecto no distribuye
-   archivos del juego. El camino concreto (incluido el parche 1.26a oficial
-   que Blizzard sigue publicando gratis) está en **docs/conseguir-el-juego.md**.
+1. **Warcraft III: The Frozen Throne 1.27a** instalado (RoC + TFT). Todos
+   los jugadores tienen que estar en la MISMA versión: versiones distintas no
+   juegan entre sí. La instalación la consigue cada uno por su lado; este
+   proyecto no distribuye archivos del juego. El camino concreto está en
+   **docs/conseguir-el-juego.md**.
 2. La **IP (o dominio) del servidor**: la `WC3_PUBLIC_IP` del `.env`.
 3. Para mapas grandes: el **map pack** descomprimido en
    `Warcraft III/Maps/Download/` (ver docs/mapas.md).
@@ -24,7 +25,7 @@ Dos herramientas libres, verificadas vigentes en 2026:
   distribuye nada del juego: parchea en memoria tu `war3.exe` para que apunte
   a un PvPGN. Soporta de 1.22a a 1.28f.
 - **Warcraft Feature Extender (WFE)** — https://github.com/UnryzeC/WFE-Release
-  — soporta 1.26a explícitamente y además suma widescreen, borderless y
+  — soporta 1.26a y 1.27a explícitamente, y además suma widescreen, borderless y
   smartcast.
 
 También sirven los editores de gateway clásicos ("BNGatewayEditor", "W3

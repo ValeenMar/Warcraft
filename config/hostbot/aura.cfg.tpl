@@ -51,7 +51,7 @@ bot_autolock = 0
 
 # 1 = los jugadores pueden bajar el mapa desde el bot (clave para mapas
 # custom; el techo duro de 1.26a son 8 MiB y arriba de ~2-3 MB la
-# transferencia es impracticable, ver docs/version-1.26a.md).
+# transferencia es impracticable, ver docs/version-juego.md).
 bot_allowdownloads = 1
 bot_maxdownloaders = 3
 
@@ -79,9 +79,9 @@ bot_gameoverplayernumber = 1
 # LAN
 # ---------------------------------------------------------------------------
 
-# Version de W3 para el broadcast LAN. 26 = 1.26x.
+# Version de W3 para el broadcast LAN. 27 = 1.27x.
 # TODO(verificar): el sample del upstream trae 29 (1.29); confirmar con el
-# juego real que este build de Aura acepta clientes 1.26a con este valor.
+# juego real que este build de Aura acepta clientes 1.27a con este valor.
 lan_war3version = ${WC3_WAR3_VERSION}
 
 udp_broadcasttarget =
@@ -134,10 +134,10 @@ bnet_commandtrigger = !
 
 # --- Seccion PvPGN custom (obligatoria contra un PvPGN, no Blizzard) -------
 # TODO(verificar): estos cuatro valores dependen del par cliente/servidor real
-# y solo se pueden confirmar conectando el bot a un PvPGN con clientes 1.26a.
-# war3version 26 = 1.26x. exeversion/exeversionhash: si se dejan vacios, Aura
+# y solo se pueden confirmar conectando el bot a un PvPGN con clientes 1.27a.
+# war3version 27 = 1.27x. exeversion/exeversionhash: si se dejan vacios, Aura
 # intenta calcularlos con bncsutil a partir de los archivos de bot_war3path
-# (war3.exe/storm.dll/game.dll de 1.26a). passwordhashtype pvpgn es lo
+# (war3.exe/storm.dll/game.dll de 1.27a). passwordhashtype pvpgn es lo
 # documentado para servidores PvPGN en el propio sample.
 bnet_custom_war3version = ${WC3_WAR3_VERSION}
 bnet_custom_exeversion =

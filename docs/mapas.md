@@ -39,7 +39,7 @@ pendiente -> descargado -> validado
 4. **Tamaño vs los límites:** el techo duro de 1.26a es **8 MiB**; si el
    mapa lo pasa, no carga y se descarta. Si pasa de ~2-3 MB, marcar en
    `notes` que va por map pack: entra igual, pero la transferencia in-lobby
-   es tan lenta que en la práctica no sirve (ver docs/version-1.26a.md).
+   es tan lenta que en la práctica no sirve (ver docs/version-juego.md).
 5. **Alta en el bot:** copiar el .w3x a `/opt/wc3/maps/` y en el canal del
    bot: `!map ElMapa` (el bot indexa el archivo y calcula el hash/CRC con
    StormLib usando common.j/blizzard.j de los MPQ). Si el bot no puede

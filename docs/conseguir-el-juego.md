@@ -1,8 +1,16 @@
-# Cómo conseguir una instalación 1.26a
+# Cómo conseguir una instalación limpia del juego
 
-Investigado y verificado en vivo el **2026-08-08**. La conclusión corta:
-**Blizzard sigue publicando gratis el parche 1.26a en su propio CDN**, así que
-la parte difícil está resuelta. Lo que hay que tener es el juego base.
+Investigado y verificado en vivo el **2026-08-08**.
+
+**La versión objetivo del proyecto es 1.27a** (ver docs/version-juego.md): es
+la que entrega hoy el instalador oficial de Blizzard, no necesita parcheo, y
+PvPGN la soporta de fábrica. Este documento cubre también 1.26a porque el
+parche oficial sigue disponible y sirve si se quiere esa versión.
+
+**Verificación rápida de una instalación 1.27a genuina**: `war3.exe` tiene que
+pesar exactamente **514.536 bytes**, con fecha 05/08/2016. (Para 1.26a son
+471.040 bytes, 18/03/2011.) Los tamaños salen del `versioncheck.json` del
+propio PvPGN.
 
 ## Lo que cambió (y hay que saber antes de empezar)
 
@@ -185,12 +193,19 @@ Soluciones, en orden:
 
 ### `ERROR: unable to apply patch to file '...\shadowstrike.mdx'` / "no corresponde con la suma de comprobación"
 
-**Este error no es del parche: es de la instalación.** El parche aplica
-deltas binarios sobre los archivos que están adentro de los MPQ, así que
-necesita que esos archivos estén byte a byte como los dejó Blizzard. Un
-checksum que no coincide significa que la instalación **no es limpia**:
-carpeta copiada de otra máquina, repack, MPQ modificados, mods instalados,
-o un parcheo anterior que quedó a medias.
+El parche aplica deltas binarios sobre los archivos que están adentro de los
+MPQ, así que necesita que esos archivos estén exactamente en el estado que
+espera. Un checksum que no coincide significa que no lo están. Dos causas, en
+orden de frecuencia:
+
+1. **Estás intentando BAJAR de versión** — es de lejos la más común. Si el
+   juego ya está en 1.27a y corrés el parche 1.26a, el parche encuentra
+   archivos más nuevos de los que espera y falla con este error en vez de
+   decirte claramente "no puedo bajar de versión". **Comprobalo primero**:
+   mirá la versión en el ángulo inferior derecho del menú principal antes de
+   suponer nada.
+2. **La instalación no es limpia**: carpeta copiada de otra máquina, repack,
+   MPQ modificados, mods, o un parcheo anterior a medias.
 
 `shadowstrike.mdx` (un modelo de Night Elf dentro de `war3.mpq`) es el
 archivo donde falla clásicamente, pero el archivo puntual da igual: es el

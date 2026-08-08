@@ -161,6 +161,32 @@ si está disponible; el bootstrap crea `/opt/wc3/venv` con mpyq+pyyaml.
   abrirlo. El parser de `war3map.w3i` está validado contra .w3i sintéticos
   (tests) — **la validación con mapas reales es parte de la fase 1**.
 
+## 11. Versión objetivo: 1.27a en vez de 1.26a (cambio del 2026-08-08)
+
+**Decisión**: el proyecto apunta a **1.27a** (build in-game `1.27.0.52240`,
+`version` de protocolo `1.27.0.16`, tag `W3XP_127A`).
+
+- Motivo principal, y es pragmático: **el operador ya tiene una instalación
+  de 1.27a funcionando**, y conseguir 1.26a limpio hoy exige CDs físicos o
+  comprar una copia usada (el canje de CD keys clásicas cerró el 21/11/2025).
+- PvPGN lo soporta de fábrica: verificado leyendo el `versioncheck.json` que
+  instala el propio build (entradas `W3XP_127A` y `WAR3_127A`).
+- Los 21 mapas del catálogo son formato 1.24a-1.28c, así que andan igual.
+- 1.27a anda mejor en Windows moderno: agregó soporte oficial de Windows
+  7-10 y abandonó Direct3D 8, de donde salen los crashes de 1.26a en
+  Windows 11 24H2.
+- Se pierde ser "el estándar latino de DotA", que en un servidor privado para
+  amigos no significa nada.
+- Reversible con `WC3_WAR3_VERSION=26` y archivos de 1.26a en `/opt/wc3/mpq/`.
+
+**Corrección honesta de un diagnóstico previo**: al ver el error
+`unable to apply patch to file ...shadowstrike.mdx` diagnostiqué que la
+instalación estaba modificada, apoyándome en que vivía en `C:\Program Files\`
+en vez de `Program Files (x86)`. La explicación más simple resultó ser otra:
+se estaba intentando aplicar el parche 1.26a sobre una instalación que ya
+estaba en 1.27a, y los parches no bajan de versión. El error de checksum era
+la forma fea que tiene BNUpdate de decir eso.
+
 ## 10. Las 3 decisiones más discutibles (resumen ejecutivo)
 
 1. **Aura (2018) para un servidor 1.26a** — ver decisión 2. Es el riesgo
@@ -176,17 +202,19 @@ si está disponible; el bootstrap crea `/opt/wc3/venv` con mpyq+pyyaml.
 
 ## TODO(verificar) — lista completa, ordenada por qué bloquea primero
 
-1. **Aura + clientes 1.26a contra PvPGN** (bloquea fase 1): con
-   `war3version=26` y `exeversion/exeversionhash` vacíos (autocálculo desde
+1. **Aura + clientes 1.27a contra PvPGN** (bloquea fase 1): con
+   `war3version=27` y `exeversion/exeversionhash` vacíos (autocálculo desde
    los MPQ), el bot tiene que loguearse al PvPGN y los clientes tienen que
-   poder entrar a sus lobbies. Plan B: GHost++ clásico.
+   poder entrar a sus lobbies. Nota a favor: el sample de Aura apunta a 1.28+,
+   así que 1.27a le queda más cerca que 1.26a. Plan B: GHost++ clásico.
 2. **PvPGN + MySQL en runtime** (bloquea fase 1): primer arranque crea las
    tablas desde `sql_DB_layout.conf`. Compiló, pero no se ejecutó contra un
    mysqld real.
-3. **Autenticación de clientes 1.26a reales** (bloquea fase 1): el
-   versioncheck de fábrica trae W3XP_126A; con `allow_bad_version=true` y
-   `allow_unknown_version=true` (defaults) debería entrar cualquier 1.26a,
-   pero solo un cliente real lo confirma.
+3. **Autenticación de clientes 1.27a reales** (bloquea fase 1): el
+   versioncheck de fábrica trae `W3XP_127A` con el `war3.exe` esperado de
+   514.536 bytes; con `allow_bad_version=true` y `allow_unknown_version=true`
+   (defaults) debería entrar cualquier 1.27a, pero solo un cliente real lo
+   confirma.
 4. **Descarga in-lobby: hasta qué tamaño es tolerable** (fase 1-2): el techo
    duro de 1.26a son 8 MiB (el límite de 4 MB era pre-1.24, corregido el
    2026-08-08). Falta medir con qué tamaño la espera en el lobby se vuelve
