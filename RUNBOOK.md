@@ -8,8 +8,12 @@ máquina.
 
 ## Fase 0 (previa): lo que hay que conseguir
 
-- [ ] VPS Ubuntu 24.04 LTS, 2 vCPU / 2-4 GB, en São Paulo o Buenos Aires,
-      con IP pública propia (no CGNAT) y acceso SSH por clave.
+- [ ] **VPS: Vultr, región Santiago de Chile (`scl`)** — decidido con ping
+      medido, ver docs/vps.md. Plan `vc2-1c-2gb` (1 vCPU / 2 GB, USD 10/mes)
+      alcanza y sobra; `vc2-2c-4gb` (USD 20) si querés margen. Imagen
+      **Ubuntu 24.04 LTS x64**. Facturación por hora, así que probarlo sale
+      centavos. Al crearla: subí tu clave SSH en el paso "SSH Keys" y NO
+      habilites el firewall de Vultr (lo maneja `ufw` desde el bootstrap).
 - [ ] Instalación de W3 TFT **1.26a**: de ella salen `war3.exe`, `Storm.dll`,
       `Game.dll` y `War3Patch.mpq` para `/opt/wc3/mpq/`. El parche oficial
       1.26a sigue publicado gratis por Blizzard; el paso a paso está en

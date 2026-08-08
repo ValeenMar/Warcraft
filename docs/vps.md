@@ -74,6 +74,21 @@ en todos los ISPs.
 - Ninguno usa CGNAT: todos dan IPv4 pública dedicada, que es lo que este
   proyecto necesita sí o sí.
 
+## Decisión tomada
+
+**Vultr, región Santiago (`scl`)**, plan `vc2-1c-2gb` (USD 10/mes) o
+`vc2-2c-4gb` (USD 20/mes), Ubuntu 24.04 LTS.
+
+El motivo: es el único destino que midió parejo en **todos** los ISPs
+argentinos probados (20,4 a 22,5 ms, dispersión de 2 ms). No es el ping más
+bajo posible — un datacenter en CABA da 10-13 ms — pero es el único que
+garantiza que **ningún** jugador quede afuera, sin tener que averiguar antes
+con qué ISP está cada uno. Encima Vultr cobra precio global en Santiago y
++50% en São Paulo, así que sale más barato *y* con menos ping que la opción
+"obvia" de Brasil.
+
+Sigue disponible como mejora futura la estrategia de dos pasos de abajo.
+
 ## Estrategia recomendada: dos pasos
 
 1. Arrancar con **Vultr Santiago** (facturación horaria, el mes de prueba
