@@ -64,7 +64,12 @@ bot_lcpings = 1
 # o Buenos Aires, 300 ms es generoso sin dejar entrar jugadores injugables.
 bot_autokickping = 300
 
-bot_lobbytimelimit = 10
+# Minutos que el bot espera a que entre el que creo la partida antes de
+# cerrar el lobby solo. El default del upstream (10) es corto para un server
+# de amigos, donde la gente llega de a poco: el lobby se vence y el que
+# intenta entrar recibe "The game you attempted to join could not be found",
+# un error que no dice nada sobre la causa real.
+bot_lobbytimelimit = ${WC3_BOT_LOBBYTIMELIMIT}
 bot_latency = 100
 bot_synclimit = 50
 bot_votekickpercentage = 70
