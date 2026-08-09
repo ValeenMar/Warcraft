@@ -308,6 +308,49 @@ no alcanza, hay que **agregarlo a `ReadWritePaths`**.
   no obligar a recompilar en medio de una puesta en marcha. Una vez que Aura
   esté recompilado con el parche, puede volver a `ReadOnlyPaths`.
 
+## 16. El bot NO debe conectarse a PvPGN por loopback (2026-08-09)
+
+El error más instructivo de la puesta en marcha, porque es **exactamente el
+problema que motivó descartar Docker**, y me lo comí igual en la configuración
+por loopback.
+
+**Síntoma**: la partida se crea, PvPGN la lista correctamente
+(`GAMELISTREPLY sent 1 of 1 games`), el cliente la encuentra al buscarla por
+nombre (`specific game found`) y al intentar entrar **vuelve a la lista sin
+ningún mensaje de error**. Ni el bot ni PvPGN loguean nada raro.
+
+**Causa**, verificada en el código de PvPGN:
+
+```c
+// src/bnetd/game.cpp
+game->addr = conn_get_game_addr(game->connections[i]);
+// src/bnetd/connection.cpp
+extern unsigned int conn_get_game_addr(t_connection const * c) {
+    return c->socket.udp_addr;   // la IP DESDE LA QUE se conecto el host
+}
+```
+
+PvPGN usa como dirección de la partida **la IP desde la que se conectó quien
+la creó**. Con `bnet_server = 127.0.0.1` en `aura.cfg`, esa IP es el loopback,
+así que PvPGN les anuncia a todos los jugadores que la partida está en
+`127.0.0.1:6113`. Cada cliente intenta conectarse a sí mismo y falla en
+silencio.
+
+**Solución**: `bnet_server = ${WC3_PUBLIC_IP}`. El bot se conecta a su propio
+servidor por la IP pública, PvPGN registra esa IP, y los jugadores reciben una
+dirección alcanzable. El tráfico no sale a internet: Linux resuelve
+localmente las conexiones a una IP propia.
+
+Alternativa descartada: una regla por puerto en `address_translation.conf`
+(PvPGN sí aplica `trans_net` a las direcciones de partida, no solo al
+w3route). Se descartó porque hace falta una línea por cada puerto de bot,
+mientras que cambiar `bnet_server` lo arregla para todas las instancias de
+una.
+
+**Lección**: la regla "los protocolos que anuncian direcciones adentro del
+payload odian cualquier capa de traducción" no aplica solo a NAT y bridge
+networking. **Aplica también al loopback.**
+
 ## 12. El hardening de SSH se separó del bootstrap (incidente del 2026-08-08)
 
 **Qué pasó**: la primera puesta en marcha real dejó el VPS **inaccesible**.

@@ -110,8 +110,16 @@ irc_rootadmin =
 # BATTLE.NET (nuestro PvPGN local)
 # ---------------------------------------------------------------------------
 
-# El bot se conecta al PvPGN del mismo VPS por loopback.
-bnet_server = 127.0.0.1
+# El bot se conecta al PvPGN del mismo VPS, pero por la IP PUBLICA, NO por
+# 127.0.0.1. Motivo (verificado en el codigo de PvPGN y en el servidor real el
+# 2026-08-09): al crear una partida, PvPGN registra como direccion del host
+# "la IP desde la que se conecto quien la creo"
+# (game->addr = conn_get_game_addr(c) -> c->socket.udp_addr).
+# Con loopback, PvPGN le anuncia a los jugadores "la partida esta en
+# 127.0.0.1:6113", cada cliente intenta conectarse a si mismo y no entra
+# nunca. El sintoma es cruel: la partida aparece listada y al entrar el
+# cliente vuelve a la lista sin ningun mensaje de error.
+bnet_server = ${WC3_PUBLIC_IP}
 bnet_serveralias = ${WC3_REALM_NAME}
 
 # En PvPGN las CD keys no se validan: el sample upstream indica dejarlas asi.
