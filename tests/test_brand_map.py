@@ -159,6 +159,24 @@ class TestBrandMap(unittest.TestCase):
             # El original no se toca
             self.assertNotIn("war3mapPreview.tga", mpq_names(src))
 
+    def test_respeta_la_preview_que_el_mapa_ya_traiga(self):
+        """Muchos mapas custom ya vienen con arte propio del autor: pisarlo
+        con un dibujo generado seria un downgrade. Solo con --force."""
+        brand = _load("brand_map", "brand-map.py")
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            src = build_w3x(tmp / "DotA v6.83d.w3x")
+            out = tmp / "out"
+            self.assertEqual(brand.main([str(src), "--out-dir", str(out)]), 0)
+            dest = out / src.name
+            primera = dest.read_bytes()
+
+            # Segunda pasada sobre el mapa que YA tiene preview: no la toca.
+            out2 = tmp / "out2"
+            self.assertEqual(brand.main([str(dest), "--out-dir", str(out2)]), 0)
+            self.assertFalse((out2 / dest.name).exists(), "no tendria que haber copiado")
+            self.assertEqual(dest.read_bytes(), primera, "piso la preview existente")
+
     def test_aborta_si_pasa_el_techo_de_8_mib(self):
         brand = _load("brand_map", "brand-map.py")
         with tempfile.TemporaryDirectory() as tmp:

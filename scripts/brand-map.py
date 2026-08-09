@@ -148,8 +148,33 @@ def read_w3i_flags(smpq: str, archive: Path) -> "dict | None":
             return None
 
 
+def extract_file(smpq: str, archive: Path, name: str) -> "bytes | None":
+    """Saca un archivo del MPQ por nombre exacto. None si no esta.
+
+    Sirve incluso en mapas protegidos (sin listfile): StormLib busca por hash
+    del nombre, no necesita el indice.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        subprocess.run(
+            [smpq, "--extract", str(archive.resolve()), name],
+            cwd=tmp,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        out = Path(tmp) / name
+        return out.read_bytes() if out.exists() else None
+
+
 def inject_preview(smpq: str, archive: Path, tga: Path) -> None:
-    """Mete (o reemplaza) war3mapPreview.tga adentro del MPQ del .w3x."""
+    """Mete (o reemplaza) war3mapPreview.tga adentro del MPQ del .w3x.
+
+    OJO: smpq devuelve codigo de salida 0 aunque StormLib falle (verificado el
+    2026-08-09 contra un mapa protegido real: imprime "Cannot create new file
+    ... Operation not permitted" y sale 0 igual). Por eso la unica verificacion
+    que vale es volver a sacar el archivo y comparar los bytes.
+    """
+    expected = tga.read_bytes()
     with tempfile.TemporaryDirectory() as tmp:
         staged = Path(tmp) / PREVIEW_NAME
         shutil.copyfile(tga, staged)
@@ -162,11 +187,68 @@ def inject_preview(smpq: str, archive: Path, tga: Path) -> None:
             text=True,
             check=False,
         )
+    salida = (proc.stderr + proc.stdout).strip()
     if proc.returncode != 0:
+        raise BrandError(f"StormLib no pudo escribir adentro del mapa: {salida}")
+
+    got = extract_file(smpq, archive, PREVIEW_NAME)
+    if got != expected:
         raise BrandError(
-            "StormLib no pudo escribir adentro del mapa "
-            f"(probablemente este protegido): {proc.stderr.strip() or proc.stdout.strip()}"
+            "el mapa esta protegido: StormLib no pudo escribir adentro.\n"
+            "         El MPQ no acepta archivos nuevos ni reemplazos (tabla de\n"
+            "         hash llena o cerrada a proposito por el protector).\n"
+            "         Para este mapa la preview propia no es posible; queda el\n"
+            "         nombre con color, que no depende del archivo."
+            + (f"\n         Dijo StormLib: {salida}" if salida else "")
         )
+
+
+def describe(smpq: str, src: Path) -> dict:
+    """Que trae el mapa hoy: preview propia, si esta protegido, tamano."""
+    listing = mpq_list(smpq, src)
+    # Un mapa protegido o bien no tiene listfile, o lo tiene con los nombres
+    # ofuscados (File00000123.blp). El sintoma fiable es que no aparezcan los
+    # archivos canonicos que todo mapa tiene.
+    canonicos = {"war3map.j", "war3map.w3e", "war3map.wpm"}
+    protegido = not listing or not (canonicos & {n.lower() for n in listing})
+    return {
+        "bytes": src.stat().st_size,
+        "preview": extract_file(smpq, src, PREVIEW_NAME),
+        "protegido": protegido,
+    }
+
+
+def report_one(smpq: str, src: Path, dump_dir: "Path | None") -> int:
+    """Modo --report: no toca nada, solo cuenta que hay adentro."""
+    print(f"\n=== {src.name}")
+    if not src.is_file():
+        print(f"  ERROR: no existe {src}", file=sys.stderr)
+        return 1
+    info = describe(smpq, src)
+    print(f"  tamano:  {info['bytes']} B (techo {MAX_MAP_BYTES} B)")
+    if info["protegido"]:
+        print("  estado:  PROTEGIDO (nombres ofuscados o sin listfile)")
+        print("           es probable que no acepte que le escribamos adentro")
+    else:
+        print("  estado:  sin proteger")
+    if info["preview"] is None:
+        print("  preview: NO tiene. El cliente le va a dibujar el minimapa.")
+        return 0
+    print(f"  preview: YA TIENE una, de {len(info['preview'])} B")
+    if dump_dir:
+        try:
+            from PIL import Image
+        except ImportError:
+            print("  (instala Pillow para exportarla a PNG)")
+            return 0
+        dump_dir.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory() as tmp:
+            tga = Path(tmp) / PREVIEW_NAME
+            tga.write_bytes(info["preview"])
+            out = dump_dir / (src.stem + ".png")
+            Image.open(tga).convert("RGB").save(out)
+        print(f"  exportada a: {out}")
+    return 0
 
 
 def brand_one(args, lobbies: list, smpq: str, src: Path) -> int:
@@ -174,6 +256,16 @@ def brand_one(args, lobbies: list, smpq: str, src: Path) -> int:
     if not src.is_file():
         print(f"  ERROR: no existe {src}", file=sys.stderr)
         return 1
+
+    # --- lo que el mapa ya trae ------------------------------------------
+    # Muchos mapas custom (sobre todo los de anime) YA vienen con una
+    # war3mapPreview.tga hecha por el autor, con arte de verdad. Pisarla con
+    # un dibujo generado es un downgrade, asi que por defecto no se toca.
+    ya_tiene = extract_file(smpq, src, PREVIEW_NAME)
+    if ya_tiene is not None and not args.force:
+        print(f"  ya trae una preview propia ({len(ya_tiene)} B): no la toco.")
+        print("  (--report --dump-previews DIR para verla; --force para pisarla)")
+        return 0
 
     entry = pick_theme(lobbies, src, args.theme)
     theme_id = entry.get("id", "?")
@@ -230,9 +322,6 @@ def brand_one(args, lobbies: list, smpq: str, src: Path) -> int:
     problems = []
     if head != b"HM3W":
         problems.append("se rompio el header HM3W del .w3x")
-    listing = mpq_list(smpq, dest)
-    if listing and PREVIEW_NAME not in listing:
-        problems.append(f"{PREVIEW_NAME} no aparece adentro del MPQ")
     if new_bytes > MAX_MAP_BYTES:
         problems.append(
             f"el mapa quedo en {new_bytes} B y el techo de 1.24-1.28 es "
@@ -275,6 +364,12 @@ def main(argv=None) -> int:
     ap.add_argument("--theme", help="forzar un id de maps/lobbies.yaml para todos")
     ap.add_argument("--from-image", type=Path,
                     help="usar esta imagen en vez del dibujo generado")
+    ap.add_argument("--report", action="store_true",
+                    help="solo informar que trae cada mapa, sin modificar nada")
+    ap.add_argument("--dump-previews", type=Path, metavar="DIR",
+                    help="con --report: exportar a PNG las previews que ya tengan")
+    ap.add_argument("--force", action="store_true",
+                    help="pisar la preview que el mapa ya traiga (por defecto se respeta)")
     ap.add_argument("--size", type=int, default=128, choices=[128, 256],
                     help="lado de la preview (128 recomendado: pesa menos)")
     ap.add_argument("--lobbies", type=Path, default=LOBBIES_YAML)
@@ -291,6 +386,12 @@ def main(argv=None) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
+    if args.report:
+        fallos = 0
+        for src in args.maps:
+            fallos += report_one(smpq, src, args.dump_previews)
+        return 1 if fallos else 0
+
     failures = 0
     for src in args.maps:
         try:
@@ -301,7 +402,7 @@ def main(argv=None) -> int:
 
     print()
     total = len(args.maps)
-    print(f"Listo: {total - failures}/{total} mapas con preview propia.")
+    print(f"Listo: {total - failures}/{total} mapas procesados sin error.")
     if failures:
         return 1
     print(

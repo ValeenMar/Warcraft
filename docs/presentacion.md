@@ -65,6 +65,27 @@ dibuja el **minimapa** del mapa. Salvo que el mapa tenga adentro un archivo
 llamado exactamente `war3mapPreview.tga`: en ese caso dibuja esa imagen. Es el
 mecanismo que usan DotA y compañía para mostrar una tapa en vez del terreno.
 
+**Antes de generar nada, mirá qué trae el mapa.** Muchos mapas custom —los de
+anime en particular— ya vienen con una `war3mapPreview.tga` hecha por el autor,
+con arte de verdad. Pisarla con un dibujo generado es un downgrade, así que el
+script por defecto **no la toca** y te avisa:
+
+```bash
+python3 scripts/brand-map.py /opt/wc3/maps/*.w3x --report --dump-previews /tmp/previews
+```
+
+```
+=== DBZ Tribute Ultra.w3x
+  tamano:  5778070 B (techo 8388608 B)
+  estado:  PROTEGIDO (nombres ofuscados o sin listfile)
+  preview: YA TIENE una, de 196652 B
+  exportada a: /tmp/previews/DBZ Tribute Ultra.png
+```
+
+Con `--dump-previews` te las exporta a PNG para mirarlas todas juntas y decidir
+cuáles vale la pena reemplazar. Para pisar una que ya existe hace falta
+`--force`.
+
 `scripts/brand-map.py` genera la imagen y la mete adentro del `.w3x` con
 StormLib (vía el comando `smpq`):
 
@@ -92,6 +113,28 @@ python3 scripts/brand-map.py mapa.w3x --from-image tapa.png
 Recorta al centro, la lleva a 128×128 y la guarda como TGA sin comprimir, que
 es lo que el motor clásico lee sin sorpresas.
 
+### Qué imagen buscar
+
+Requisitos: **cuadrada** (se recorta al centro, así que si es apaisada perdés
+los costados), **256×256 o más grande** para que no se vea pixelada al
+reducir, y con el motivo **centrado**. Formato cualquiera: PNG, JPG, lo que
+sea — la conversión a TGA la hace el script.
+
+Qué buscar, por orden de qué tan bien queda:
+
+1. **El arte del propio mapa.** En la página del mapa en EpicWar o Hive
+   Workshop suele estar la imagen que subió el autor. Es la que mejor
+   representa el mapa porque es literalmente su tapa.
+2. **"key visual" o "poster" de la serie**, si el mapa es de anime. Buscar
+   `<serie> key visual` da imágenes verticales de buena calidad; `<serie>
+   square icon` o `<serie> app icon`, directamente cuadradas.
+3. **Un personaje icónico sobre fondo liso.** Es lo que mejor sobrevive a
+   128×128: a ese tamaño, una escena con mucho detalle se convierte en puré.
+
+Lo que **no** funciona: capturas de pantalla del juego (a 128×128 no se
+entiende nada), imágenes con texto chico, y cualquier cosa apaisada tipo
+wallpaper 16:9 sin recortar antes.
+
 ### Las tres cosas que hay que tener en la cabeza
 
 **1. Cambia el hash del mapa.** Aura calcula CRC y SHA1 del `.w3x`. El que
@@ -111,10 +154,21 @@ MPQ). DotA 6.83d viene con apenas ~170 KB de margen, así que entra, pero por
 poco. El script aborta y deja el original intacto si el resultado se pasa —
 hay un test que lo verifica.
 
-**3. Los mapas protegidos pueden rechazar la escritura.** Muchos mapas
+**3. Los mapas protegidos rechazan la escritura — confirmado.** Muchos mapas
 populares vienen "protegidos": les rompen a propósito las estructuras internas
-del MPQ para que no se puedan abrir con el editor. StormLib suele poder
-escribir igual, pero no siempre. Si falla, el script lo dice y no toca nada.
+del MPQ para que no se puedan abrir con el editor. Probado el 2026-08-09 contra
+*DBZ Tribute Ultra* (epicwar 133974, 5,7 MB, real): StormLib contesta
+`Cannot create new file 'war3mapPreview.tga': Operation not permitted`, tanto
+para agregar un archivo nuevo como para reemplazar uno existente. En esos mapas
+la preview propia **no es posible**; queda el nombre con color, que no depende
+del archivo.
+
+Ojo con una trampa acá: **`smpq` devuelve código de salida 0 aunque StormLib
+falle**. Imprime el error por stderr y sale bien igual. Y en un mapa protegido
+el listado del MPQ tampoco sirve para verificar, porque los nombres vienen
+ofuscados. Por eso la única verificación que vale, y la que hace el script, es
+volver a **extraer** el archivo del mapa y comparar los bytes con lo que se
+quiso escribir.
 
 Un cuarto detalle menor: si el mapa tiene prendido el flag *"Hide minimap in
 preview screens"* del editor (bit 0 de los flags de `war3map.w3i`), el motor
