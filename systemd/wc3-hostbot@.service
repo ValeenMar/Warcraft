@@ -38,10 +38,19 @@ ProtectKernelModules=true
 ProtectControlGroups=true
 RestrictSUIDSGID=true
 LockPersonality=true
-# La instancia escribe su sqlite (aura.dbs) y los mapcfgs compartidos
-ReadWritePaths=/opt/wc3/hostbot/instances/%i /opt/wc3/hostbot/mapcfgs
-# Mapas y MPQ del juego: solo lectura
-ReadOnlyPaths=/opt/wc3/maps /opt/wc3/mpq
+# La instancia escribe su sqlite (aura.dbs) y los mapcfgs compartidos.
+#
+# /opt/wc3/maps aparece aca aunque el bot solo LEE los mapas. Motivo: Aura
+# llama a SFileOpenArchive sin MPQ_OPEN_READ_ONLY, asi que StormLib abre cada
+# .w3x en lectura-escritura. Con ProtectSystem=strict el montaje es de solo
+# lectura y la apertura falla, dejando el mapa sin map_crc ("invalid map_crc
+# detected"). Descubierto en el servidor real el 2026-08-09.
+#
+# install/20-build-hostbot.sh parchea Aura para pasar el flag correcto; una vez
+# recompilado con ese parche, /opt/wc3/maps puede volver a ReadOnlyPaths.
+ReadWritePaths=/opt/wc3/hostbot/instances/%i /opt/wc3/hostbot/mapcfgs /opt/wc3/maps
+# MPQ del juego: solo lectura (el parche de arriba hace que alcance)
+ReadOnlyPaths=/opt/wc3/mpq
 
 [Install]
 WantedBy=multi-user.target

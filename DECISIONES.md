@@ -273,6 +273,41 @@ compilada dentro del ejecutable y editar el registro no cambia nada; el
 redirect por `hosts` de `europe.battle.net` sí funcionó, porque el gateway
 "Northrend (Europe)" resuelve ese nombre.
 
+## 15. StormLib abre en lectura-escritura: choca con `ProtectSystem=strict`
+
+Aura llama a `SFileOpenArchive` sin `MPQ_OPEN_READ_ONLY`, así que **StormLib
+abre todo MPQ en lectura-escritura**, aunque solo vaya a leerlo. Eso choca de
+frente con el blindaje de systemd, y afecta a **dos** directorios distintos:
+
+1. `/opt/wc3/mpq` (los archivos del juego) → falla la extracción de
+   `common.j`/`blizzard.j`, con `error code 13`.
+2. `/opt/wc3/maps` (los `.w3x`) → falla la apertura de cada mapa, y el bot
+   responde en el canal `Error while loading map: [invalid map_crc detected]`.
+
+El segundo es más engañoso, porque el log muestra que el archivo **sí se leyó**
+(calcula `map_size` y `map_info` correctamente) y solo falla al abrirlo como
+MPQ:
+
+```
+[MAP] warning - unable to load MPQ file [/opt/wc3/maps/XXX.w3x]
+[MAP] calculated map_size = 197 94 8 0
+[MAP] unable to calculate map_crc/sha1 - map MPQ file not loaded
+[MAP] invalid map_crc detected
+```
+
+Ojo con el diagnóstico: **no son los permisos del archivo**. Con
+`ProtectSystem=strict` todo el sistema de archivos se monta de solo lectura
+salvo lo listado en `ReadWritePaths`; sacar un directorio de `ReadOnlyPaths`
+no alcanza, hay que **agregarlo a `ReadWritePaths`**.
+
+**Solución adoptada, en dos capas:**
+
+- El parche de `MPQ_OPEN_READ_ONLY` en `install/20-build-hostbot.sh` (fix de
+  raíz, se aplica en la próxima recompilación de Aura).
+- Mientras tanto, `/opt/wc3/maps` pasa a `ReadWritePaths` en la unidad, para
+  no obligar a recompilar en medio de una puesta en marcha. Una vez que Aura
+  esté recompilado con el parche, puede volver a `ReadOnlyPaths`.
+
 ## 12. El hardening de SSH se separó del bootstrap (incidente del 2026-08-08)
 
 **Qué pasó**: la primera puesta en marcha real dejó el VPS **inaccesible**.
