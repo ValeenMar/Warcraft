@@ -77,14 +77,17 @@ lobbies:
   # --------------------------------------------------------------- anime ---
   # OJO con el orden: "Anime Fight Arena" tiene que ir ANTES que
   # "Anime Fight*", si no lo captura el patron generico.
+  # Hero Arena de PrideTeam (epicwar 152876, 2010). El "0.1" es solo el nombre
+  # del archivo; el mapa se llama "Anime Fight Arena AI" y trae IA propia del
+  # autor. No hay creeps ni oro: se sube de nivel matando a otros jugadores.
   - id: anime-fight-arena
     match: ["Anime Fight Arena*", "AnimeFightArena*"]
     display_name: "|cFFCC66FFAnime Fight Arena"
-    plain_name: "Anime Fight Arena 0.1"
+    plain_name: "Anime Fight Arena AI"
     short_name: "AF Arena"
     preview:
       title: "Arena"
-      subtitle: "Anime Fight v0.1"
+      subtitle: "Anime Fight - 20 heroes"
       bg_top: "#3a1a4d"
       bg_bottom: "#0c0413"
       accent: "#d98cff"
