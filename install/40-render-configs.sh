@@ -29,6 +29,21 @@ fi
 set -a
 # shellcheck source=/dev/null
 source "${ENV_FILE}"
+
+# Variables agregadas despues de que se creo el .env del servidor. Si faltan,
+# el render aborta por "placeholder sin resolver" y desde el mensaje no se
+# entiende que el problema es un .env viejo, asi que se les da un default
+# razonable. Las criticas (IP publica, contrasenas) siguen siendo obligatorias:
+# ahi un default silencioso daria un servidor que no funciona.
+#
+# Vacio = autohost apagado, que es el comportamiento original de Aura. Cada
+# instancia define el suyo en config/hostbot/instance-N.env.
+WC3_BOT_AUTOHOSTNAME="${WC3_BOT_AUTOHOSTNAME:-}"
+if [[ -z "${WC3_BOT_AUTOHOSTOWNER:-}" ]]; then
+    # Dueno de las partidas que crea el autohost: el primer admin de la lista.
+    WC3_BOT_AUTOHOSTOWNER="${WC3_BOT_ROOTADMINS%%,*}"
+    log "WC3_BOT_AUTOHOSTOWNER no esta en .env: uso '${WC3_BOT_AUTOHOSTOWNER}'"
+fi
 set +a
 
 # Whitelist para envsubst: SOLO variables WC3_*. Asi un ${prefix} legitimo de

@@ -12,8 +12,13 @@
 #                 practica entran ~19 caracteres visibles con un color o ~15
 #                 con dos. scripts/lobby-names.py valida esto.
 #
-#   plain_name    el mismo nombre sin colores. Sirve de plan B: ver la nota
-#                 TODO(verificar) de abajo.
+#   plain_name    el mismo nombre sin colores. Es el que se usa: ver la nota
+#                 de abajo.
+#
+#   short_name    etiqueta del jugador virtual que el bot pone en el lobby
+#                 (bot_virtualhostname). LIMITE: 15 bytes contando el codigo
+#                 de color, si se le pone. Sirve para saber de un vistazo que
+#                 instancia hosteo la partida.
 #
 #   preview       tema con el que scripts/make-preview.py dibuja la imagen
 #                 que reemplaza al minimapa en la pantalla de preview.
@@ -40,6 +45,7 @@ lobbies:
     match: ["DotA*", "*Allstars*"]
     display_name: "|cFF00CCFFDotA |cFFFFCC006.83d"
     plain_name: "DotA Allstars 6.83d"
+    short_name: "DotA"
     preview:
       title: "DotA"
       subtitle: "Allstars 6.83d"
@@ -53,6 +59,7 @@ lobbies:
     match: ["Pudge Wars*", "*PudgeWars*"]
     display_name: "|cFF77DD44PUDGE |cFFFF3355WARS"
     plain_name: "Pudge Wars 1.26 - 2 equipos"
+    short_name: "Pudge"
     preview:
       title: "Pudge Wars"
       subtitle: "v1.26"
@@ -74,6 +81,7 @@ lobbies:
     match: ["Anime Fight Arena*", "AnimeFightArena*"]
     display_name: "|cFFCC66FFAnime Fight Arena"
     plain_name: "Anime Fight Arena 0.1"
+    short_name: "AF Arena"
     preview:
       title: "Arena"
       subtitle: "Anime Fight v0.1"
@@ -87,6 +95,7 @@ lobbies:
     match: ["Anime Fight*", "AnimeFight*"]
     display_name: "|cFFFF3355ANIME |cFFFFCC00FIGHT"
     plain_name: "Anime Fight Beta 1.39b"
+    short_name: "AnimeFight"
     preview:
       title: "Anime Fight"
       subtitle: "Beta 1.39b"
@@ -100,6 +109,7 @@ lobbies:
     match: ["Naruto Ninpou*", "*Ninpou*"]
     display_name: "|cFFFF8800Naruto Ninpou Storm"
     plain_name: "Naruto Ninpou Storm 0.9"
+    short_name: "Naruto"
     preview:
       title: "Naruto"
       subtitle: "Ninpou Storm 0.9"
@@ -113,6 +123,7 @@ lobbies:
     match: ["Bleach vs One Piece*", "*BvO*", "Bleach*"]
     display_name: "|cFFFF6600Bleach vs One Piece"
     plain_name: "Bleach vs One Piece 2.08b"
+    short_name: "Bleach"
     preview:
       title: "Bleach"
       subtitle: "vs One Piece v2.08b"
@@ -127,6 +138,7 @@ lobbies:
     match: ["Marvel*", "*MarvelTD*"]
     display_name: "|cFFFFCC00MARVEL |cFF33CCFFTD"
     plain_name: "Marvel Tower Defense 1.3"
+    short_name: "MarvelTD"
     preview:
       title: "Marvel TD"
       subtitle: "v1.3"
