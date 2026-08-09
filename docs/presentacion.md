@@ -236,6 +236,14 @@ junto con nuestro `ad.json` en cada render. Ojo: **el cliente cachea el
 banner**, así que después de cambiarlo puede hacer falta reconectarse para
 verlo.
 
+**Para poner un diseño propio**: dejar el archivo en `config/pvpgn/banner.png`
+y el render lo usa en lugar de dibujar. Especificaciones completas en
+`config/pvpgn/LEEME-banner.txt`; el resumen es **468×60, PNG, RGB sin
+transparencia**. Si viene en otra medida, `make-banner.py --from-image` lo
+recorta al centro hasta esa proporción en vez de deformarlo — pero conviene
+dibujarlo directo en 468×60, porque es una franja muy apaisada (7,8 : 1) y un
+logo cuadrado pierde la mitad de arriba y de abajo.
+
 **El mensaje de bienvenida** (`w3motd.txt`) es el texto que aparece en el chat
 al loguearse. Dos datos útiles que salen del sample de PvPGN: tiene un límite
 de **11 líneas**, y —a diferencia de la lista de partidas— acá los códigos de

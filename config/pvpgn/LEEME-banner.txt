@@ -1,0 +1,45 @@
+Banner del cliente: dejá tu diseño acá como "banner.png"
+=========================================================
+
+Si en este directorio existe un archivo llamado exactamente banner.png,
+install/40-render-configs.sh lo usa en vez de dibujar uno. Si no existe,
+genera uno automático con el nombre del realm.
+
+ESPECIFICACIONES
+----------------
+  Medida   : 468 x 60 píxeles (es el hueco exacto de la interfaz)
+  Formato  : PNG
+  Color    : RGB, SIN transparencia (el alfa se aplana sobre negro)
+  Peso     : el de fábrica pesa 3 KB. Cuanto más liviano mejor: cada
+             cliente se lo baja del servidor al conectarse.
+
+Si lo hacés en otra medida, make-banner.py lo recorta al centro hasta la
+proporción 468x60 y avisa. Pero conviene que lo dibujes directo en la
+medida final: 468x60 es MUY apaisado (7,8 : 1) y un logo cuadrado
+recortado pierde la mitad de arriba y de abajo.
+
+QUÉ FUNCIONA BIEN A ESE TAMAÑO
+------------------------------
+  - 60 píxeles de alto es poco: el texto tiene que ser grande y grueso.
+    Nada de tipografías finas ni texto chico, no se lee.
+  - Composición horizontal: logo o nombre a la izquierda, dato corto a la
+    derecha. Es la forma natural de llenar una franja tan ancha.
+  - Buen contraste con el fondo del cliente, que es oscuro.
+  - Si querés una imagen de fondo, que sea algo con poco detalle y el
+    texto encima con contorno; a 60 px de alto una escena cargada se
+    convierte en ruido.
+
+CÓMO SE APLICA
+--------------
+  1. Copiá tu PNG a este directorio con el nombre banner.png
+  2. sudo make render-config
+  3. systemctl restart pvpgn
+
+OJO: el cliente CACHEA el banner. Después de cambiarlo puede hacer falta
+cerrar el juego y volver a entrar para verlo.
+
+Para probar cómo queda sin tocar el servidor:
+  python3 scripts/make-banner.py --from-image tu-logo.png \
+      --out /tmp/banner.png --preview /tmp/banner-x3.png
+
+El clic sobre el banner abre la URL de WC3_SERVER_URL (.env).

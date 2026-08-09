@@ -20,8 +20,12 @@ Este script dibuja un banner de 468x60 con el estilo del resto del proyecto
 trabajo de install/40-render-configs.sh.
 
 Uso:
-    make-banner.py --title "WC3 Revival" --subtitle "8 mapas - 22 ms desde Argentina" --out ad000001.png
+    make-banner.py --title "WC3 Revival" --subtitle "8 mapas - 22 ms" --out ad000001.png
+    make-banner.py --from-image mi-logo.png --out ad000001.png
     make-banner.py --title "WC3 Revival" --out banner.png --preview banner-grande.png
+
+Si preferis dibujarlo vos: PNG de 468x60, RGB, sin transparencia. El script
+lo adapta igual si se lo pasas en otra medida (recorta al centro).
 
 Dependencias: Pillow (en el VPS vive en /opt/wc3/venv).
 """
@@ -93,9 +97,49 @@ def render(title: str, subtitle: str, accent: str, bg_top: str, bg_bottom: str):
     return img.resize((ANCHO, ALTO), Image.LANCZOS)
 
 
+def adaptar(ruta: Path):
+    """Adapta una imagen propia a los 468x60 exactos que espera el cliente.
+
+    Si ya viene en la medida justa, solo se le saca la transparencia (el banner
+    de fabrica es RGB sin alfa, y el cliente clasico no la usa). Si viene en
+    otra proporcion, se recorta al centro hasta 468x60 en vez de deformarla:
+    un banner estirado se nota mucho mas que uno recortado.
+    """
+    from PIL import Image
+
+    img = Image.open(ruta)
+    original = img.size
+
+    # Alfa aplanado sobre negro: el formato final no lleva transparencia.
+    if img.mode in ("RGBA", "LA", "P"):
+        img = img.convert("RGBA")
+        fondo = Image.new("RGBA", img.size, (0, 0, 0, 255))
+        img = Image.alpha_composite(fondo, img)
+    img = img.convert("RGB")
+
+    if img.size != (ANCHO, ALTO):
+        objetivo = ANCHO / ALTO
+        w, h = img.size
+        actual = w / h
+        if actual > objetivo:  # mas apaisada: sobra a los costados
+            nuevo_w = round(h * objetivo)
+            izq = (w - nuevo_w) // 2
+            img = img.crop((izq, 0, izq + nuevo_w, h))
+        elif actual < objetivo:  # mas alta: sobra arriba y abajo
+            nuevo_h = round(w / objetivo)
+            arriba = (h - nuevo_h) // 2
+            img = img.crop((0, arriba, w, arriba + nuevo_h))
+        img = img.resize((ANCHO, ALTO), Image.LANCZOS)
+        print(f"    aviso: la imagen venia en {original[0]}x{original[1]}; "
+              f"la recorte al centro y la lleve a {ANCHO}x{ALTO}")
+    return img
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Genera el banner 468x60 del cliente")
-    ap.add_argument("--title", required=True, help="texto grande (nombre del server)")
+    ap.add_argument("--title", help="texto grande (nombre del server)")
+    ap.add_argument("--from-image", type=Path,
+                    help="usar esta imagen en vez de dibujar (se adapta a 468x60)")
     ap.add_argument("--subtitle", default="", help="texto chico a la derecha")
     ap.add_argument("--accent", default="#3fc4ff")
     ap.add_argument("--bg-top", default="#16233a")
@@ -104,16 +148,22 @@ def main(argv=None) -> int:
     ap.add_argument("--preview", type=Path,
                     help="ademas, una copia agrandada x3 para mirarla comoda")
     args = ap.parse_args(argv)
+    if not args.from_image and not args.title:
+        ap.error("hace falta --title (para dibujarlo) o --from-image (para usar el tuyo)")
 
     try:
-        img = render(args.title, args.subtitle, args.accent, args.bg_top, args.bg_bottom)
+        if args.from_image:
+            img = adaptar(args.from_image)
+        else:
+            img = render(args.title, args.subtitle, args.accent, args.bg_top, args.bg_bottom)
     except ImportError:
         print("Falta Pillow (en el VPS: /opt/wc3/venv/bin/pip install pillow).",
               file=sys.stderr)
         return 3
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    img.save(args.out, format="PNG")
+    # Sin entrelazado y sin alfa, igual que el que instala PvPGN de fabrica.
+    img.save(args.out, format="PNG", interlace=False)
     print(f"OK: {args.out} ({ANCHO}x{ALTO}, {args.out.stat().st_size} B)")
     if args.preview:
         from PIL import Image

@@ -116,14 +116,23 @@ done
 
 # El banner en si: lo dibuja make-banner.py (necesita Pillow, que vive en el
 # venv). Si falta, no es fatal: queda el banner default de PvPGN.
+# Si dejaste tu propio diseno en config/pvpgn/banner.png, gana ese; si no, se
+# dibuja uno con el nombre del realm. En los dos casos pasa por make-banner.py,
+# que lo lleva a 468x60 RGB sin alfa, que es lo que el cliente espera.
 BANNER_PY=/opt/wc3/venv/bin/python
+BANNER_PROPIO="${REPO_DIR}/config/pvpgn/banner.png"
 if [[ -x "${BANNER_PY}" ]] && "${BANNER_PY}" -c 'import PIL' 2>/dev/null; then
-    "${BANNER_PY}" "${REPO_DIR}/scripts/make-banner.py" \
-        --title "${WC3_REALM_NAME}" \
-        --subtitle "${WC3_BANNER_SUBTITLE:-${WC3_SERVER_DESCRIPTION}}" \
-        --out /opt/wc3/pvpgn/var/pvpgn/files/ad000001.png
+    banner_args=(--out /opt/wc3/pvpgn/var/pvpgn/files/ad000001.png)
+    if [[ -f "${BANNER_PROPIO}" ]]; then
+        log "usando el banner propio: config/pvpgn/banner.png"
+        banner_args+=(--from-image "${BANNER_PROPIO}")
+    else
+        banner_args+=(--title "${WC3_REALM_NAME}"
+                      --subtitle "${WC3_BANNER_SUBTITLE:-${WC3_SERVER_DESCRIPTION}}")
+    fi
+    "${BANNER_PY}" "${REPO_DIR}/scripts/make-banner.py" "${banner_args[@]}"
     chown wc3:wc3 /opt/wc3/pvpgn/var/pvpgn/files/ad000001.png
-    log "banner regenerado (el cliente lo cachea: puede tardar una reconexion en verse)"
+    log "banner instalado (el cliente lo cachea: puede tardar una reconexion en verse)"
 else
     log "Pillow no disponible en /opt/wc3/venv: dejo el banner que este"
 fi
