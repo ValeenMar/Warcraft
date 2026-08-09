@@ -131,6 +131,55 @@ else
     log "sin mapas (usar --maps DIR para incluirlos)"
 fi
 
+# --- WFE: teclas estilo LoL (opcional, mejor esfuerzo) -----------------------
+# El binario vive en los releases de GitHub (el repo git trae solo configs),
+# asi que la URL del asset se descubre por la API en el momento del build. Si
+# no hay internet o la API cambia, el kit sale sin extras y se avisa: WFE es
+# opcional, no vale la pena frenar el build por el.
+WFE_ZIP="${CACHE_DIR}/wfe.zip"
+if [[ ! -s "${WFE_ZIP}" ]]; then
+    log "buscando el ultimo release de WFE (teclas QWER + vida visible)"
+    wfe_url="$(curl -fsSL --max-time 30 \
+        https://api.github.com/repos/UnryzeC/WFE-Release/releases/latest 2>/dev/null \
+        | grep -oE '"browser_download_url" *: *"[^"]*\.zip"' \
+        | head -1 | grep -oE 'https[^"]*')" || true
+    if [[ -n "${wfe_url:-}" ]]; then
+        log "bajando ${wfe_url}"
+        curl -fsSL -o "${WFE_ZIP}" "${wfe_url}" || rm -f "${WFE_ZIP}"
+    fi
+fi
+if [[ -s "${WFE_ZIP}" ]]; then
+    install -d "${KIT}/extras/WFE"
+    if unzip -qq -o "${WFE_ZIP}" -d "${KIT}/extras/WFE"; then
+        # Si el zip venia con una unica carpeta arriba (p. ej. WFE/), se aplana
+        # para que la ruta sea extras\WFE\WFEApp.exe, como dice TECLAS-LOL.txt.
+        mapfile -t _tope < <(find "${KIT}/extras/WFE" -mindepth 1 -maxdepth 1)
+        if [[ "${#_tope[@]}" -eq 1 && -d "${_tope[0]}" ]]; then
+            mv "${_tope[0]}"/* "${KIT}/extras/WFE/"
+            rmdir "${_tope[0]}"
+        fi
+        # El perfil QWER+DF se genera contra el WFEConfigBase.ini que vino en
+        # ESTE zip: si WFE renombro claves, make-wfe-profile.py aborta y el
+        # kit sale sin el perfil antes que con uno a medias.
+        wfe_base="$(find "${KIT}/extras/WFE" -iname 'WFEConfigBase.ini' -print -quit)"
+        wfe_root="$(find "${KIT}/extras/WFE" -iname 'WFEApp.exe' -printf '%h\n' -quit)"
+        [[ -n "${wfe_root}" ]] || wfe_root="${KIT}/extras/WFE"
+        if [[ -n "${wfe_base}" ]] && python3 "${REPO_DIR}/scripts/make-wfe-profile.py" \
+                "${wfe_base}" --out "${wfe_root}/Profiles/WC3Revival.ini"; then
+            envsubst "${subst}" < "${REPO_DIR}/kit/TECLAS-LOL.txt.tpl" > "${KIT}/TECLAS-LOL.txt"
+            log "WFE listo con el perfil WC3Revival (ver TECLAS-LOL.txt)"
+        else
+            log "AVISO: no pude generar el perfil de WFE; el kit sale sin extras"
+            rm -rf "${KIT}/extras"
+        fi
+    else
+        log "AVISO: el zip de WFE no se pudo extraer; el kit sale sin extras"
+        rm -rf "${KIT}/extras" "${WFE_ZIP}"
+    fi
+else
+    log "AVISO: sin release de WFE a mano; el kit sale sin las teclas estilo LoL"
+fi
+
 # --- finales de linea CRLF ---------------------------------------------------
 # Windows los quiere asi; el .bat en particular se porta raro sin ellos. Se
 # excluye loader/ a proposito: esos archivos son de terceros (latency.txt es
@@ -139,7 +188,7 @@ log "pasando .bat/.txt/.ps1 a CRLF"
 while IFS= read -r -d '' f; do
     tmp="${f}.crlf"
     sed 's/$/\r/' "${f}" > "${tmp}" && mv "${tmp}" "${f}"
-done < <(find "${KIT}" -path "${KIT}/loader" -prune -o \
+done < <(find "${KIT}" \( -path "${KIT}/loader" -o -path "${KIT}/extras" \) -prune -o \
     \( -name '*.bat' -o -name '*.txt' -o -name '*.ps1' \) -type f -print0)
 
 # --- empaquetar --------------------------------------------------------------

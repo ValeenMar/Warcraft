@@ -560,6 +560,45 @@ kit no trae ni traerá keys ni archivos del juego (regla de copyright del
 proyecto). El instalador se queda en "lo mínimo que tiene que hacer un humano
 son sus dos keys".
 
+## 22. Teclas estilo LoL: WFE preconfigurado en el kit (2026-08-09)
+
+**Qué se quería**: QWER para las habilidades, D/F para las extras, smartcast
+y vida siempre visible — el pedido original de "que se juegue como LoL".
+
+**Por qué no se puede con el juego solo**: el 1.27a vanilla no tiene teclas
+por posición ni "always show health bars" (las dos cosas llegaron recién en
+1.29+). Lo único nativo es CustomKeys.txt, que remapea por HABILIDAD, no por
+botón: para mapas custom habría que conocer los códigos internos de cada
+habilidad de cada mapa. Inviable para un catálogo variado.
+
+**La herramienta es WFE** (github.com/UnryzeC/WFE-Release). Verificado contra
+su repo real: soporta 1.27a explícito, convive con w3l (su README documenta
+el caso EuroBattle), y su config tiene exactamente lo que hace falta —
+`[KEYBINDS]` por posición de la grilla (A_XnYn para habilidades, I_XnYn para
+los 6 ítems), `[SMARTCAST]` por botón, `[HEALTHBAR]`/`[MANABAR]` con color
+por bando, `ENFORCEHOTKEYS` e `ISHEROONLY` (las teclas solo aplican a héroes:
+construir torres en un TD no se ve afectado).
+
+**Cambio de postura**: la decisión anterior era no incluir WFE (antivirus,
+VC++, soporte). Se revierte a medias: se incluye pero PRECONFIGURADO y
+opcional — el kit trae `extras/WFE` con el perfil `WC3Revival.ini` ya armado
+(QWER en la fila de abajo, DF en los dos botones derechos de la fila del
+medio — se evita la izquierda porque ahí vive Patrol —, ítems en ZXCVBN para
+no pisar los grupos de control) y `TECLAS-LOL.txt` con los 5 pasos de
+activación y las advertencias. Lo que convirtió el "no" en "sí": venir
+preconfigurado elimina el 90% del soporte que motivaba excluirlo.
+
+**Mecánica de build**: el binario vive en los releases de GitHub (el repo git
+trae solo configs), así que `build-kit.sh` descubre la URL del asset por la
+API en el momento del build, y `make-wfe-profile.py` genera el perfil contra
+el `WFEConfigBase.ini` que vino en ESE zip — si WFE renombra claves, aborta
+en vez de producir un perfil a medias. Todo mejor-esfuerzo: sin internet o
+sin release, el kit sale sin extras y lo dice.
+
+**No verificado** (necesita Windows): que el perfil funcione en una partida
+real. Las claves y el formato salen del ini real del repo, pero la prueba de
+fuego es de 5 minutos con el juego.
+
 ## 12. El hardening de SSH se separó del bootstrap (incidente del 2026-08-08)
 
 **Qué pasó**: la primera puesta en marcha real dejó el VPS **inaccesible**.
