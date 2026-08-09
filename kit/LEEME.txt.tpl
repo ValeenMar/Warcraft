@@ -127,8 +127,13 @@ El antivirus se queja del loader
   LOS MAPAS
 ---------------------------------------------------------------
 
-Los que estan en la carpeta "mapas" los copia el instalador a:
-    Documentos\Warcraft III\Maps\Download
+Los que estan en la carpeta "mapas" los copia el instalador a la
+carpeta del juego:
+    <donde tengas Warcraft III>\Maps\Download
+
+Ojo si buscas a mano: NO es la carpeta Documentos. Warcraft III
+empezo a usar Documentos recien en el parche 1.28, y este
+servidor es 1.27a.
 
 Los que no tengas te los manda el bot solo cuando entras al
 lobby (se ve una barra de descarga). Con los mapas grandes eso

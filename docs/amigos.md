@@ -163,9 +163,11 @@ nada de esto: entrás al lobby y esperás que arranque.
 - Los mapas livianos **te los manda el bot solo** en el lobby (se ve la
   barra de descarga). No hay que hacer nada.
 - Los pesados harían la espera del lobby eterna, así que se reparten aparte
-  como "map pack": los `.w3x` van descomprimidos en
-  **`Documents\Warcraft III\Maps\Download`** (la carpeta Documentos de tu
-  usuario, no la del juego). Pedile el pack vigente al admin.
+  dentro del kit: los `.w3x` van descomprimidos en
+  **`<carpeta del juego>\Maps\Download`** — típicamente
+  `C:\Program Files (x86)\Warcraft III\Maps\Download`. **No** es la carpeta
+  Documentos: Warcraft III empezó a usar Documentos recién en el parche 1.28,
+  y este servidor es 1.27a. El `INSTALAR.bat` del kit los pone donde va.
 
 ## Si algo no anda
 

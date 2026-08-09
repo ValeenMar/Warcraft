@@ -109,13 +109,17 @@ if errorlevel 1 (
 :: ---------------------------------------------------------------
 :: Mapas
 :: ---------------------------------------------------------------
-set MAPDIR=%USERPROFILE%\Documents\Warcraft III\Maps\Download
+:: OJO con la ruta: recien desde el parche 1.28 Warcraft III lee los mapas de
+:: Documentos. En 1.27a, que es la version de este servidor, los busca adentro
+:: de la carpeta de instalacion. Copiarlos a Documentos no rompe nada, pero el
+:: juego no los ve nunca.
+set MAPDIR=!WC3DIR!\Maps\Download
 if exist "%~dp0mapas\*.w3x" (
     echo.
     echo   Copiando mapas...
     if not exist "!MAPDIR!" mkdir "!MAPDIR!" 2>nul
     copy /Y "%~dp0mapas\*.w3x" "!MAPDIR!\" >nul
-    echo         OK: mapas en Documentos\Warcraft III\Maps\Download
+    echo         OK: mapas en !WC3DIR!\Maps\Download
 )
 
 :: ---------------------------------------------------------------
