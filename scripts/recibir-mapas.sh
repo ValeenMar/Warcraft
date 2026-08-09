@@ -84,9 +84,24 @@ echo "   Arrastra los .w3x ahi. Se apaga solo en ${MINUTES} minutos."
 echo "  ================================================================"
 echo
 
+# Si ya hay un kit armado se ofrece para descargar en la misma pagina: es la
+# unica forma comoda de sacarlo del servidor y llevarlo a Windows, y es el
+# link que despues se les pasa a los amigos.
+KIT_ARGS=()
+KIT=""
+for z in "${REPO_DIR}"/dist/*.zip; do
+    [[ -f "${z}" ]] || continue
+    [[ -z "${KIT}" || "${z}" -nt "${KIT}" ]] && KIT="${z}"
+done
+if [[ -n "${KIT}" ]]; then
+    log "ofreciendo para descarga: $(basename "${KIT}")"
+    KIT_ARGS=(--offer "${KIT}")
+fi
+
 "${PY}" "${REPO_DIR}/scripts/upload-maps.py" \
     --dest "${DEST}" --port "${PORT}" --minutes "${MINUTES}" \
-    --realm "${REALM}" --token "${TOKEN}" --gallery "${GALERIA}" || true
+    --realm "${REALM}" --token "${TOKEN}" --gallery "${GALERIA}" \
+    "${KIT_ARGS[@]}" || true
 
 echo
 log "listo. Quedaron en ${DEST}:"

@@ -68,6 +68,10 @@ PAGE = """<!doctype html>
   #zona b {{ display:block; font-size:1.05rem; margin-bottom:.3rem; }}
   #zona span {{ color:#93a0b8; font-size:.88rem; }}
   h2 {{ font-size:1rem; margin:2rem 0 .8rem; color:#93a0b8; font-weight:600; }}
+  a.kit {{ display:block; text-align:center; padding:1rem; border-radius:12px;
+          background:#1d4ed8; color:#fff; text-decoration:none; font-weight:600; }}
+  a.kit:hover {{ background:#2563eb; }}
+  a.kit small {{ display:block; font-weight:400; opacity:.8; margin-top:.2rem; }}
   #galeria {{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
              gap:.9rem; }}
   #galeria figure {{ margin:0; }}
@@ -89,6 +93,7 @@ Máximo 8 MiB por mapa.</p>
 <div id="zona"><b>Soltá los mapas acá</b><span>o clic para buscarlos</span></div>
 <input type="file" id="picker" multiple accept=".w3x,.w3m">
 <ul id="lista"></ul>
+{descarga}
 {galeria}
 <script>
 const zona = document.getElementById('zona');
@@ -168,6 +173,7 @@ class Handler(BaseHTTPRequestHandler):
     realm = "el servidor"
     owner = None
     gallery = None
+    offer = None
 
     def log_message(self, fmt, *args):  # noqa: A003
         sys.stderr.write("[upload] %s - %s\n" % (self.address_string(), fmt % args))
@@ -203,6 +209,39 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(data)))
         self.end_headers()
         self.wfile.write(data)
+
+    def _descarga_html(self) -> str:
+        """Boton para bajarse el kit, si se le paso uno con --offer."""
+        if self.offer is None or not self.offer.is_file():
+            return ""
+        from urllib.parse import quote
+
+        mb = self.offer.stat().st_size / 1048576
+        return (
+            '<h2>Kit para instalar el juego</h2>'
+            '<a class="kit" href="{base}/bajar/{f}">Descargar {n}'
+            "<small>{mb:.1f} MB — descomprimir y doble clic en INSTALAR.bat</small></a>"
+        ).format(
+            base="/" + self.token,
+            f=quote(self.offer.name),
+            n=html.escape(self.offer.name),
+            mb=mb,
+        )
+
+    def _servir_kit(self, nombre: str) -> None:
+        """Manda el archivo de --offer. Solo ese, comparando por nombre."""
+        if self.offer is None or os.path.basename(nombre) != self.offer.name:
+            self._txt(404, "no existe\n")
+            return
+        datos = self.offer.read_bytes()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/zip")
+        self.send_header("Content-Length", str(len(datos)))
+        self.send_header(
+            "Content-Disposition", f'attachment; filename="{self.offer.name}"'
+        )
+        self.end_headers()
+        self.wfile.write(datos)
 
     def _galeria_html(self) -> str:
         """Grilla con las previews que haya en el directorio de galeria."""
@@ -254,12 +293,17 @@ class Handler(BaseHTTPRequestHandler):
         if self.path.startswith(prefijo_img):
             self._serve_image(unquote(self.path[len(prefijo_img):]))
             return
+        prefijo_kit = "/" + self.token + "/bajar/"
+        if self.path.startswith(prefijo_kit):
+            self._servir_kit(unquote(self.path[len(prefijo_kit):]))
+            return
         if self.path.rstrip("/") != "/" + self.token:
             self._txt(404, "no existe\n")
             return
         page = PAGE.format(
             realm=html.escape(self.realm),
             base="/" + self.token,
+            descarga=self._descarga_html(),
             galeria=self._galeria_html(),
         )
         data = page.encode("utf-8")
@@ -339,6 +383,8 @@ def main(argv=None) -> int:
     ap.add_argument("--chown", default="wc3",
                     help="usuario dueno de los archivos subidos ('' para no cambiarlo)")
     ap.add_argument("--token", default=None, help="fijar el token en vez de sortearlo")
+    ap.add_argument("--offer", type=Path, default=None,
+                    help="archivo (el kit) que se ofrece para descargar en la pagina")
     ap.add_argument("--gallery", type=Path, default=None,
                     help="mostrar los .png de este directorio abajo de la zona de subida")
     args = ap.parse_args(argv)
@@ -349,6 +395,7 @@ def main(argv=None) -> int:
     Handler.dest = args.dest
     Handler.realm = args.realm
     Handler.gallery = args.gallery
+    Handler.offer = args.offer
     if args.chown:
         try:
             Handler.owner = pwd.getpwnam(args.chown)

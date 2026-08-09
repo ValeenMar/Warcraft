@@ -101,6 +101,28 @@ class TestGaleria(unittest.TestCase):
             with self.subTest(intento):
                 self.assertEqual(self.get(intento), 404)
 
+    def test_ofrece_el_kit_para_descargar(self):
+        kit = Path(self.tmp.name) / "WC3-Revival-Kit.zip"
+        kit.write_bytes(b"PK\x03\x04" + b"contenido del kit")
+        upload.Handler.offer = kit
+        try:
+            with urllib.request.urlopen(self.base, timeout=10) as r:
+                self.assertIn("Descargar WC3-Revival-Kit.zip", r.read().decode("utf-8"))
+            with urllib.request.urlopen(
+                self.base + "/bajar/WC3-Revival-Kit.zip", timeout=10
+            ) as r:
+                self.assertEqual(r.read(), kit.read_bytes())
+            # Solo se sirve ESE archivo, no cualquiera que se pida
+            self.assertEqual(self.get("/bajar/otra-cosa.zip"), 404)
+            self.assertEqual(self.get("/bajar/..%2F..%2Fetc%2Fpasswd"), 404)
+        finally:
+            upload.Handler.offer = None
+
+    def test_sin_kit_no_hay_boton_ni_ruta(self):
+        self.assertEqual(self.get("/bajar/WC3-Revival-Kit.zip"), 404)
+        with urllib.request.urlopen(self.base, timeout=10) as r:
+            self.assertNotIn("Descargar", r.read().decode("utf-8"))
+
     def test_sin_galeria_la_pagina_sale_igual(self):
         upload.Handler.gallery = None
         with urllib.request.urlopen(self.base, timeout=10) as r:
