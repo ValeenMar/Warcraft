@@ -56,7 +56,7 @@ cat <<EOF
 
 EOF
 read -r -p "Ya lo comprobaste y entra por clave? (escribi SI) " answer
-if [[ "${answer}" != "SI" ]]; then
+if [[ "${answer,,}" != "si" ]]; then
     echo "Cancelado. Nada fue modificado." >&2
     exit 1
 fi
