@@ -51,6 +51,25 @@ es un 1.27a genuino y no vas a poder entrar.
 
 ## 2. Apuntar el juego a nuestro servidor
 
+### El camino corto: el kit
+
+Hay un kit (`WC3-Revival-Kit.zip`) que hace los pasos 2 y 3 de un doble
+clic: `INSTALAR.bat` busca la instalación del juego, verifica que sea 1.27a,
+copia el loader y **agrega el servidor a la lista de gateways del juego**,
+sin tocar ningún archivo del juego y sin romper nada más. Pedíselo al admin.
+
+Es el camino recomendado, y no solo por comodidad: agrega el servidor **al
+lado** de los de Blizzard en vez de secuestrar el DNS de uno de ellos, así
+que no tiene el efecto colateral sobre la app de Battle.net que sí tiene el
+método manual de acá abajo.
+
+El detalle de dónde vive esa lista está en la cabecera de
+`herramientas/gateway.ps1` dentro del kit: es un `REG_MULTI_SZ` en
+`HKCU\Software\Blizzard Entertainment\Warcraft III`, con el formato que usa
+el instalador oficial de gateways de PvPGN.
+
+### A mano: secuestrar `europe.battle.net`
+
 El cliente trae grabadas las direcciones de los Battle.net oficiales. El
 truco es hacer que una de ellas (`europe.battle.net`, la que usa el gateway
 "Northrend") resuelva a la IP de nuestro servidor.
@@ -86,6 +105,9 @@ El cliente de W3 verifica una firma criptográfica de Blizzard antes de
 dejarte loguear, y un servidor privado no puede producirla. **Sin loader no
 hay forma de conectar**: el juego tira `Unable to connect to Battle.net...`
 aunque todo lo demás esté perfecto.
+
+Si usaste el kit del paso 2, esto ya está hecho y podés saltear la sección.
+A mano:
 
 1. Bajá el **Warcraft 3 Loader (w3l)** de https://pvpgn.pro/w3l.html — el
    paquete cubre de 1.22a a 1.28f, así que 1.27a entra.
@@ -149,7 +171,8 @@ nada de esto: entrás al lobby y esperás que arranque.
 
 | Síntoma | Causa y solución |
 |---|---|
-| `Unable to connect to Battle.net...` | O el juego se abrió sin el loader (usá `w3l.exe`, paso 3), o falta o está mal la línea del `hosts` (paso 2), o el gateway elegido no es Northrend (Europe). |
+| `Unable to connect to Battle.net...` | O el juego se abrió sin el loader (usá `w3l.exe`, paso 3), o el gateway elegido no es el nuestro. Con el kit: que arriba diga **WC3 Revival**. A mano: que diga **Northrend (Europe)** y que la línea del `hosts` esté puesta (paso 2). |
+| Veo la partida en la lista pero no puedo entrar | Versión distinta del juego (los 514.536 bytes del paso 1) o versión distinta del mapa. Los mapas del servidor llevan una preview propia inyectada, así que el archivo tiene que ser exactamente el nuestro: borrá el que tengas y dejá que te lo mande el bot. |
 | Al entrar a una partida, `...could not be found` o vuelve a la lista | Ese lobby ya no existe (la partida arrancó, o venció por tiempo). Pedí en el canal que la hosteen de nuevo (`!pub`) y verificá con `!games`. |
 | El juego crashea (típico en Windows 11 24H2) | [DDrawCompat](https://github.com/narzoul/DDrawCompat/releases): copiar su `ddraw.dll` a la carpeta del juego, junto al ejecutable. No hay que configurar nada. |
 | La app de Battle.net cuelga en "Security Check" | Es la línea del `hosts` (paso 2). Esperable; revertila solo si necesitás la app. |

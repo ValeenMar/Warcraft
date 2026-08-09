@@ -4,7 +4,8 @@
 # y solo tienen sentido en el VPS; validate y map-scan corren en cualquier lado.
 # ============================================================================
 
-.PHONY: help bootstrap build install render-config validate map-scan test backup
+.PHONY: help bootstrap build install render-config validate map-scan test backup \
+	lobby-names brand-maps kit
 
 help:
 	@echo "Targets:"
@@ -15,6 +16,9 @@ help:
 	@echo "  validate       valida todo en seco (sin VPS ni juego)"
 	@echo "  test           tests de inspect-map.py"
 	@echo "  map-scan       inspecciona todos los .w3x de maps/ y actualiza el registry"
+	@echo "  kit            arma dist/<realm>-Kit.zip para repartir a los amigos"
+	@echo "  lobby-names    chuleta de nombres de partida con color, para pegar"
+	@echo "  brand-maps     mete la preview propia a los .w3x de /opt/wc3/incoming"
 	@echo "  backup         dump de MySQL + configs a tar fechado (sudo)"
 
 bootstrap:
@@ -48,6 +52,33 @@ map-scan:
 		$$PY scripts/inspect-map.py "$$m" --update-registry --pretty || true; \
 	done; \
 	[ $$found -eq 1 ] || echo "no hay .w3x en maps/ ni /opt/wc3/maps/"
+
+# Los mapas se incluyen si estan en /opt/wc3/maps (los ya "brandeados").
+kit:
+	@if [ -d /opt/wc3/maps ]; then \
+		./scripts/build-kit.sh --maps /opt/wc3/maps; \
+	else \
+		./scripts/build-kit.sh; \
+	fi
+
+lobby-names:
+	@PY=/opt/wc3/venv/bin/python; [ -x $$PY ] || PY=python3; \
+	$$PY scripts/lobby-names.py
+
+# Los .w3x nuevos se suben a /opt/wc3/incoming; esto les mete la preview y los
+# deja en /opt/wc3/maps. Los originales quedan donde estaban.
+brand-maps:
+	@PY=/opt/wc3/venv/bin/python; [ -x $$PY ] || PY=python3; \
+	found=0; \
+	for m in /opt/wc3/incoming/*.w3x; do \
+		[ -f "$$m" ] || continue; found=1; \
+	done; \
+	if [ $$found -eq 0 ]; then \
+		echo "no hay .w3x en /opt/wc3/incoming (subilos ahi primero)"; \
+	else \
+		sudo $$PY scripts/brand-map.py /opt/wc3/incoming/*.w3x --out-dir /opt/wc3/maps && \
+		sudo chown wc3:wc3 /opt/wc3/maps/*.w3x; \
+	fi
 
 backup:
 	sudo ./scripts/backup.sh

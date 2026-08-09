@@ -41,3 +41,8 @@ backups/
 __pycache__/
 *.pyc
 .pytest_cache/
+
+# --- Artefactos del kit ------------------------------------------------------
+# dist/ es el .zip generado por scripts/build-kit.sh; .cache/ el loader bajado
+dist/
+.cache/

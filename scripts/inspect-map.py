@@ -110,7 +110,12 @@ def parse_w3i(data: bytes) -> dict:
         u32()
     out["playable_width"] = u32()
     out["playable_height"] = u32()
-    u32()  # flags
+    flags = u32()
+    out["flags"] = flags
+    # bit 0 = "Hide minimap in preview screens". Importa para las previews
+    # propias: si esta prendido, el motor puede tapar la pantalla de preview
+    # en lugar de mostrar la imagen. Ver scripts/brand-map.py.
+    out["hide_minimap_in_preview"] = bool(flags & 0x0001)
     buf.read(1)  # tileset (char)
 
     if fmt == 25:  # TFT

@@ -439,6 +439,61 @@ la era 1.29+ son regresiones. El pin de commit ya era política del proyecto
 (decisión 7); ahora además sabemos qué commit es la frontera: todo lo
 anterior a `2de4fc0` es territorio 1.24-1.28.
 
+## 19. Presentación de los lobbies: nombre con color y preview propia (2026-08-09)
+
+**Qué se quería**: que en la lista de partidas personalizadas el nombre salga
+lindo y con color, y que la imagen de preview muestre una tapa del mapa en vez
+del minimapa.
+
+**Son dos mecanismos distintos y conviene no mezclarlos.** El nombre lo escribe
+el que hostea (`!pub <nombre>`) y viaja en el paquete de anuncio de partida; la
+imagen vive **adentro del archivo del mapa**, en `war3mapPreview.tga`. Uno es
+gratis, el otro tiene consecuencias.
+
+**Decisión 1 — los nombres van en `maps/lobbies.yaml`, no hardcodeados.** Aura
+no tiene autohost ni saca el nombre del mapa (no existe una clave `map_name`
+en el cfg: los keys reales están en `map.cpp` y son todos técnicos), así que el
+nombre es siempre manual. El límite real es **31 bytes contando los códigos de
+color** (`aura.cpp:879`), lo que deja ~19 caracteres visibles con un color o
+~15 con dos. Es lo bastante ajustado como para equivocarse, así que hay un test
+que falla si un nombre se pasa, y `scripts/lobby-names.py` imprime la chuleta
+lista para pegar con Ctrl+V.
+
+Queda un `TODO(verificar)`: que la lista de partidas renderice los códigos de
+color en vez de mostrarlos literales. Los nombres de cuenta de Battle.net sí
+los aceptan (documentado y probado por terceros), pero la lista de partidas no
+se pudo probar sin un cliente. Por eso cada entry lleva también `plain_name`:
+si sale literal, se cambia de plan en 5 segundos sin tocar código.
+
+**Decisión 2 — la preview se inyecta en una COPIA del mapa, nunca en el
+original.** Meter `war3mapPreview.tga` adentro del `.w3x` cambia el CRC y el
+SHA1 que Aura calcula, y eso tiene un costo real: el que tenga el mapa original
+bajado de otro lado no puede entrar, se lo tiene que bajar del bot en el lobby.
+Se acepta el costo porque es un servidor privado donde el mapa lo repartimos
+nosotros (server + kit de amigos), y a cambio la lista de partidas deja de ser
+una grilla de minimapas grises. Pero el original queda intacto por defecto:
+`--in-place` es opt-in y aun así deja un `.orig`.
+
+**Decisión 3 — el techo de 8 MiB se chequea en el script, no en la cabeza del
+operador.** La preview agrega ~23 KB (TGA de 128×128 = 49.196 B sin comprimir,
+~22,8 KB ya comprimido con zlib dentro del MPQ). DotA 6.83d tiene ~170 KB de
+margen: entra, pero es el caso apretado y el que va a crecer si algún día se
+sube a 256×256. `brand-map.py` aborta y limpia la salida si el resultado se
+pasa, y hay un test con relleno incompresible que lo verifica.
+
+**Herramienta elegida: `smpq`** (paquete de Ubuntu, frontend de StormLib
+9.21) en vez de escribir bindings o usar mpyq. Motivo: mpyq es solo lectura, y
+StormLib ya es la biblioteca que usa Aura, así que escribimos el MPQ con
+exactamente el mismo código que después lo va a leer.
+
+**Verificado en sandbox el 2026-08-09** contra un `.w3x` sintético: StormLib
+abre y escribe dentro del `.w3x` a pesar de los 512 bytes de header HM3W que
+preceden al MPQ, el header queda intacto, y el archivo aparece en el listado.
+**No verificado** (necesita cliente): que la imagen se vea, y que el color se
+renderice en la lista. Tampoco está probado contra un mapa *protegido* — el
+script detecta el fallo de escritura y no toca nada, pero si aparece hay que
+buscarle la vuelta.
+
 ## 12. El hardening de SSH se separó del bootstrap (incidente del 2026-08-08)
 
 **Qué pasó**: la primera puesta en marcha real dejó el VPS **inaccesible**.

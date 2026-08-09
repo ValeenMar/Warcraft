@@ -1,0 +1,315 @@
+#!/usr/bin/env python3
+"""brand-map.py — le mete al mapa una imagen de preview propia.
+
+Warcraft III muestra, al seleccionar una partida en la lista de partidas
+personalizadas y despues en el lobby, el archivo `war3mapPreview.tga` que este
+adentro del MPQ del mapa. Si no esta, dibuja el minimapa. Este script genera la
+imagen (scripts/make-preview.py) y la inyecta con StormLib via `smpq`.
+
+Tres cosas que hay que tener claras antes de usarlo:
+
+1. CAMBIA EL HASH DEL MAPA. Aura calcula CRC y SHA1 del .w3x; si vos hosteas el
+   mapa modificado, los jugadores necesitan EXACTAMENTE ese archivo. El que
+   tenga el original bajado de otro lado no va a poder entrar (o se lo va a
+   bajar del bot en el lobby). Por eso el mapa modificado es el que va tanto en
+   /opt/wc3/maps del server como en el kit de los amigos.
+
+2. HAY UN TECHO DE 8 MiB. El cliente 1.24-1.28 no carga mapas de mas de
+   8.388.608 bytes. Meter la preview agranda el archivo, y DotA 6.83d ya viene
+   con ~170 KB de margen. El script aborta y deja el mapa original intacto si
+   se pasa.
+
+3. LOS MAPAS PROTEGIDOS PUEDEN RECHAZAR LA ESCRITURA. Muchos mapas populares
+   estan "protegidos" (les rompen a proposito las estructuras internas del MPQ
+   para que no se puedan abrir con el editor). StormLib suele poder escribir
+   igual, pero no siempre. Si falla, el script lo dice y no toca nada.
+
+Nunca modifica el archivo original salvo que le pases --in-place.
+
+Uso:
+    brand-map.py "DotA v6.83d.w3x"                    # deja el resultado en ./branded/
+    brand-map.py *.w3x --out-dir /opt/wc3/maps
+    brand-map.py mapa.w3x --from-image tapa.png       # imagen propia en vez de dibujo
+    brand-map.py mapa.w3x --theme dota --in-place
+
+Requiere: smpq (apt install smpq) y Pillow + PyYAML (venv /opt/wc3/venv).
+"""
+
+import argparse
+import fnmatch
+import hashlib
+import importlib.util
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+REPO_DIR = SCRIPT_DIR.parent
+LOBBIES_YAML = REPO_DIR / "maps" / "lobbies.yaml"
+
+PREVIEW_NAME = "war3mapPreview.tga"
+# Techo duro del cliente 1.24-1.28 (ver maps/registry.yaml).
+MAX_MAP_BYTES = 8 * 1024 * 1024
+
+
+class BrandError(Exception):
+    """Error con mensaje apto para humanos."""
+
+
+def _load_sibling(name: str, filename: str):
+    """Importa un script hermano cuyo nombre tiene guiones."""
+    spec = importlib.util.spec_from_file_location(name, SCRIPT_DIR / filename)
+    if spec is None or spec.loader is None:
+        raise BrandError(f"no pude importar {filename}")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def require_smpq() -> str:
+    exe = shutil.which("smpq")
+    if not exe:
+        raise BrandError(
+            "falta el comando 'smpq' (frontend de StormLib).\n"
+            "  Ubuntu/Debian: sudo apt install smpq"
+        )
+    return exe
+
+
+def sha1_of(path: Path) -> str:
+    h = hashlib.sha1()
+    with path.open("rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def load_lobbies(path: Path) -> list:
+    import yaml
+
+    if not path.exists():
+        raise BrandError(f"no existe {path}")
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return data.get("lobbies", []) or []
+
+
+def pick_theme(lobbies: list, map_path: Path, forced_id: "str | None") -> dict:
+    """Elige el entry de lobbies.yaml para este archivo (gana el primero)."""
+    if forced_id:
+        for entry in lobbies:
+            if entry.get("id") == forced_id:
+                return entry
+        raise BrandError(
+            f"no hay un tema con id '{forced_id}'. "
+            f"Disponibles: {', '.join(e.get('id', '?') for e in lobbies)}"
+        )
+    name = map_path.name
+    for entry in lobbies:
+        for pattern in entry.get("match", []) or []:
+            if fnmatch.fnmatch(name.lower(), pattern.lower()):
+                return entry
+    raise BrandError(f"ningun patron de {LOBBIES_YAML.name} matchea con '{name}'")
+
+
+def mpq_list(smpq: str, archive: Path) -> list:
+    """Lista los archivos del MPQ. Devuelve [] si el mapa no tiene listfile."""
+    proc = subprocess.run(
+        [smpq, "--list", str(archive)], capture_output=True, text=True, check=False
+    )
+    if proc.returncode != 0:
+        raise BrandError(f"smpq no pudo abrir el archivo: {proc.stderr.strip()}")
+    names = []
+    for line in proc.stdout.splitlines():
+        parts = line.split(None, 3)
+        if len(parts) == 4:
+            names.append(parts[3])
+    return names
+
+
+def read_w3i_flags(smpq: str, archive: Path) -> "dict | None":
+    """Extrae war3map.w3i y devuelve su metadata, o None si no se pudo."""
+    inspect = _load_sibling("inspect_map", "inspect-map.py")
+    with tempfile.TemporaryDirectory() as tmp:
+        proc = subprocess.run(
+            [smpq, "--extract", str(archive.resolve()), "war3map.w3i"],
+            cwd=tmp,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        extracted = Path(tmp) / "war3map.w3i"
+        if proc.returncode != 0 or not extracted.exists():
+            return None
+        try:
+            return inspect.parse_w3i(extracted.read_bytes())
+        except Exception:  # mapa protegido: el w3i esta adrede corrupto
+            return None
+
+
+def inject_preview(smpq: str, archive: Path, tga: Path) -> None:
+    """Mete (o reemplaza) war3mapPreview.tga adentro del MPQ del .w3x."""
+    with tempfile.TemporaryDirectory() as tmp:
+        staged = Path(tmp) / PREVIEW_NAME
+        shutil.copyfile(tga, staged)
+        # Corremos con cwd=tmp y pasamos solo el basename: smpq guarda el
+        # archivo adentro del MPQ con la ruta tal cual se la damos.
+        proc = subprocess.run(
+            [smpq, "--append", "--overwrite", str(archive.resolve()), PREVIEW_NAME],
+            cwd=tmp,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    if proc.returncode != 0:
+        raise BrandError(
+            "StormLib no pudo escribir adentro del mapa "
+            f"(probablemente este protegido): {proc.stderr.strip() or proc.stdout.strip()}"
+        )
+
+
+def brand_one(args, lobbies: list, smpq: str, src: Path) -> int:
+    print(f"\n=== {src.name}")
+    if not src.is_file():
+        print(f"  ERROR: no existe {src}", file=sys.stderr)
+        return 1
+
+    entry = pick_theme(lobbies, src, args.theme)
+    theme_id = entry.get("id", "?")
+    print(f"  tema: {theme_id}")
+
+    original_bytes = src.stat().st_size
+    original_sha1 = sha1_of(src)
+
+    # --- destino ---------------------------------------------------------
+    if args.in_place:
+        dest = src
+        backup = src.with_suffix(src.suffix + ".orig")
+        if not backup.exists():
+            shutil.copyfile(src, backup)
+            print(f"  respaldo: {backup.name}")
+    else:
+        out_dir = args.out_dir or (src.parent / "branded")
+        out_dir.mkdir(parents=True, exist_ok=True)
+        dest = out_dir / src.name
+        shutil.copyfile(src, dest)
+
+    # --- aviso del flag "hide minimap in preview screens" -----------------
+    meta = read_w3i_flags(smpq, dest)
+    if meta is None:
+        print("  aviso: no pude leer war3map.w3i (mapa protegido). Sigo igual.")
+    elif meta.get("hide_minimap_in_preview"):
+        print(
+            "  AVISO: el mapa tiene prendido 'Hide minimap in preview screens'.\n"
+            "         Si la imagen no aparece en el lobby, la causa es esa."
+        )
+
+    # --- imagen ----------------------------------------------------------
+    preview = _load_sibling("make_preview", "make-preview.py")
+    with tempfile.TemporaryDirectory() as tmp:
+        tga = Path(tmp) / PREVIEW_NAME
+        if args.from_image:
+            img = preview.from_image(args.from_image, args.size)
+        else:
+            img = preview.render(entry.get("preview", {}), args.size)
+        preview.save(img, tga)
+        tga_bytes = tga.stat().st_size
+        try:
+            inject_preview(smpq, dest, tga)
+        except BrandError as exc:
+            if not args.in_place:
+                dest.unlink(missing_ok=True)
+            print(f"  ERROR: {exc}", file=sys.stderr)
+            return 1
+
+    # --- verificaciones --------------------------------------------------
+    new_bytes = dest.stat().st_size
+    with dest.open("rb") as fh:
+        head = fh.read(4)
+    problems = []
+    if head != b"HM3W":
+        problems.append("se rompio el header HM3W del .w3x")
+    listing = mpq_list(smpq, dest)
+    if listing and PREVIEW_NAME not in listing:
+        problems.append(f"{PREVIEW_NAME} no aparece adentro del MPQ")
+    if new_bytes > MAX_MAP_BYTES:
+        problems.append(
+            f"el mapa quedo en {new_bytes} B y el techo de 1.24-1.28 es "
+            f"{MAX_MAP_BYTES} B: no lo va a cargar ningun cliente"
+        )
+
+    if problems:
+        for p in problems:
+            print(f"  ERROR: {p}", file=sys.stderr)
+        if args.in_place:
+            backup = src.with_suffix(src.suffix + ".orig")
+            if backup.exists():
+                shutil.copyfile(backup, src)
+                print("  restaurado desde el respaldo .orig", file=sys.stderr)
+        else:
+            dest.unlink(missing_ok=True)
+        return 1
+
+    delta = new_bytes - original_bytes
+    margin = MAX_MAP_BYTES - new_bytes
+    print(f"  imagen:  {args.size}x{args.size} TGA, {tga_bytes} B sin comprimir")
+    print(f"  tamano:  {original_bytes} B -> {new_bytes} B ({delta:+d} B)")
+    print(f"  margen:  {margin} B hasta el techo de 8 MiB")
+    print(f"  sha1:    {original_sha1[:12]}... -> {sha1_of(dest)[:12]}...")
+    print(f"  salida:  {dest}")
+    display = entry.get("display_name") or entry.get("plain_name")
+    if display:
+        print(f"  hostear: !pub {display}")
+    return 0
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(
+        description="Inyecta una preview propia (war3mapPreview.tga) en mapas .w3x"
+    )
+    ap.add_argument("maps", nargs="+", type=Path, help="archivos .w3x")
+    ap.add_argument("--out-dir", type=Path, help="donde dejar los mapas modificados")
+    ap.add_argument("--in-place", action="store_true",
+                    help="modificar el archivo original (deja un respaldo .orig)")
+    ap.add_argument("--theme", help="forzar un id de maps/lobbies.yaml para todos")
+    ap.add_argument("--from-image", type=Path,
+                    help="usar esta imagen en vez del dibujo generado")
+    ap.add_argument("--size", type=int, default=128, choices=[128, 256],
+                    help="lado de la preview (128 recomendado: pesa menos)")
+    ap.add_argument("--lobbies", type=Path, default=LOBBIES_YAML)
+    args = ap.parse_args(argv)
+
+    if args.in_place and args.out_dir:
+        print("error: --in-place y --out-dir son excluyentes", file=sys.stderr)
+        return 2
+
+    try:
+        smpq = require_smpq()
+        lobbies = load_lobbies(args.lobbies)
+    except BrandError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    failures = 0
+    for src in args.maps:
+        try:
+            failures += brand_one(args, lobbies, smpq, src)
+        except BrandError as exc:
+            print(f"  ERROR: {exc}", file=sys.stderr)
+            failures += 1
+
+    print()
+    total = len(args.maps)
+    print(f"Listo: {total - failures}/{total} mapas con preview propia.")
+    if failures:
+        return 1
+    print(
+        "Acordate: el hash cambio. En el server hay que volver a cargar el mapa\n"
+        "en el bot (!map <nombre>) y los jugadores necesitan ESTE archivo."
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,147 @@
+# ============================================================================
+# Presentacion de los lobbies: nombre en la lista de partidas + preview
+# ----------------------------------------------------------------------------
+# Este archivo NO describe el catalogo (eso es maps/registry.yaml). Describe
+# como se VE cada mapa:
+#
+#   display_name  el nombre con el que se hostea la partida. Warcraft III
+#                 acepta codigos de color |cAARRGGBB ... |r en el texto.
+#                 LIMITE DURO: 31 bytes contando los codigos de color
+#                 (aura.cpp:879 rechaza cualquier cosa mas larga). Cada
+#                 "|cAARRGGBB" gasta 10 y cada "|r" gasta 2, asi que en la
+#                 practica entran ~19 caracteres visibles con un color o ~15
+#                 con dos. scripts/lobby-names.py valida esto.
+#
+#   plain_name    el mismo nombre sin colores. Sirve de plan B: ver la nota
+#                 TODO(verificar) de abajo.
+#
+#   preview       tema con el que scripts/make-preview.py dibuja la imagen
+#                 que reemplaza al minimapa en la pantalla de preview.
+#                 Campos: title, subtitle, bg_top, bg_bottom, accent, shadow,
+#                 motif. Motivos disponibles: swords, shuriken, hook, clash,
+#                 orb, bolt, tower, star, none.
+#
+#   match         patrones glob (case-insensitive) contra el NOMBRE DE ARCHIVO
+#                 del .w3x. Gana el primer entry que matchea, asi que los
+#                 patrones mas especificos van primero.
+#
+# TODO(verificar): que la lista de partidas personalizadas del cliente 1.27a
+# renderice los codigos de color y no los muestre literales. Que los nombres
+# de cuenta de Battle.net acepten color esta documentado y probado; que la
+# lista de partidas tambien lo haga NO lo pudimos probar sin un cliente. Es un
+# test de 30 segundos: hostear una partida y mirar la lista. Si sale literal
+# ("|cFFFF3355ANIME..."), usar plain_name. Ver docs/presentacion.md.
+# ============================================================================
+
+lobbies:
+  # ------------------------------------------------------------------ AoS ---
+  - id: dota
+    match: ["DotA*", "*Allstars*"]
+    display_name: "|cFF00CCFFDotA |cFFFFCC006.83d"
+    plain_name: "DotA 6.83d"
+    preview:
+      title: "DotA"
+      subtitle: "Allstars 6.83d"
+      bg_top: "#0d2438"
+      bg_bottom: "#04080f"
+      accent: "#3fc4ff"
+      shadow: "#01121e"
+      motif: swords
+
+  - id: pudge-wars
+    match: ["Pudge Wars*", "*PudgeWars*"]
+    display_name: "|cFF77DD44PUDGE |cFFFF3355WARS"
+    plain_name: "Pudge Wars 1.26"
+    preview:
+      title: "Pudge Wars"
+      subtitle: "v1.26"
+      bg_top: "#2f3d18"
+      bg_bottom: "#0a0d04"
+      accent: "#a8e05a"
+      shadow: "#141a06"
+      motif: hook
+
+  # --------------------------------------------------------------- anime ---
+  # OJO con el orden: "Anime Fight Arena" tiene que ir ANTES que
+  # "Anime Fight*", si no lo captura el patron generico.
+  - id: anime-fight-arena
+    match: ["Anime Fight Arena*", "AnimeFightArena*"]
+    display_name: "|cFFCC66FFAnime Fight Arena"
+    plain_name: "Anime Fight Arena 0.1"
+    preview:
+      title: "Arena"
+      subtitle: "Anime Fight v0.1"
+      bg_top: "#3a1a4d"
+      bg_bottom: "#0c0413"
+      accent: "#d98cff"
+      shadow: "#1a0726"
+      motif: orb
+
+  - id: anime-fight
+    match: ["Anime Fight*", "AnimeFight*"]
+    display_name: "|cFFFF3355ANIME |cFFFFCC00FIGHT"
+    plain_name: "Anime Fight 1.39b"
+    preview:
+      title: "Anime Fight"
+      subtitle: "Beta 1.39b"
+      bg_top: "#4a0f1e"
+      bg_bottom: "#100206"
+      accent: "#ff5577"
+      shadow: "#26060d"
+      motif: bolt
+
+  - id: naruto-ninpou
+    match: ["Naruto Ninpou*", "*Ninpou*"]
+    display_name: "|cFFFF8800Naruto Ninpou Storm"
+    plain_name: "Naruto Ninpou Storm"
+    preview:
+      title: "Naruto"
+      subtitle: "Ninpou Storm 0.9"
+      bg_top: "#4d2a05"
+      bg_bottom: "#120802"
+      accent: "#ffa726"
+      shadow: "#291504"
+      motif: shuriken
+
+  - id: bleach-vs-one-piece
+    match: ["Bleach vs One Piece*", "*BvO*", "Bleach*"]
+    display_name: "|cFFFF6600Bleach vs One Piece"
+    plain_name: "Bleach vs One Piece"
+    preview:
+      title: "Bleach"
+      subtitle: "vs One Piece v2.08b"
+      bg_top: "#0f3550"
+      bg_bottom: "#050b12"
+      accent: "#ff8c3b"
+      shadow: "#02121d"
+      motif: clash
+
+  # ----------------------------------------------------------------- TD ----
+  - id: marvel-td
+    match: ["Marvel*", "*MarvelTD*"]
+    display_name: "|cFFFFCC00MARVEL |cFF33CCFFTD"
+    plain_name: "Marvel Tower Defense"
+    preview:
+      title: "Marvel TD"
+      subtitle: "v1.3"
+      bg_top: "#2a1030"
+      bg_bottom: "#080310"
+      accent: "#ffd23f"
+      shadow: "#160722"
+      motif: tower
+
+  # -------------------------------------------------------------- default --
+  # Ultimo entry: matchea cualquier cosa. Sirve para que un mapa nuevo tenga
+  # igual una preview decente antes de que le escribas su tema propio.
+  - id: default
+    match: ["*"]
+    display_name: null   # sin tema propio no inventamos nombre: se usa el archivo
+    plain_name: null
+    preview:
+      title: ""
+      subtitle: ""
+      bg_top: "#1b2436"
+      bg_bottom: "#05070c"
+      accent: "#8fb3d9"
+      shadow: "#0a0f18"
+      motif: star

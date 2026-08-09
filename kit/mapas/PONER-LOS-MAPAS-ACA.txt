@@ -1,0 +1,11 @@
+Los archivos .w3x van en esta carpeta.
+
+El instalador los copia solo a:
+    Documentos\Warcraft III\Maps\Download
+
+Tienen que ser los mismos que usa el servidor. Si bajas un mapa
+por tu cuenta de internet, aunque se llame igual, lo mas probable
+es que no puedas entrar a la partida: el bot compara el archivo
+byte por byte.
+
+Este archivo se puede borrar.

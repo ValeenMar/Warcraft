@@ -31,6 +31,8 @@ apt-get update -q
 # default-libmysqlclient-dev: backend MySQL de PvPGN
 # libgmp-dev/libbz2-dev/zlib1g-dev/m4: bncsutil y StormLib (Aura)
 # gettext-base: envsubst para render de configs
+# smpq: frontend de StormLib, lo usa scripts/brand-map.py para meterle la
+#       preview propia a los mapas
 apt-get install -y -q \
     build-essential cmake git m4 \
     default-libmysqlclient-dev \
@@ -39,17 +41,19 @@ apt-get install -y -q \
     ufw fail2ban \
     gettext-base python3 python3-pip python3-venv \
     python3-yaml python3-jsonschema \
+    smpq \
     curl unzip
 
-# venv para las dependencias de inspect-map.py que no estan empaquetadas en
-# Ubuntu (mpyq no instala contra el setuptools parcheado de Debian fuera de
-# un venv; verificado en sandbox 2026-08-08)
+# venv para las dependencias de inspect-map.py y brand-map.py que no estan
+# empaquetadas en Ubuntu (mpyq no instala contra el setuptools parcheado de
+# Debian fuera de un venv; verificado en sandbox 2026-08-08). Pillow se usa
+# para dibujar las previews de los mapas (scripts/make-preview.py).
 if [[ ! -x /opt/wc3/venv/bin/python ]]; then
-    log "creando venv /opt/wc3/venv (mpyq + pyyaml)"
+    log "creando venv /opt/wc3/venv (mpyq + pyyaml + pillow)"
     install -d /opt/wc3
     python3 -m venv /opt/wc3/venv
-    /opt/wc3/venv/bin/pip install --quiet mpyq pyyaml
 fi
+/opt/wc3/venv/bin/pip install --quiet --upgrade mpyq pyyaml pillow
 
 # --- Timezone ----------------------------------------------------------------
 log "timezone -> ${TIMEZONE}"

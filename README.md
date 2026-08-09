@@ -41,9 +41,14 @@ El paso a paso real, con criterios de "listo" por fase, está en
 | `systemd/` | `pvpgn.service` y `wc3-hostbot@.service` (instanciada) |
 | `config/` | templates de configuración (placeholders `${WC3_*}` + `.env`) |
 | `maps/registry.yaml` | **el catálogo**: 21 mapas con estado y riesgo 1.24+ |
+| `maps/lobbies.yaml` | cómo se ve cada mapa: nombre con color + tema de la preview |
 | `scripts/inspect-map.py` | lee un `.w3x` y alimenta el registry |
+| `scripts/brand-map.py` | mete una preview propia (`war3mapPreview.tga`) adentro del `.w3x` |
+| `scripts/lobby-names.py` | chuleta de nombres de partida con color, lista para pegar |
+| `kit/` + `scripts/build-kit.sh` | arma el `.zip` que se le pasa a los amigos (el loader se baja, no se commitea) |
 | `scripts/validate.sh` | valida TODO en seco; tiene que estar en verde |
 | `docs/conseguir-el-juego.md` | cómo llegar a una instalación limpia del juego, y errores típicos al parchear |
+| `docs/presentacion.md` | nombres de lobby con color y previews propias de los mapas |
 | `docs/` | versión del juego y return bug, mapas, clientes, VPS, operación, Docker futuro |
 
 ## Layout en el servidor
