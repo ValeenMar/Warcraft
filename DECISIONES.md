@@ -351,6 +351,90 @@ una.
 payload odian cualquier capa de traducción" no aplica solo a NAT y bridge
 networking. **Aplica también al loopback.**
 
+## 18. Plan B validado: GHost++ compilado en Ubuntu 24.04 (2026-08-09)
+
+Mientras se verificaba el parche de Aura, se compiló **GHost++**
+([uakfdotb/ghostpp](https://github.com/uakfdotb/ghostpp), commit `cf39754`)
+en el sandbox Ubuntu 24.04 / GCC 13.3, como plan B ejecutable y no teórico.
+
+**Resultado: compila fácil.** Receta completa:
+
+- `apt install libboost-date-time-dev libboost-system-dev libboost-filesystem-dev libboost-thread-dev`
+- Un solo parche de código: `my_bool` → `bool` en `ghost/ghostdbmysql.cpp`
+  (mismo problema de MySQL 8 que PvPGN, decisión 1).
+- Compilar la CascLib vendored (`cd CascLib && cmake && make install`); el
+  StormLib y bncsutil que ya instala este proyecto linkean directo.
+- Smoke test OK; soporte 1.26/1.27 confirmado en código (path clásico
+  `war3.exe`+`storm.dll`+`game.dll` para `war3version <= 28`, logon
+  `pvpgn` dedicado).
+
+**Lo que GHost++ tiene y Aura no**: `!autohost <maxgames> <startplayers>
+<gamename>` — partidas que se rehostean solas (lo pedido como "lobbies
+siempre disponibles"). Claves: `autohost_maxgames`, `autohost_startplayers`,
+`autohost_gamename`, `autohost_owner`.
+
+**Para el futuro** también quedó identificado
+[Slayer95/aura-bot](https://github.com/Slayer95/aura-bot): fork activo de
+Aura (desarrollo 2024-2026), con soporte multi-versión de W3, byte de slots
+version-aware y auto-rehost. Candidato natural si algún día se moderniza el
+hostbot; por ahora el Aura parcheado alcanza y está probado.
+
+## 17. Causa raíz de "no puedo entrar al lobby": el soporte de 24 jugadores de Aura (2026-08-09)
+
+**El último bloqueo de la fase 1.** Síntoma: la partida se crea y se anuncia
+con la IP y puerto correctos (verificado con `/games`: `64.176.24.103:6113`),
+el puerto responde desde la PC del jugador (`Test-NetConnection` OK), el
+cliente encuentra la partida por nombre (`specific game found` en bnetd.log)…
+y **vuelve a la lista sin error y sin intentar conectarse al bot** (cero
+conexiones nuevas en el log de Aura).
+
+**Causa, encontrada en la historia del upstream**: el commit `2de4fc0`
+("Add preliminary 24 player support", abril 2018) — incluido en el HEAD
+`1e5df42` que compila este proyecto — adapta Aura al protocolo de W3 1.29+,
+que amplió el juego de 12 a 24 jugadores. Dos cambios rompen a los clientes
+clásicos (1.24-1.28, máximo 12 jugadores):
+
+1. **El statstring del anuncio de partida** (`SEND_SID_STARTADVEX3`,
+   `src/bnetprotocol.cpp`): `packet.push_back(98)` pasó a
+   `packet.push_back(110)` — de "11 slots libres" (`'b'`) a "23 slots
+   libres" (`'n'`). El comentario del propio código advierte: *"this is the
+   # of PID's Warcraft III will allocate"*. Un cliente 1.27 recibe 23,
+   no puede reservar esa cantidad de PIDs, da la partida por inválida y
+   vuelve a la lista **sin conectarse**. Encaja con el síntoma al 100%.
+2. **`MAX_SLOTS = 24`** (`src/gameslot.h`) usado en todo `game.cpp`: el
+   equipo de observadores pasa de 12 a 24, colores hasta 23, etc. Valores
+   ilegales para el protocolo de un cliente de 12 jugadores.
+
+**Por qué el resto funcionaba**: el login BNCS (`cd keys accepted`) no pasa
+por ese código; solo el anuncio/join de partidas usa el statstring.
+
+**Fix**: parche quirúrgico que revierte la semántica (MAX_SLOTS=12 y el byte
+98), manteniendo los 5 commits posteriores (incluyen un fix de buffer overrun
+en bncsutilinterface que queremos). **Verificado en sandbox el 2026-08-09**:
+se revisó el diff completo del commit 24p sitio por sitio (todos los demás
+usos son aritmética sobre MAX_SLOTS y vuelven solos a 12/11/10; el `110` de
+`bnetprotocol.cpp:567` es el código de idioma `enUS`, no tocarlo; el virtual
+host usa el sentinel PID 255 y no necesita cambios), se compiló el árbol
+parcheado sin errores, y los sed se validaron idempotentes corriendo dos
+veces sobre un checkout limpio. Aplicado en `install/20-build-hostbot.sh`,
+que además ahora borra los `.o` previos: el Makefile de Aura no rastrea
+dependencias de headers, y un make incremental tras tocar `gameslot.h`
+produciría un binario mezclado.
+
+**Confirmación externa**: el issue
+[uakfdotb/ghostpp#31](https://github.com/uakfdotb/ghostpp/issues/31)
+documenta este mismo bug contra PvPGN para el parche de 24 jugadores
+equivalente de GHost++, y el workaround oficial del autor es exactamente
+este revert. bnetdocs (packet SID_GETADVLISTEX) confirma la posición y
+semántica del byte de slots libres. El fork activo Slayer95/aura-bot lo
+resolvió de raíz con un byte version-aware (`86 + maxSupportedSlots`).
+
+**Lección**: "el último commit del upstream" no es sinónimo de "la mejor
+versión para tu caso". Para un servidor de clientes clásicos, los commits de
+la era 1.29+ son regresiones. El pin de commit ya era política del proyecto
+(decisión 7); ahora además sabemos qué commit es la frontera: todo lo
+anterior a `2de4fc0` es territorio 1.24-1.28.
+
 ## 12. El hardening de SSH se separó del bootstrap (incidente del 2026-08-08)
 
 **Qué pasó**: la primera puesta en marcha real dejó el VPS **inaccesible**.

@@ -117,3 +117,47 @@ free -h && df -h /                      # memoria y disco
 ss -ltnp | grep -E '6112|611[3-9]'      # puertos escuchando
 sudo ufw status                         # firewall arriba
 ```
+
+## Chuleta del día a día
+
+Lo mínimo para operar sin releer todo lo de arriba.
+
+### Hostear una partida (ciclo típico)
+
+En el canal del bot (`AoS`), como admin:
+
+```
+!map dota          <- elegir el mapa (busca por nombre parcial en /opt/wc3/maps)
+!pub viernes       <- abrir un lobby público llamado "viernes"
+```
+
+Después, desde el cliente: *Custom Game* → *Play Game* → **doble clic**
+sobre la partida (seleccionarla de la lista NO llena el campo del nombre;
+es doble clic o escribir el nombre exacto).
+
+### Ver qué hay hosteado
+
+- En cualquier chat de PvPGN: `/games` — lista todas las partidas
+  anunciadas, con su IP:puerto (útil para verificar que se anuncia la IP
+  pública y no otra cosa).
+- En el canal del bot: `!games`.
+
+### Diagnóstico de un join que no anda
+
+```bash
+sudo ./scripts/diagnose-join.sh        # 90 segundos de captura
+sudo ./scripts/diagnose-join.sh 180    # o los segundos que hagan falta
+```
+
+Graba en paralelo el tcpdump de 6112-6114 y los dos logs mientras alguien
+intenta entrar, y al final resume cuántos SYN llegaron al puerto del bot:
+si son 0, el cliente ni intentó conectarse (el problema está en el anuncio
+de la partida, no en la red ni el firewall).
+
+### Los tres logs útiles
+
+```bash
+tail -f /opt/wc3/pvpgn/var/pvpgn/bnetd.log   # PvPGN: logins, canales, lista de partidas
+journalctl -fu wc3-hostbot@1                 # Aura: lobbies, joins, CRC de mapas
+journalctl -fu pvpgn                         # stdout del proceso (errores de arranque)
+```

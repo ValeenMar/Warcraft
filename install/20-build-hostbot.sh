@@ -59,6 +59,37 @@ if grep -q 'MPQ_OPEN_FORCE_MPQ_V1, &MPQ' "${SRC_DIR}/src/aura.cpp"; then
         "${SRC_DIR}/src/aura.cpp"
 fi
 
+# --- Parche CRITICO: volver a 12 jugadores (clientes 1.24-1.28) --------------
+# El commit 2de4fc0 del upstream ("Add preliminary 24 player support", era
+# 1.29) rompe a los clientes clasicos de 12 jugadores: el statstring del
+# anuncio de partida pasa a declarar 23 slots libres (byte 110 = 'n') donde
+# un cliente 1.27 espera como maximo 11 (byte 98 = 'b') — el comentario del
+# propio codigo avisa que ese byte es la cantidad de PIDs que el cliente va
+# a reservar. Resultado: el cliente ve la partida en la lista pero la
+# descarta sin intentar conectarse al lobby. Confirmado por el issue
+# uakfdotb/ghostpp#31, cuyo workaround oficial es exactamente este revert.
+# Verificado compilando y revisando todos los usos en sandbox el 2026-08-09
+# (los demas sitios usan aritmetica sobre MAX_SLOTS y vuelven solos a la
+# semantica 12/11/10; el 110 de bnetprotocol.cpp:567 es 'enUS', no tocarlo).
+log "aplicando parche de 12 jugadores (clientes 1.24-1.28)"
+cd "${SRC_DIR}"
+if grep -q 'constexpr int MAX_SLOTS = 24;' src/gameslot.h; then
+    sed -i 's/^constexpr int MAX_SLOTS = 24;$/constexpr int MAX_SLOTS = 12;/' src/gameslot.h
+fi
+if grep -q 'packet\.push_back(110);' src/bnetprotocol.cpp; then
+    sed -i "s|packet\.push_back(110);                                 // Slots Free (ascii 110 = char 'n' = 23 slots free)|packet.push_back(98);                                  // Slots Free (ascii 98 = char 'b' = 11 slots free)|" src/bnetprotocol.cpp
+fi
+grep -q 'constexpr int MAX_SLOTS = 12;' src/gameslot.h
+grep -q 'packet\.push_back(98);' src/bnetprotocol.cpp
+cd - >/dev/null
+
+# --- Limpiar objetos de builds anteriores ------------------------------------
+# El Makefile de Aura no rastrea dependencias de headers: tras parchear
+# gameslot.h, un make incremental NO recompila las unidades que lo incluyen y
+# el binario queda mezclado. En re-ejecuciones de este script hay que partir
+# de cero. (El primer build no tiene .o y esto es un no-op.)
+rm -f "${SRC_DIR}"/src/*.o "${SRC_DIR}/aura++"
+
 # --- StormLib (vendored) -----------------------------------------------------
 log "compilando StormLib"
 cmake -S "${SRC_DIR}/StormLib" -B "${SRC_DIR}/StormLib/build" \

@@ -145,6 +145,18 @@ Para cada mapa, el protocolo completo de docs/mapas.md:
    ambos entran al lobby, la partida arranca, 10 minutos sin desync ni drops.
 5. Registry: `status: validado`, versión probada en `versions_known`.
 
+### Estado real (2026-08-09, primera puesta en marcha)
+
+Verificado funcionando: bootstrap, build de PvPGN y Aura en el VPS, MySQL con
+tablas creadas, PvPGN escuchando (6112/6200) con la IP pública bien anunciada,
+bot logueado al PvPGN (`cd keys accepted` + `logon successful`), cliente
+1.27a conectado vía loader w3l + hosts, cuentas creadas, mapa cargado con CRC
+calculado, partida creada y anunciada con IP:puerto correctos.
+
+Bloqueo restante: el cliente no entra al lobby — causa raíz diagnosticada
+(commit de 24 jugadores de Aura, ver DECISIONES.md #17), fix en
+`install/20-build-hostbot.sh`; requiere re-correr ese script en el VPS.
+
 ### Criterio de listo
 
 - [ ] `systemctl status pvpgn wc3-hostbot@1` ambos `active (running)` y
