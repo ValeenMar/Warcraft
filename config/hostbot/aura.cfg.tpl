@@ -118,7 +118,10 @@ bnet_serveralias = ${WC3_REALM_NAME}
 bnet_cdkeyroc = FFFFFFFFFFFFFFFFFFFFFFFFFF
 bnet_cdkeytft = FFFFFFFFFFFFFFFFFFFFFFFFFF
 
-bnet_locale = system
+# NO usar "system": en Linux Aura cae al valor 1031 (aleman) y el servidor le
+# contesta todo en ese idioma, lo que ensucia el log del bot. Verificado en el
+# servidor real el 2026-08-08. 1033 = en-US. Para es-AR seria 11274.
+bnet_locale = ${WC3_BOT_LOCALE}
 
 # Cuenta del bot en el PvPGN. Crearla antes con el cliente o via bnetd
 # (new_accounts = true) — ver RUNBOOK fase 1.
