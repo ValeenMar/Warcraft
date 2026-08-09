@@ -40,6 +40,31 @@ if grep -q '\bmy_bool\b' "${SRC_DIR}/src/bnetd/sql_mysql.cpp"; then
     sed -i 's/\bmy_bool\b/bool/g' "${SRC_DIR}/src/bnetd/sql_mysql.cpp"
 fi
 
+# --- Parche `rank` (palabra reservada en MySQL >= 8.0.2) ---------------------
+# La tabla arrangedteam tiene una columna llamada "rank", que MySQL 8 reservo
+# para las funciones de ventana. Las tres queries que la tocan (SELECT/INSERT/
+# UPDATE en sql_common.cpp) y su definicion en sql_DB_layout.conf.in la usan
+# sin comillas, asi que fallan con error de sintaxis. Solo afecta a los
+# "arranged teams" (ladder por equipos de Battle.net), que este proyecto no
+# usa, pero deja un [error] en cada arranque. Se escapa con backticks.
+# Cuidado: NO tocar "team->rank", que es C++ y esta bien.
+SQL_COMMON="${SRC_DIR}/src/bnetd/sql_common.cpp"
+if grep -q ', rank FROM %sarrangedteam' "${SQL_COMMON}"; then
+    log "aplicando parche de la palabra reservada rank en sql_common.cpp"
+    # shellcheck disable=SC2016  # los backticks son de SQL, no de shell
+    sed -i \
+        -e 's/, rank FROM %sarrangedteam/, `rank` FROM %sarrangedteam/' \
+        -e 's/level, rank) VALUES/level, `rank`) VALUES/' \
+        -e "s/level='%d', rank='%d' WHERE/level='%d', \`rank\`='%d' WHERE/" \
+        "${SQL_COMMON}"
+fi
+DB_LAYOUT="${SRC_DIR}/conf/sql_DB_layout.conf.in"
+if grep -q '^"rank int"' "${DB_LAYOUT}"; then
+    log "aplicando parche de la palabra reservada rank en sql_DB_layout.conf.in"
+    # shellcheck disable=SC2016  # los backticks son de SQL, no de shell
+    sed -i 's/^"rank int"/"`rank` int"/' "${DB_LAYOUT}"
+fi
+
 # --- Compilar ----------------------------------------------------------------
 log "configurando cmake (MySQL ON, Diablo2 OFF)"
 cmake -S "${SRC_DIR}" -B "${SRC_DIR}/build" \

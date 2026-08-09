@@ -39,6 +39,27 @@ representativos del VPS.
   `1.26.0.1`, hash `0xf2e7cec2`, tag `W3XP_126A`). No hay que fabricar
   entradas de versioncheck.
 
+**Segundo parche, descubierto en el VPS real (2026-08-08)**: `RANK` es
+palabra reservada en MySQL desde 8.0.2 (se la quedaron las funciones de
+ventana), y PvPGN tiene una columna llamada `rank` en la tabla
+`arrangedteam`, usada sin comillas en tres queries de `sql_common.cpp`
+(SELECT/INSERT/UPDATE) y en `sql_DB_layout.conf.in`. Resultado: un
+`[error] sql_load_teams: error query db` en cada arranque.
+
+- **Alcance real: nulo para este proyecto.** Los "arranged teams" son el
+  ladder por equipos armados de Battle.net; acá se juegan partidas custom
+  hosteadas por el bot. Ninguna otra tabla usa esa palabra.
+- Igual se parchea (escapando con backticks) en
+  `install/10-build-pvpgn.sh`, porque un `[error]` permanente en cada
+  arranque envenena el log: cuando algo real falle, ya nadie lo va a mirar.
+- El parche toca solo los literales SQL; `team->rank`, que es C++ válido,
+  queda intacto (verificado).
+- No es urgente: si PvPGN ya está compilado y andando, el error es cosmético
+  y el parche se aplica en la próxima recompilación.
+
+También aparece un `WARNING: MYSQL_OPT_RECONNECT is deprecated` al arrancar.
+Es solo un aviso de deprecación de libmysqlclient 8; no rompe nada.
+
 ### Aura-bot (github.com/Josko/aura-bot, commit `1e5df42`, último del upstream, 2018-09-09)
 
 **Estado: compilado y probado.**
