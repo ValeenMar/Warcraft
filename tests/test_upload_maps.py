@@ -64,6 +64,21 @@ class TestSafeName(unittest.TestCase):
                 self.assertIsNone(upload.safe_name(n))
 
 
+class TestAlfabetoDelToken(unittest.TestCase):
+    """El token se lee de una consola y se tipea en un navegador. Si trae
+    caracteres que se confunden entre si, el resultado es un 404 inexplicable
+    (paso de verdad: una 'l' minuscula tecleada como '1')."""
+
+    def test_sin_caracteres_ambiguos(self):
+        for c in "01lIoO":
+            self.assertNotIn(c, upload.ALFABETO, f"'{c}' se confunde al tipear")
+
+    def test_largo_suficiente(self):
+        # 12 caracteres de un alfabeto de 31 son ~59 bits: de sobra para una
+        # ventana de media hora, y todavia tipeable.
+        self.assertGreaterEqual(upload.LARGO_TOKEN * len(upload.ALFABETO).bit_length(), 55)
+
+
 class TestServidor(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -139,6 +154,15 @@ class TestServidor(unittest.TestCase):
             code = 413
         self.assertEqual(code, 413)
         self.assertFalse((self.dest / "gigante.w3x").exists())
+
+    def test_un_handshake_tls_se_corta_sin_romper_el_servidor(self):
+        # Escribir la direccion sin "http://" hace que el navegador mande TLS.
+        # Antes eso llenaba el log de basura binaria; ahora se corta limpio y
+        # el servidor tiene que seguir atendiendo lo siguiente.
+        with socket.create_connection(("127.0.0.1", self.port), timeout=10) as s:
+            s.sendall(b"\x16\x03\x01\x02\x00\x01\x00\x01\xfc\x03\x03" + b"\x00" * 64)
+            self.assertEqual(s.recv(64), b"", "tendria que cerrar sin contestar")
+        self.assertEqual(self.put("DotA v6.83d.w3x", MAPA), 200)
 
     def test_no_deja_archivos_a_medias(self):
         # Un rechazo no puede dejar el .parcial dando vueltas.

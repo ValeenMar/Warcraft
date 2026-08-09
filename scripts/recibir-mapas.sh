@@ -45,7 +45,9 @@ fi
 PY=/opt/wc3/venv/bin/python
 [[ -x "${PY}" ]] || PY=python3
 
-TOKEN="$(head -c 18 /dev/urandom | base64 | tr '+/' '-_' | tr -d '=')"
+# Sin 0/O ni 1/l/I: el token se lee de la consola y se tipea en el navegador,
+# y una "l" minuscula tecleada como "1" da un 404 que no se entiende.
+TOKEN="$(head -c 512 /dev/urandom | LC_ALL=C tr -dc 'abcdefghjkmnpqrstuvwxyz23456789' | cut -c1-12)"
 
 # --- galeria de previews -----------------------------------------------------
 # Los .png quedan en el servidor, donde no se pueden mirar. Los exportamos y la

@@ -34,6 +34,7 @@ import pwd
 import re
 import secrets
 import shutil
+import socket
 import sys
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -41,6 +42,13 @@ from pathlib import Path
 
 MAX_BYTES = 8 * 1024 * 1024  # mismo techo que el cliente 1.24-1.28
 ALLOWED_SUFFIXES = {".w3x", ".w3m"}
+
+# Alfabeto del token: sin 0/O ni 1/l/I. El token se lee de una consola y se
+# tipea en el navegador, y con base64 normal la primera "l" minuscula se tipea
+# como "1" y da 404 sin que se entienda por que. Doce caracteres de estos son
+# ~59 bits, de sobra para una ventana de media hora.
+ALFABETO = "abcdefghjkmnpqrstuvwxyz23456789"
+LARGO_TOKEN = 12
 
 PAGE = """<!doctype html>
 <html lang="es"><head><meta charset="utf-8">
@@ -163,6 +171,30 @@ class Handler(BaseHTTPRequestHandler):
 
     def log_message(self, fmt, *args):  # noqa: A003
         sys.stderr.write("[upload] %s - %s\n" % (self.address_string(), fmt % args))
+
+    def handle_one_request(self) -> None:
+        """Corta las conexiones TLS antes de intentar parsearlas como HTTP.
+
+        Si en el navegador se escribe la direccion sin el "http://", Chrome
+        asume HTTPS y manda un handshake TLS. Esto habla HTTP plano, asi que el
+        parser toma los bytes del handshake como si fueran una linea de pedido
+        y vomita paginas de basura binaria en el log por cada reintento. Un
+        handshake TLS siempre arranca con 0x16, asi que se detecta y se corta
+        con un aviso legible.
+        """
+        try:
+            primero = self.connection.recv(1, socket.MSG_PEEK)
+        except OSError:
+            primero = b""
+        if primero == b"\x16":
+            print(
+                f"[upload] {self.address_string()} intento entrar por HTTPS. "
+                "La direccion es http:// (sin la s).",
+                flush=True,
+            )
+            self.close_connection = True
+            return
+        super().handle_one_request()
 
     def _txt(self, code: int, body: str) -> None:
         data = body.encode("utf-8")
@@ -311,7 +343,9 @@ def main(argv=None) -> int:
                     help="mostrar los .png de este directorio abajo de la zona de subida")
     args = ap.parse_args(argv)
 
-    Handler.token = args.token or secrets.token_urlsafe(16)
+    Handler.token = args.token or "".join(
+        secrets.choice(ALFABETO) for _ in range(LARGO_TOKEN)
+    )
     Handler.dest = args.dest
     Handler.realm = args.realm
     Handler.gallery = args.gallery
