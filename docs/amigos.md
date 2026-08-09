@@ -11,7 +11,7 @@ Los datos que se usan en toda la guía:
 | IP del servidor | `64.176.24.103` |
 | Versión del juego | **The Frozen Throne 1.27a** — todos la misma, sin excepción |
 | Gateway en el cliente | **Northrend (Europe)** |
-| Canal de encuentro | `AoS` |
+| Canal de encuentro | el que diga `WC3_BOT_CHANNEL` en el `.env` del servidor (por defecto `W3`) |
 
 ## 1. Conseguir el juego (TFT 1.27a, limpio)
 
@@ -128,12 +128,17 @@ A mano:
 
 ## 5. Jugar
 
-Después de loguearte caés a un canal de chat. El bot que hostea las partidas
-vive en el canal **`AoS`**: entrá con `/join AoS`.
+Después de loguearte caés a un canal de chat. Los bots que hostean las
+partidas viven todos en el mismo canal, **`W3`**: entrá con `/join W3`.
 
-- **`!games`** en el canal: el bot responde qué partidas hay hosteadas ahora.
-- Para que se abra un lobby nuevo, pedilo en el canal (los admins lo crean
-  con `!pub nombre`).
+Ahí no tenés que pedir nada. Cada mapa tiene su propio bot y cada bot
+**mantiene su lobby siempre abierto**: los vas a ver todos juntos en
+*Custom Game → Play Game*. Y cuando una partida arranca, ese mismo bot
+publica un lobby nuevo del mismo mapa en menos de un minuto, así que un mapa
+que se está jugando sigue estando disponible.
+
+El canal sirve para chatear y para susurrarle a un bot si hace falta
+(`!games` te dice qué partidas hay corriendo).
 
 **Para entrar a una partida**: menú *Custom Game* → *Play Game*. En la lista
 va a aparecer la partida. **Doble clic sobre ella.** Ojo con esta trampa del
@@ -150,12 +155,13 @@ de un admin, así que no se fía del chat del lobby. La verificación es un
 susurro por Battle.net (donde tu identidad sí está autenticada por el login):
 
 ```
-/w hostbot sc
+/w hostbotN sc
 ```
 
 Una sola vez por partida, y de ahí en más tus comandos en el lobby andan.
 El atajo equivalente es mandar el comando directamente por susurro, por
-ejemplo `/w hostbot !start` (solo admins). Si no sos admin no te hace falta
+ejemplo `/w hostbotN !start` (solo admins). La `N` es el número del bot que
+hostea esa partida: se ve en el lobby, en el nombre del jugador virtual. Si no sos admin no te hace falta
 nada de esto: entrás al lobby y esperás que arranque.
 
 ### Mapas
