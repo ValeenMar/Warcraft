@@ -424,17 +424,24 @@ maps:
   - name: Marvel TD
     aliases: [Marvel Tower Defense]
     category: td
-    target_version: "1.51 [Se]"
-    versions_known: ["1.51 [Se]"]
-    size_mb: 3.64
-    slots: 9
-    teams: null
-    min_patch: "1.24"
+    target_version: "1.3"
+    versions_known: ["1.3", "1.51 [Se]"]
+    size_mb: 0.52
+    slots: 10
+    teams: 2
+    min_patch: null
     return_bug_risk: verde
-    status: pendiente
+    status: validado
     notes: >-
-      v1.51 [Se]: formato 1.24a-1.28c confirmado, 33k descargas. El clasico
-      v1.3 (2005, 124k descargas) es PRE-1.24 y es riesgo. Ojo con
+      VALIDADO el 2026-08-09 con la v1.3 clasica (2005, 548.549 B): pese a
+      ser PRE-1.24, carga y se juega en 1.27a — el return bug no la toca
+      (mapa de triggers simples). Probado en el servidor real, join desde
+      cliente 1.27a con 23 ms, partida jugada; 9 slots humanos + 1
+      computadora (el bot reporta numplayers=10, numteams=2). Falta la
+      prueba de desincronizacion con dos clientes desde redes distintas
+      para el cierre formal de fase 1. Alternativa mas nueva si hiciera
+      falta: v1.51 [Se] (3,64 MiB, formato 1.24+ confirmado, 33k
+      descargas). Ojo con
       "v1.56 [DK]" (2021, 6,87 MiB) que es de 10 slots, y con "v.2008b" que es
       otro linaje distinto.
     source_url: https://www.epicwar.com/maps/134232/

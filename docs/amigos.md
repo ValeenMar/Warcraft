@@ -120,6 +120,22 @@ nombre**, así que apretar *Join* con la partida apenas seleccionada no hace
 nada. Es doble clic, o escribir el nombre exacto en el campo y recién ahí
 *Join*.
 
+### Comandos dentro del lobby (el bot te ignora hasta que te verifiques)
+
+Adentro del lobby, el bot **ignora en silencio** los comandos de cualquiera
+que no haya verificado su identidad — cualquiera podría entrar con el nombre
+de un admin, así que no se fía del chat del lobby. La verificación es un
+susurro por Battle.net (donde tu identidad sí está autenticada por el login):
+
+```
+/w hostbot sc
+```
+
+Una sola vez por partida, y de ahí en más tus comandos en el lobby andan.
+El atajo equivalente es mandar el comando directamente por susurro, por
+ejemplo `/w hostbot !start` (solo admins). Si no sos admin no te hace falta
+nada de esto: entrás al lobby y esperás que arranque.
+
 ### Mapas
 
 - Los mapas livianos **te los manda el bot solo** en el lobby (se ve la

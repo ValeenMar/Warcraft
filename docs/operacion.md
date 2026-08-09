@@ -142,6 +142,14 @@ es doble clic o escribir el nombre exacto).
   pública y no otra cosa).
 - En el canal del bot: `!games`.
 
+### El bot no responde comandos en el lobby
+
+Los comandos escritos DENTRO del lobby requieren spoofcheck (verificación de
+identidad): una vez por partida, `/w hostbot sc` desde el chat del lobby.
+Alternativa directa para admins: mandar el comando por susurro,
+`/w hostbot !start`. Los comandos en el CANAL o por susurro no necesitan
+nada de esto: ahí la identidad ya viene autenticada por el login.
+
 ### Diagnóstico de un join que no anda
 
 ```bash

@@ -153,9 +153,12 @@ bot logueado al PvPGN (`cd keys accepted` + `logon successful`), cliente
 1.27a conectado vía loader w3l + hosts, cuentas creadas, mapa cargado con CRC
 calculado, partida creada y anunciada con IP:puerto correctos.
 
-Bloqueo restante: el cliente no entra al lobby — causa raíz diagnosticada
-(commit de 24 jugadores de Aura, ver DECISIONES.md #17), fix en
-`install/20-build-hostbot.sh`; requiere re-correr ese script en el VPS.
+**2026-08-09, ampliación**: el bloqueo del lobby quedó resuelto (parche de
+12 jugadores, DECISIONES.md #17) y verificado jugando: cliente 1.27a dentro
+de una partida real de Marvel TD con 23 ms. Primer mapa `validado` en el
+registry. Para el cierre formal de la fase quedan: la prueba de
+desincronización con **dos clientes desde redes distintas**, el test de
+`sudo reboot`, y correr `install/50-harden-ssh.sh`.
 
 ### Criterio de listo
 

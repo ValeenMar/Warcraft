@@ -421,6 +421,10 @@ que además ahora borra los `.o` previos: el Makefile de Aura no rastrea
 dependencias de headers, y un make incremental tras tocar `gameslot.h`
 produciría un binario mezclado.
 
+**Confirmación empírica final (2026-08-09)**: con el parche compilado en el
+VPS, el cliente 1.27a entró al lobby al primer intento y jugó una partida
+completa de Marvel TD con 23 ms de ping. Cerrado.
+
 **Confirmación externa**: el issue
 [uakfdotb/ghostpp#31](https://github.com/uakfdotb/ghostpp/issues/31)
 documenta este mismo bug contra PvPGN para el parche de 24 jugadores
