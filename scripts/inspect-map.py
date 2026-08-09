@@ -8,6 +8,10 @@ Que lee:
      porque los protectores solo rompen el interior del MPQ.
   2. Si mpyq esta instalado, abre el MPQ embebido (offset 512) y extrae
      war3map.w3i: nombre real, autor, jugadores y fuerzas (equipos).
+  3. Tambien war3map.wts, la tabla de textos, si el mapa la trae. El editor
+     no guarda el nombre ni la descripcion en el w3i sino referencias tipo
+     "TRIGSTR_004"; sin resolverlas la salida no dice nada util, y es
+     justamente ahi donde el autor explica como se juega el mapa.
 
 Si el mapa esta protegido y el w3i no se puede leer, termina con codigo 2 y
 un mensaje claro (sin traceback); la metadata del header HM3W igual se
@@ -26,6 +30,7 @@ Dependencias: stdlib. Opcionales: mpyq (lectura del MPQ), PyYAML (para
 import argparse
 import io
 import json
+import re
 import struct
 import sys
 from pathlib import Path
@@ -165,8 +170,58 @@ def parse_w3i(data: bytes) -> dict:
     return out
 
 
-def extract_w3i(map_path: Path) -> bytes:
-    """Abre el MPQ embebido en el .w3x y extrae war3map.w3i."""
+TRIGSTR_RE = re.compile(r"^TRIGSTR_(\d+)$")
+
+
+def parse_wts(data: bytes) -> dict:
+    """Parsea war3map.wts, la tabla de textos del mapa.
+
+    El editor no guarda el nombre, el autor ni la descripcion adentro del w3i:
+    guarda referencias tipo "TRIGSTR_004" y el texto de verdad va en este
+    archivo aparte. El formato es texto plano, con comentarios opcionales:
+
+        STRING 4
+        // comentario del editor
+        {
+        Anime Fight Arena AI
+        }
+
+    Se parsea por lineas y no con una expresion regular: el cuerpo puede tener
+    llaves, lineas vacias y acentos, y una regex multilinea sobre esto es
+    justo donde se esconden los errores.
+
+    Devuelve {numero: texto}.
+    """
+    textos, numero, cuerpo, dentro = {}, None, [], False
+    for linea in data.decode("utf-8-sig", errors="replace").splitlines():
+        pelada = linea.strip()
+        if dentro:
+            if pelada == "}":
+                textos[numero] = "\n".join(cuerpo).strip()
+                numero, cuerpo, dentro = None, [], False
+            else:
+                cuerpo.append(linea.rstrip("\r"))
+        elif pelada == "{" and numero is not None:
+            dentro = True
+        elif pelada.upper().startswith("STRING "):
+            resto = pelada[7:].strip()
+            numero = int(resto) if resto.isdigit() else None
+    return textos
+
+
+def resolve_trigstrs(meta: dict, textos: dict) -> None:
+    """Reemplaza in-place los TRIGSTR_nnn de la metadata por su texto."""
+    for clave in ("name", "author", "description", "players_recommended"):
+        valor = meta.get(clave)
+        if not isinstance(valor, str):
+            continue
+        m = TRIGSTR_RE.match(valor.strip())
+        if m:
+            meta[clave] = textos.get(int(m.group(1)), valor)
+
+
+def extract_from_mpq(map_path: Path, nombre: str, obligatorio: bool = True) -> bytes:
+    """Abre el MPQ embebido en el .w3x y extrae un archivo por nombre."""
     try:
         import mpyq
     except ImportError as exc:
@@ -182,11 +237,15 @@ def extract_w3i(map_path: Path) -> bytes:
         raise InspectError("no se encontro un archivo MPQ dentro del mapa")
     try:
         archive = mpyq.MPQArchive(io.BytesIO(raw[off:]), listfile=False)
-        data = archive.read_file("war3map.w3i")
+        data = archive.read_file(nombre)
     except Exception as exc:  # mpyq tira errores variados con MPQ rotos
+        if not obligatorio:
+            return b""
         raise InspectError(
             f"no se pudo leer el MPQ del mapa (probablemente protegido): {exc}"
         ) from exc
+    if not data and not obligatorio:
+        return b""
     if not data:
         raise InspectError(
             "el mapa no expone war3map.w3i: esta protegido. "
@@ -194,6 +253,11 @@ def extract_w3i(map_path: Path) -> bytes:
             "metadata hay que cargarla a mano en el registry."
         )
     return data
+
+
+def extract_w3i(map_path: Path) -> bytes:
+    """Compatibilidad: extrae war3map.w3i."""
+    return extract_from_mpq(map_path, "war3map.w3i")
 
 
 def inspect(map_path: Path) -> tuple[dict, "InspectError | None"]:
@@ -209,6 +273,13 @@ def inspect(map_path: Path) -> tuple[dict, "InspectError | None"]:
     w3i_error = None
     try:
         meta.update(parse_w3i(extract_w3i(map_path)))
+        # El w3i guarda referencias (TRIGSTR_004), no el texto. Si el mapa trae
+        # la tabla de textos, las resolvemos: ahi es donde el autor deja el
+        # nombre real y las instrucciones de como se juega. Es opcional a
+        # proposito — muchos mapas no la tienen y eso no es un error.
+        wts = extract_from_mpq(map_path, "war3map.wts", obligatorio=False)
+        if wts:
+            resolve_trigstrs(meta, parse_wts(wts))
     except InspectError as exc:
         w3i_error = exc
     return meta, w3i_error

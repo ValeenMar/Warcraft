@@ -119,3 +119,52 @@ class TestCliOnSyntheticW3x(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestWtsTrigstrs(unittest.TestCase):
+    """El editor no guarda el nombre ni la descripcion en el w3i: guarda
+    referencias TRIGSTR_nnn y el texto va en war3map.wts. Sin resolverlas, la
+    salida es inutil para saber de que se trata un mapa."""
+
+    WTS = """\ufeffSTRING 4
+{
+Anime Fight Arena AI
+}
+
+STRING 6
+// comentario del editor
+{
+Elegi tu heroe y peleá.
+Modos: -ai para activar la IA
+}
+
+STRING 7
+{
+autor desconocido
+}
+""".encode("utf-8")
+
+    def test_parse_wts(self):
+        textos = inspect_map.parse_wts(self.WTS)
+        self.assertEqual(textos[4], "Anime Fight Arena AI")
+        self.assertEqual(textos[7], "autor desconocido")
+        self.assertIn("-ai para activar la IA", textos[6])
+
+    def test_resolve_trigstrs(self):
+        meta = {
+            "name": "TRIGSTR_004",
+            "author": "TRIGSTR_007",
+            "description": "TRIGSTR_006",
+            "players_recommended": "TRIGSTR_999",  # sin entrada: se deja como esta
+        }
+        inspect_map.resolve_trigstrs(meta, inspect_map.parse_wts(self.WTS))
+        self.assertEqual(meta["name"], "Anime Fight Arena AI")
+        self.assertEqual(meta["author"], "autor desconocido")
+        self.assertIn("Modos:", meta["description"])
+        self.assertEqual(meta["players_recommended"], "TRIGSTR_999")
+
+    def test_texto_literal_no_se_toca(self):
+        meta = {"name": "DotA Allstars", "author": "IceFrog"}
+        inspect_map.resolve_trigstrs(meta, {4: "otra cosa"})
+        self.assertEqual(meta["name"], "DotA Allstars")
+        self.assertEqual(meta["author"], "IceFrog")
