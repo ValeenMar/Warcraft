@@ -74,6 +74,25 @@ en todos los ISPs.
 - Ninguno usa CGNAT: todos dan IPv4 pública dedicada, que es lo que este
   proyecto necesita sí o sí.
 
+## Verificación post-deploy (2026-08-08)
+
+Medición real contra la instancia ya creada (Vultr Santiago, `64.176.24.103`),
+desde sondas argentinas de GlobalPing, 10 paquetes cada una:
+
+| Sonda | Promedio | Pérdida |
+|---|---|---|
+| Buenos Aires (Telecentro) | 22,5 ms | 0% |
+| Buenos Aires (otra red) | 20,4 ms | 0% |
+| La Plata (Sondatech) | 21,6 ms | 0% |
+| Córdoba (Sondatech) | 30,5 ms | 0% |
+| Córdoba (Techtel) | 33,8 ms | 0% |
+| Neuquén (Cogent) | 5,7 ms | 0% |
+
+Coincide con la predicción de la tabla de arriba: AMBA y La Plata entre 20 y
+22,5 ms, Córdoba en torno a los 30, sin pérdida de paquetes en ninguna sonda.
+La decisión queda validada contra el servidor real, no solo contra sondas de
+referencia.
+
 ## Decisión tomada
 
 **Vultr, región Santiago (`scl`)**, plan `vc2-1c-2gb` (USD 10/mes) o
