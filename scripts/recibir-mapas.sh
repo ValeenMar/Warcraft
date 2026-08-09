@@ -47,11 +47,27 @@ PY=/opt/wc3/venv/bin/python
 
 TOKEN="$(head -c 18 /dev/urandom | base64 | tr '+/' '-_' | tr -d '=')"
 
-cerrar_puerto() {
+# --- galeria de previews -----------------------------------------------------
+# Los .png quedan en el servidor, donde no se pueden mirar. Los exportamos y la
+# misma pagina los muestra abajo de la zona de subida. Si falta alguna
+# dependencia no pasa nada: la pagina sale sin galeria.
+GALERIA="$(mktemp -d)"
+shopt -s nullglob
+existentes=("${DEST}"/*.w3x /opt/wc3/maps/*.w3x)
+if [[ "${#existentes[@]}" -gt 0 ]] && command -v smpq >/dev/null; then
+    log "exportando las previews que ya traen los mapas"
+    "${PY}" "${REPO_DIR}/scripts/brand-map.py" "${existentes[@]}" \
+        --report --dump-previews "${GALERIA}" >/dev/null 2>&1 || true
+fi
+
+# Un solo trap para todo: dos `trap ... EXIT` seguidos se pisan y el segundo
+# gana, que es justo como se filtra un directorio temporal sin que nadie note.
+limpiar() {
     log "cerrando el puerto ${PORT} en ufw"
     ufw delete allow "${PORT}/tcp" >/dev/null 2>&1 || true
+    rm -rf "${GALERIA}"
 }
-trap cerrar_puerto EXIT
+trap limpiar EXIT
 
 log "abriendo el puerto ${PORT} en ufw (temporal)"
 ufw allow "${PORT}/tcp" comment 'subida temporal de mapas' >/dev/null
@@ -68,7 +84,7 @@ echo
 
 "${PY}" "${REPO_DIR}/scripts/upload-maps.py" \
     --dest "${DEST}" --port "${PORT}" --minutes "${MINUTES}" \
-    --realm "${REALM}" --token "${TOKEN}" || true
+    --realm "${REALM}" --token "${TOKEN}" --gallery "${GALERIA}" || true
 
 echo
 log "listo. Quedaron en ${DEST}:"

@@ -59,6 +59,14 @@ PAGE = """<!doctype html>
   #zona.hot {{ border-color:#5aa9ff; background:#16202f; }}
   #zona b {{ display:block; font-size:1.05rem; margin-bottom:.3rem; }}
   #zona span {{ color:#93a0b8; font-size:.88rem; }}
+  h2 {{ font-size:1rem; margin:2rem 0 .8rem; color:#93a0b8; font-weight:600; }}
+  #galeria {{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+             gap:.9rem; }}
+  #galeria figure {{ margin:0; }}
+  #galeria img {{ width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px;
+                 background:#182031; display:block; image-rendering:pixelated; }}
+  #galeria figcaption {{ font-size:.78rem; color:#93a0b8; margin-top:.35rem;
+                        overflow-wrap:anywhere; }}
   ul {{ list-style:none; padding:0; margin:1.2rem 0 0; }}
   li {{ display:flex; justify-content:space-between; gap:1rem; padding:.5rem .7rem;
        background:#182031; border-radius:8px; margin-bottom:.4rem; font-size:.9rem; }}
@@ -73,6 +81,7 @@ Máximo 8 MiB por mapa.</p>
 <div id="zona"><b>Soltá los mapas acá</b><span>o clic para buscarlos</span></div>
 <input type="file" id="picker" multiple accept=".w3x,.w3m">
 <ul id="lista"></ul>
+{galeria}
 <script>
 const zona = document.getElementById('zona');
 const picker = document.getElementById('picker');
@@ -150,6 +159,7 @@ class Handler(BaseHTTPRequestHandler):
     dest = Path("/opt/wc3/incoming")
     realm = "el servidor"
     owner = None
+    gallery = None
 
     def log_message(self, fmt, *args):  # noqa: A003
         sys.stderr.write("[upload] %s - %s\n" % (self.address_string(), fmt % args))
@@ -162,11 +172,64 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def _galeria_html(self) -> str:
+        """Grilla con las previews que haya en el directorio de galeria."""
+        if self.gallery is None or not self.gallery.is_dir():
+            return ""
+        imgs = sorted(p for p in self.gallery.iterdir() if p.suffix.lower() == ".png")
+        if not imgs:
+            return ""
+        from urllib.parse import quote
+
+        filas = "".join(
+            '<figure><img src="{base}/img/{f}" alt="" loading="lazy">'
+            "<figcaption>{n}</figcaption></figure>".format(
+                base="/" + self.token, f=quote(p.name), n=html.escape(p.stem)
+            )
+            for p in imgs
+        )
+        return (
+            "<h2>Previews que ya traen los mapas</h2>"
+            f'<div id="galeria">{filas}</div>'
+        )
+
+    def _serve_image(self, nombre: str) -> None:
+        """Sirve un PNG de la galeria. Solo basename, y solo .png."""
+        if self.gallery is None:
+            self._txt(404, "no existe\n")
+            return
+        name = os.path.basename(nombre.replace("\\", "/"))
+        ruta = self.gallery / name
+        if (
+            not name
+            or name.startswith(".")
+            or Path(name).suffix.lower() != ".png"
+            or not ruta.is_file()
+        ):
+            self._txt(404, "no existe\n")
+            return
+        data = ruta.read_bytes()
+        self.send_response(200)
+        self.send_header("Content-Type", "image/png")
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
     def do_GET(self) -> None:  # noqa: N802
+        from urllib.parse import unquote
+
+        prefijo_img = "/" + self.token + "/img/"
+        if self.path.startswith(prefijo_img):
+            self._serve_image(unquote(self.path[len(prefijo_img):]))
+            return
         if self.path.rstrip("/") != "/" + self.token:
             self._txt(404, "no existe\n")
             return
-        page = PAGE.format(realm=html.escape(self.realm), base="/" + self.token)
+        page = PAGE.format(
+            realm=html.escape(self.realm),
+            base="/" + self.token,
+            galeria=self._galeria_html(),
+        )
         data = page.encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -244,11 +307,14 @@ def main(argv=None) -> int:
     ap.add_argument("--chown", default="wc3",
                     help="usuario dueno de los archivos subidos ('' para no cambiarlo)")
     ap.add_argument("--token", default=None, help="fijar el token en vez de sortearlo")
+    ap.add_argument("--gallery", type=Path, default=None,
+                    help="mostrar los .png de este directorio abajo de la zona de subida")
     args = ap.parse_args(argv)
 
     Handler.token = args.token or secrets.token_urlsafe(16)
     Handler.dest = args.dest
     Handler.realm = args.realm
+    Handler.gallery = args.gallery
     if args.chown:
         try:
             Handler.owner = pwd.getpwnam(args.chown)
