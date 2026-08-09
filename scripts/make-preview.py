@@ -286,8 +286,32 @@ MOTIFS = {
 # --------------------------------------------------------------------------
 # Render
 # --------------------------------------------------------------------------
-def render(theme: dict, size: int = 128) -> "Image.Image":
-    """Dibuja la preview del tema al tamano pedido."""
+def paste_subject(base: "Image.Image", subject: "Image.Image") -> None:
+    """Pega una imagen (idealmente con fondo transparente) sobre el fondo.
+
+    Se escala conservando la proporcion y se apoya un poco por debajo del
+    centro, de manera que la parte de abajo quede tapada por la banda oscura
+    del titulo. Asi la figura "sale" del cuadro en vez de flotar.
+    """
+    big = base.size[0]
+    max_w, max_h = int(big * 0.92), int(big * 0.68)
+    escala = min(max_w / subject.width, max_h / subject.height)
+    nuevo = subject.resize(
+        (max(1, round(subject.width * escala)), max(1, round(subject.height * escala))),
+        Image.LANCZOS,
+    )
+    x = (big - nuevo.width) // 2
+    y = int(big * 0.70) - nuevo.height
+    base.paste(nuevo, (x, max(0, y)), nuevo if nuevo.mode == "RGBA" else None)
+
+
+def render(theme: dict, size: int = 128, subject: "Image.Image | None" = None) -> "Image.Image":
+    """Dibuja la preview del tema al tamano pedido.
+
+    Si se pasa `subject`, esa imagen reemplaza al motivo dibujado: sirve para
+    usar arte de verdad (un render, una tapa) manteniendo el fondo, el titulo y
+    el marco, que son los que hacen que se lea a 128x128.
+    """
     big = size * SUPERSAMPLE
     top = hex_to_rgb(theme.get("bg_top", "#101828"))
     bottom = hex_to_rgb(theme.get("bg_bottom", "#050810"))
@@ -308,12 +332,19 @@ def render(theme: dict, size: int = 128) -> "Image.Image":
             fill=(255, 255, 255, 10),
         )
 
-    motif = MOTIFS.get(theme.get("motif", "star"))
-    if motif is None:
-        raise PreviewError(
-            f"motivo desconocido: {theme.get('motif')!r} (validos: {', '.join(sorted(MOTIFS))})"
-        )
-    motif(d, big, accent, dark)
+    if subject is not None:
+        paste_subject(img, subject.resize(
+            (subject.width * SUPERSAMPLE, subject.height * SUPERSAMPLE), Image.LANCZOS
+        ) if max(subject.size) * SUPERSAMPLE < big else subject)
+        d = ImageDraw.Draw(img, "RGBA")
+    else:
+        motif = MOTIFS.get(theme.get("motif", "star"))
+        if motif is None:
+            raise PreviewError(
+                f"motivo desconocido: {theme.get('motif')!r} "
+                f"(validos: {', '.join(sorted(MOTIFS))})"
+            )
+        motif(d, big, accent, dark)
 
     # Sombra de abajo para que el texto se despegue del motivo
     d.rectangle([0, big * 0.62, big, big], fill=(0, 0, 0, 130))
@@ -336,12 +367,23 @@ def render(theme: dict, size: int = 128) -> "Image.Image":
 
 
 def from_image(path: Path, size: int = 128) -> "Image.Image":
-    """Adapta una imagen cualquiera: recorte centrado cuadrado + resize."""
+    """Adapta una imagen cualquiera: recorte centrado cuadrado + resize.
+
+    Es el camino "crudo": la imagen ocupa todo el cuadro, sin titulo ni marco.
+    Sirve cuando la imagen ya es una tapa hecha y derecha. Para un render
+    suelto conviene componerlo con el tema (ver render(subject=...)).
+    """
     img = Image.open(path).convert("RGB")
     w, h = img.size
     side = min(w, h)
     img = img.crop(((w - side) // 2, (h - side) // 2, (w + side) // 2, (h + side) // 2))
     return img.resize((size, size), Image.LANCZOS)
+
+
+def load_subject(path: Path) -> "Image.Image":
+    """Carga una imagen para usarla como figura sobre el fondo del tema."""
+    img = Image.open(path)
+    return img.convert("RGBA") if img.mode in ("RGBA", "LA", "P") else img.convert("RGB")
 
 
 def save(img: "Image.Image", out: Path) -> None:
@@ -372,17 +414,23 @@ def load_themes(path: Path) -> dict:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Genera war3mapPreview.tga para un mapa")
-    src = ap.add_mutually_exclusive_group(required=True)
-    src.add_argument("--theme", help="id de un entry de maps/lobbies.yaml")
-    src.add_argument("--from-image", type=Path, help="usar esta imagen en vez de dibujar")
+    ap.add_argument("--theme", help="id de un entry de maps/lobbies.yaml")
+    ap.add_argument("--from-image", type=Path,
+                    help="imagen a usar como figura; con --theme se compone sobre el fondo")
     ap.add_argument("--out", type=Path, required=True, help="archivo de salida (.tga o .png)")
+    ap.add_argument("--raw-image", action="store_true",
+                    help="con --from-image: usar la imagen tal cual, sin titulo ni marco")
     ap.add_argument("--size", type=int, default=128, choices=[128, 256, 512],
                     help="lado en pixeles; 128 es lo recomendado (512 solo para mirarla)")
     ap.add_argument("--lobbies", type=Path, default=LOBBIES_YAML)
     args = ap.parse_args(argv)
+    if not args.theme and not args.from_image:
+        ap.error("hace falta --theme, --from-image, o los dos juntos")
+    if args.raw_image and not args.from_image:
+        ap.error("--raw-image solo tiene sentido junto con --from-image")
 
     try:
-        if args.from_image:
+        if args.from_image and args.raw_image:
             img = from_image(args.from_image, args.size)
         else:
             themes = load_themes(args.lobbies)
@@ -393,7 +441,8 @@ def main(argv=None) -> int:
                     file=sys.stderr,
                 )
                 return 2
-            img = render(themes[args.theme], args.size)
+            subject = load_subject(args.from_image) if args.from_image else None
+            img = render(themes[args.theme], args.size, subject)
         save(img, args.out)
     except PreviewError as exc:
         print(f"error: {exc}", file=sys.stderr)

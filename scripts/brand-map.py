@@ -166,6 +166,39 @@ def extract_file(smpq: str, archive: Path, name: str) -> "bytes | None":
         return out.read_bytes() if out.exists() else None
 
 
+def resolve_image(spec: "str | None", tmp_dir: Path) -> "Path | None":
+    """Acepta una ruta local o una URL http(s) y devuelve un archivo local.
+
+    Que --from-image tome URLs ahorra el paso de bajar la imagen a mano en el
+    servidor, que es donde corre esto y donde no hay navegador.
+    """
+    if not spec:
+        return None
+    if not str(spec).lower().startswith(("http://", "https://")):
+        ruta = Path(spec)
+        if not ruta.is_file():
+            raise BrandError(f"no existe la imagen {ruta}")
+        return ruta
+
+    import urllib.error
+    import urllib.request
+
+    destino = tmp_dir / "subject_descargado"
+    pedido = urllib.request.Request(
+        str(spec), headers={"User-Agent": "wc3-revival/brand-map"}
+    )
+    try:
+        with urllib.request.urlopen(pedido, timeout=30) as resp:
+            datos = resp.read(16 * 1024 * 1024)
+    except (urllib.error.URLError, OSError) as exc:
+        raise BrandError(f"no pude bajar {spec}: {exc}") from exc
+    if not datos:
+        raise BrandError(f"la descarga de {spec} vino vacia")
+    destino.write_bytes(datos)
+    print(f"  imagen bajada: {len(datos)} B de {spec}")
+    return destino
+
+
 def inject_preview(smpq: str, archive: Path, tga: Path) -> None:
     """Mete (o reemplaza) war3mapPreview.tga adentro del MPQ del .w3x.
 
@@ -307,11 +340,13 @@ def brand_one(args, lobbies: list, smpq: str, src: Path) -> int:
     # --- imagen ----------------------------------------------------------
     preview = _load_sibling("make_preview", "make-preview.py")
     with tempfile.TemporaryDirectory() as tmp:
+        imagen = resolve_image(args.from_image, Path(tmp))
         tga = Path(tmp) / PREVIEW_NAME
-        if args.from_image:
-            img = preview.from_image(args.from_image, args.size)
+        if args.from_image and args.raw_image:
+            img = preview.from_image(imagen, args.size)
         else:
-            img = preview.render(entry.get("preview", {}), args.size)
+            subject = preview.load_subject(imagen) if imagen else None
+            img = preview.render(entry.get("preview", {}), args.size, subject)
         preview.save(img, tga)
         tga_bytes = tga.stat().st_size
         try:
@@ -369,8 +404,11 @@ def main(argv=None) -> int:
     ap.add_argument("--in-place", action="store_true",
                     help="modificar el archivo original (deja un respaldo .orig)")
     ap.add_argument("--theme", help="forzar un id de maps/lobbies.yaml para todos")
-    ap.add_argument("--from-image", type=Path,
-                    help="usar esta imagen en vez del dibujo generado")
+    ap.add_argument("--from-image",
+                    help="imagen a usar como figura: ruta local o URL http(s). "
+                         "Se compone sobre el fondo y el titulo del tema")
+    ap.add_argument("--raw-image", action="store_true",
+                    help="con --from-image: usar la imagen tal cual, sin titulo ni marco")
     ap.add_argument("--report", action="store_true",
                     help="solo informar que trae cada mapa, sin modificar nada")
     ap.add_argument("--dump-previews", type=Path, metavar="DIR",

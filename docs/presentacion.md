@@ -1,4 +1,4 @@
-# Presentación: nombres de lobby con color y previews propias
+# Presentación: nombres de lobby y previews propias
 
 Dos cosas distintas que el jugador ve antes de entrar a una partida, y que se
 resuelven por caminos totalmente distintos:
@@ -10,7 +10,7 @@ resuelven por caminos totalmente distintos:
 
 ---
 
-## 1. Nombres con color
+## 1. El nombre en la lista de partidas
 
 Warcraft III pinta el texto con `|cAARRGGBB` y corta el color con `|r`. Por
 ejemplo `|cFF00CCFFDotA` sale en celeste.
@@ -30,9 +30,9 @@ python3 scripts/lobby-names.py
 ```
 
 ```
-dota                   !pub |cFF00CCFFDotA |cFFFFCC006.83d
-pudge-wars             !pub |cFF77DD44PUDGE |cFFFF3355WARS
-naruto-ninpou          !pub |cFFFF8800Naruto Ninpou Storm
+dota                   !pub DotA Allstars 6.83d
+pudge-wars             !pub Pudge Wars 1.26 - 2 equipos
+naruto-ninpou          !pub Naruto Ninpou Storm 0.9
 ...
 ```
 
@@ -40,16 +40,20 @@ Se pega con **Ctrl+V** en el chat de Battle.net, susurrándole al bot:
 
 ```
 /w <nombre-del-bot> !map dota
-/w <nombre-del-bot> !pub |cFF00CCFFDotA |cFFFFCC006.83d
+/w <nombre-del-bot> !pub DotA Allstars 6.83d
 ```
 
-> **Falta confirmar:** que la *lista de partidas personalizadas* del cliente
-> 1.27a renderice los códigos y no los muestre literales. Que los nombres de
-> cuenta de Battle.net aceptan color está documentado y probado; que la lista
-> de partidas también lo haga no lo pudimos probar sin un cliente. Es un test
-> de 30 segundos: hosteá una partida y mirá la lista. Si sale
-> `|cFF00CCFFDotA...` en crudo, corré `scripts/lobby-names.py --plain` y usá
-> esos nombres; el resto del sistema no cambia.
+> **Verificado el 2026-08-09 contra un cliente 1.27a real: no funcionan.** La
+> lista de partidas personalizadas **no pinta** los códigos de color. Tampoco
+> los muestra literales: se los come. `|cFF77DD44PUDGE |cFFFF3355WARS` se ve
+> como `PUDGE WARS` en blanco, y los 20 bytes de los dos códigos se gastaron
+> para nada.
+>
+> Por eso `scripts/lobby-names.py` ahora imprime los nombres **sin** color por
+> defecto (`--color` sigue dando la versión vieja). El lado bueno: sin códigos
+> quedan los 31 bytes enteros para el nombre, así que en vez de `DotA 6.83d`
+> entra `DotA Allstars 6.83d`, y en vez de `PUDGE WARS`, `Pudge Wars 1.26 -
+> 2 equipos`. Se perdió el color y se ganó claridad.
 
 Aura **no tiene autohost** y no saca el nombre del mapa, así que el nombre lo
 pone siempre el operador a mano. Si algún día se quiere lobby permanente sin
@@ -104,14 +108,23 @@ El mapa se elige por patrón sobre el nombre del archivo, y gana el primer
 patrón que matchea (por eso `Anime Fight Arena*` va **antes** que
 `Anime Fight*`).
 
-Si preferís una imagen de verdad en lugar del dibujo generado:
+Si preferís una imagen de verdad en lugar del dibujo generado, `--from-image`
+acepta tanto una ruta local como una **URL**, que es lo cómodo en el servidor
+donde no hay navegador:
 
 ```bash
-python3 scripts/brand-map.py mapa.w3x --from-image tapa.png
+python3 scripts/brand-map.py "Pudge Wars 1.26.w3x" \
+    --from-image "https://ejemplo.invalid/pudge.png"
 ```
 
-Recorta al centro, la lleva a 128×128 y la guarda como TGA sin comprimir, que
-es lo que el motor clásico lee sin sorpresas.
+Por defecto **compone**: usa la imagen como figura y le deja encima el fondo
+del tema, el título y el marco. Eso importa a 128×128, donde una foto sola se
+vuelve puré ilegible; con el título abajo se entiende de qué mapa es de un
+vistazo. Si la imagen ya es una tapa hecha y derecha, `--raw-image` la usa tal
+cual, recortada al centro.
+
+Sale siempre como TGA sin comprimir, que es lo que el motor clásico lee sin
+sorpresas.
 
 ### Qué imagen buscar
 
@@ -160,7 +173,7 @@ del MPQ para que no se puedan abrir con el editor. Probado el 2026-08-09 contra
 *DBZ Tribute Ultra* (epicwar 133974, 5,7 MB, real): StormLib contesta
 `Cannot create new file 'war3mapPreview.tga': Operation not permitted`, tanto
 para agregar un archivo nuevo como para reemplazar uno existente. En esos mapas
-la preview propia **no es posible**; queda el nombre con color, que no depende
+la preview propia **no es posible**; queda el nombre del lobby, que no depende
 del archivo.
 
 Ojo con una trampa acá: **`smpq` devuelve código de salida 0 aunque StormLib
@@ -185,6 +198,10 @@ Contra un `.w3x` sintético (header HM3W de 512 bytes + MPQ v1), en Ubuntu
 - `war3mapPreview.tga` aparece en el listado del MPQ después de inyectarlo.
 - El corte por el techo de 8 MiB dispara y limpia la salida.
 
-Lo que **no** está verificado y solo se puede probar con el cliente: que la
-imagen efectivamente se vea en la pantalla de preview, y que los códigos de
-color se rendericen en la lista de partidas.
+**Verificado el 2026-08-09 contra el cliente real**: se hosteó Pudge Wars con
+la preview inyectada y la imagen aparece en el panel de la derecha de la lista
+de partidas, en el lugar donde el cliente dibujaría el minimapa. El mecanismo
+completo —generar el TGA, meterlo en el MPQ con StormLib, que Aura recalcule
+el hash y que el cliente lo muestre— funciona de punta a punta.
+
+En la misma prueba quedó descartado lo del color en los nombres (ver arriba).

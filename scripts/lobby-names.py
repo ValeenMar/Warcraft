@@ -3,16 +3,20 @@
 
 Aura no tiene autohost ni saca el nombre del lobby del mapa: la partida se
 crea con `!pub <nombre>` (publica) o `!priv <nombre>` (privada), asi que el
-nombre lo escribe el operador. Escribir a mano un nombre con codigos de color
-adentro del chat de Warcraft es un garron, asi que este script los deja
-armados para pegarlos con Ctrl+V.
+nombre lo escribe el operador. Este script los deja armados para pegarlos con
+Ctrl+V en el chat.
+
+Salen SIN codigos de color, porque el 2026-08-09 se verifico contra un cliente
+1.27a real que la lista de partidas no los pinta: se los come sin mostrarlos,
+asi que los 10 bytes que gasta cada codigo se tiran a la basura. Con --color
+se imprimen igual, por si alguna vez se prueba otro cliente.
 
 Valida ademas el limite duro de 31 bytes de aura.cpp:879 — mas largo que eso
 y el bot contesta "The game name is too long".
 
 Uso:
-    lobby-names.py                 # tabla con los nombres con color
-    lobby-names.py --plain         # los mismos sin color (plan B)
+    lobby-names.py                 # los nombres que hay que usar
+    lobby-names.py --color         # la version con codigos de color (no pinta)
     lobby-names.py --priv          # usar !priv en vez de !pub
     lobby-names.py --out chuleta.txt
 """
@@ -43,17 +47,26 @@ def build(lobbies: list, plain: bool, command: str) -> "tuple[str, int]":
             problems += 1
         lines.append(f"{entry['id']:<22} !{command} {name}{flag}")
     lines.append("")
-    lines.append(
-        "Los codigos |cAARRGGBB pintan el texto y |r corta el color. Si en la\n"
-        "lista de partidas los ves literales en vez de pintados, corre este\n"
-        "mismo script con --plain y usa esos nombres."
-    )
+    if plain:
+        lines.append(
+            "Sin codigos de color a proposito: el cliente 1.27a no los pinta en la\n"
+            "lista de partidas (verificado). Como cada codigo gasta 10 de los 31\n"
+            "bytes que permite el nombre, sacarlos deja lugar para nombres mas\n"
+            "descriptivos, que es lo que se ve arriba."
+        )
+    else:
+        lines.append(
+            "OJO: estos NO se ven de colores en la lista de partidas del 1.27a.\n"
+            "El cliente se come los codigos sin pintarlos. Quedan por si alguna\n"
+            "vez se prueba con otro cliente."
+        )
     return "\n".join(lines) + "\n", problems
 
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Chuleta de nombres de partida")
-    ap.add_argument("--plain", action="store_true", help="sin codigos de color")
+    ap.add_argument("--color", action="store_true",
+                    help="con codigos de color (verificado: el cliente no los pinta)")
     ap.add_argument("--priv", action="store_true", help="usar !priv en vez de !pub")
     ap.add_argument("--out", type=Path, help="escribir a un archivo en vez de la pantalla")
     ap.add_argument("--lobbies", type=Path, default=LOBBIES_YAML)
@@ -67,7 +80,7 @@ def main(argv=None) -> int:
 
     data = yaml.safe_load(args.lobbies.read_text(encoding="utf-8")) or {}
     text, problems = build(
-        data.get("lobbies", []) or [], args.plain, "priv" if args.priv else "pub"
+        data.get("lobbies", []) or [], not args.color, "priv" if args.priv else "pub"
     )
 
     if args.out:

@@ -486,13 +486,37 @@ pasa, y hay un test con relleno incompresible que lo verifica.
 StormLib ya es la biblioteca que usa Aura, así que escribimos el MPQ con
 exactamente el mismo código que después lo va a leer.
 
-**Verificado en sandbox el 2026-08-09** contra un `.w3x` sintético: StormLib
-abre y escribe dentro del `.w3x` a pesar de los 512 bytes de header HM3W que
-preceden al MPQ, el header queda intacto, y el archivo aparece en el listado.
-**No verificado** (necesita cliente): que la imagen se vea, y que el color se
-renderice en la lista. Tampoco está probado contra un mapa *protegido* — el
-script detecta el fallo de escritura y no toca nada, pero si aparece hay que
-buscarle la vuelta.
+**Verificado contra el cliente real el 2026-08-09.** Las dos mitades, con
+resultados opuestos:
+
+- **La preview funciona.** Se hosteó Pudge Wars con la imagen inyectada y
+  aparece en el panel derecho de la lista de partidas, donde el cliente
+  dibujaría el minimapa. La cadena completa —generar el TGA, meterlo en el MPQ
+  con StormLib, que Aura recalcule CRC y SHA1, que el cliente lo muestre— anda
+  de punta a punta.
+- **El color en los nombres no.** La lista de partidas **no pinta** los
+  códigos: se los come sin mostrarlos. `|cFF77DD44PUDGE |cFFFF3355WARS` se ve
+  `PUDGE WARS` en blanco. Los 20 bytes de los dos códigos se gastaban para
+  nada, así que `lobby-names.py` pasó a imprimir nombres planos por defecto y
+  esos 20 bytes se reinvirtieron en nombres más descriptivos (`Pudge Wars 1.26
+  - 2 equipos` en vez de `PUDGE WARS`). La hipótesis de la que se partió —que
+  si los nombres de cuenta de Battle.net aceptan color, la lista también—
+  resultó falsa; menos mal que cada entry ya traía su `plain_name`.
+
+**También quedó confirmado el riesgo de los mapas protegidos**, que era una
+hipótesis: probado contra *DBZ Tribute Ultra* (epicwar 133974, 5,7 MB),
+StormLib contesta `Cannot create new file: Operation not permitted` tanto para
+agregar como para reemplazar. Y de yapa apareció una trampa: **`smpq` sale con
+código 0 aunque StormLib falle**, y en un mapa protegido el listado del MPQ
+viene ofuscado, así que la verificación por listado se salteaba sola y el
+script daba por buena una inyección que nunca ocurrió. Ahora se verifica
+extrayendo el archivo y comparando los bytes.
+
+**El dato que cambió el plan**: de los seis mapas del catálogo real, **cinco ya
+traían su propia `war3mapPreview.tga`** con arte del autor. El default pasó a
+ser no tocarla. El único que faltaba, Pudge Wars, se resolvió componiendo un
+render del personaje sobre el fondo del tema — y `--from-image` acepta una URL,
+porque el servidor no tiene navegador para bajar la imagen a mano.
 
 ## 12. El hardening de SSH se separó del bootstrap (incidente del 2026-08-08)
 
