@@ -5,7 +5,7 @@
 # ============================================================================
 
 .PHONY: help bootstrap build install render-config validate map-scan test backup \
-	lobby-names brand-maps kit
+	lobby-names brand-maps kit recibir
 
 help:
 	@echo "Targets:"
@@ -16,6 +16,7 @@ help:
 	@echo "  validate       valida todo en seco (sin VPS ni juego)"
 	@echo "  test           tests de inspect-map.py"
 	@echo "  map-scan       inspecciona todos los .w3x de maps/ y actualiza el registry"
+	@echo "  recibir        abre una pagina web para subir mapas desde el navegador (sudo)"
 	@echo "  kit            arma dist/<realm>-Kit.zip para repartir a los amigos"
 	@echo "  lobby-names    chuleta de nombres de partida con color, para pegar"
 	@echo "  brand-maps     mete la preview propia a los .w3x de /opt/wc3/incoming"
@@ -60,6 +61,11 @@ kit:
 	else \
 		./scripts/build-kit.sh; \
 	fi
+
+# Sirve para no pelear con scp: se abre la URL que imprime y se arrastran
+# los .w3x. El puerto se abre y se cierra solo.
+recibir:
+	sudo ./scripts/recibir-mapas.sh
 
 lobby-names:
 	@PY=/opt/wc3/venv/bin/python; [ -x $$PY ] || PY=python3; \

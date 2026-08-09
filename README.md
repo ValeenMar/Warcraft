@@ -46,6 +46,7 @@ El paso a paso real, con criterios de "listo" por fase, está en
 | `scripts/brand-map.py` | mete una preview propia (`war3mapPreview.tga`) adentro del `.w3x` |
 | `scripts/lobby-names.py` | chuleta de nombres de partida con color, lista para pegar |
 | `kit/` + `scripts/build-kit.sh` | arma el `.zip` que se le pasa a los amigos (el loader se baja, no se commitea) |
+| `scripts/recibir-mapas.sh` | pagina web temporal para subir mapas desde el navegador, sin scp |
 | `scripts/validate.sh` | valida TODO en seco; tiene que estar en verde |
 | `docs/conseguir-el-juego.md` | cómo llegar a una instalación limpia del juego, y errores típicos al parchear |
 | `docs/presentacion.md` | nombres de lobby con color y previews propias de los mapas |
