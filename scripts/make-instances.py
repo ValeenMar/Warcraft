@@ -34,6 +34,7 @@ Uso:
 
 import argparse
 import fnmatch
+import re
 import sys
 from pathlib import Path
 
@@ -154,6 +155,29 @@ def main(argv=None) -> int:
     if args.limit:
         planificadas = planificadas[: args.limit]
 
+    # Numeracion estable: si ya hay instancias generadas, cada mapa se queda
+    # con el numero que tenia. Sin esto, agregar un mapa que cae antes en orden
+    # alfabetico renumeraba todo, y cada bot pasaba a hostear otro mapa — con
+    # la cuenta de PvPGN, el puerto y la partida en curso desfasados.
+    ya_asignados = {}
+    for env in sorted(args.env_dir.glob("instance-*.env")):
+        m = re.search(r"instance-(\d+)\.env$", env.name)
+        d = re.search(r"^WC3_BOT_DEFAULTMAP=(.+)$", env.read_text(encoding="utf-8"), re.M)
+        if m and d:
+            ya_asignados[d.group(1).strip()] = int(m.group(1))
+
+    asignadas, libres = {}, set(range(1, MAX_INSTANCIAS + 1))
+    for entry, _ in planificadas:
+        n = ya_asignados.get(entry["id"])
+        if n and n in libres:
+            asignadas[entry["id"]] = n
+            libres.discard(n)
+    for entry, _ in planificadas:
+        if entry["id"] not in asignadas:
+            n = min(libres)
+            asignadas[entry["id"]] = n
+            libres.discard(n)
+
     if len(planificadas) > MAX_INSTANCIAS:
         print(
             f"error: {len(planificadas)} instancias no entran en el rango de puertos "
@@ -163,7 +187,9 @@ def main(argv=None) -> int:
         return 2
 
     problemas = 0
-    for n, (entry, mapa) in enumerate(planificadas, start=1):
+    planificadas.sort(key=lambda par: asignadas[par[0]["id"]])
+    for entry, mapa in planificadas:
+        n = asignadas[entry["id"]]
         nombre = entry.get("plain_name") or Path(mapa).stem
         corto = entry.get("short_name") or entry["id"]
         if len(nombre.encode("utf-8")) > LIMITE_NOMBRE:
@@ -200,23 +226,25 @@ def main(argv=None) -> int:
         return 1
 
     total = len(planificadas)
+    numeros = sorted(asignadas[e["id"]] for e, _ in planificadas)
     print(f"\n{total} instancia(s) planificada(s)." + (" (dry-run, no escribi nada)"
                                                        if args.dry_run else ""))
     if args.dry_run:
         return 0
 
+    cuentas = ", ".join(f"hostbot{i}" for i in numeros)
     print(f"""
 Pasos que faltan, en orden:
 
 1. Crear las cuentas de los bots en PvPGN. Desde el cliente del juego,
-   "New Account", una por instancia: hostbot1 .. hostbot{total}, todas con la
+   "New Account", una por instancia: {cuentas}, todas con la
    contrasena de WC3_BOT_PASSWORD. Battle.net no admite la misma cuenta
-   conectada dos veces, por eso una por bot.
+   conectada dos veces, por eso una por bot. Las que ya existan, dejalas.
 
 2. Renderizar las configs:      sudo make render-config
 
 3. Prender las instancias:
-   sudo systemctl enable --now {' '.join(f'wc3-hostbot@{i}' for i in range(1, total + 1))}
+   sudo systemctl enable --now {' '.join(f'wc3-hostbot@{i}' for i in numeros)}
 
 4. Mirar que entraron todas:    systemctl status 'wc3-hostbot@*' --no-pager
 """)

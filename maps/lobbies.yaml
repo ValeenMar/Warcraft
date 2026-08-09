@@ -133,6 +133,23 @@ lobbies:
       shadow: "#02121d"
       motif: clash
 
+  - id: dbz-tribute
+    match: ["DBZ*", "*Dragon Ball*", "*DragonBall*"]
+    display_name: "|cFFFFAA00DBZ Tribute"
+    plain_name: "DBZ Tribute Ultra"
+    short_name: "DBZ"
+    preview:
+      # Ya trae tapa propia del autor (el collage de la serie), asi que este
+      # tema no se llega a usar: queda de reserva por si aparece una version
+      # sin preview.
+      title: "DBZ"
+      subtitle: "Tribute Ultra"
+      bg_top: "#4a2a00"
+      bg_bottom: "#120a00"
+      accent: "#ffbb33"
+      shadow: "#241400"
+      motif: orb
+
   # ----------------------------------------------------------------- TD ----
   - id: marvel-td
     match: ["Marvel*", "*MarvelTD*"]
