@@ -11,6 +11,39 @@
 3. Para mapas grandes: el **map pack** descomprimido en
    `Warcraft III/Maps/Download/` (ver docs/mapas.md).
 
+## El loader es OBLIGATORIO, no opcional
+
+Verificado contra el servidor real el **2026-08-08**. Los clientes modernos de
+Warcraft III **verifican una firma criptográfica del servidor** antes de
+seguir con el login. PvPGN no puede producirla (haría falta la clave privada
+de Blizzard), así que el cliente corta la conexión por su cuenta.
+
+Sin un loader que desactive esa verificación, **no hay forma de conectar**,
+por más que el gateway apunte perfecto y el firewall esté abierto.
+
+Cómo se ve el síntoma:
+
+- En el cliente: `Unable to connect to Battle.net. You may be trying to
+  connect to an invalid Battle.net server.`
+- En `bnetd.log` del servidor, la conexión llega y muere enseguida:
+
+```
+sd_accept: accepted connection from <IP-del-jugador>:60857 on 0.0.0.0:6112
+handle_init_packet: client initiated bnet connection
+_client_auth_info: AUTH_INFO packet { platform=IX86, product=W3XP, versionid=0x1b, ... }
+_client_auth_info: selected "ver-IX86-1.mpq" "B=... C=... A=..."
+sd_tcpinput: read returned -1 (closing connection)     <-- el CLIENTE corta
+```
+
+Que el `AUTH_INFO` aparezca en el log es la prueba de que la red, el gateway y
+el firewall están bien: el corte es decisión del cliente.
+
+**Solución**: [Warcraft 3 Loader (w3l)](https://pvpgn.pro/w3l.html), GPL v3.
+Se baja el paquete de la versión que corresponda (soporta de 1.22a a 1.28f),
+se copian `w3l.exe`, `w3lh.dll` y la DLL de la versión (para 1.27a es
+`wl27.dll`) a la carpeta de Warcraft III, y se abre el juego con **`w3l.exe`**
+en vez del ejecutable normal. Los zips del sitio traen contraseña: `pvpgn`.
+
 ## Redirección de gateway (apuntar el cliente a nuestro PvPGN)
 
 El cliente de W3 trae hardcodeadas las direcciones de Battle.net oficiales
@@ -43,7 +76,7 @@ Los gateways viven en
 (valor multi-string). Se puede exportar un `.reg` de ejemplo y pasárselo a
 los amigos — queda para la fase 4 armar ese `.reg` con la IP definitiva.
 
-### Opción C: DNS local / hosts
+### Opción C: DNS local / hosts (la más rápida para probar)
 
 Redirigir un gateway oficial (ej. `useast.battle.net`) a nuestra IP vía
 `C:\Windows\System32\drivers\etc\hosts`:
@@ -52,8 +85,25 @@ Redirigir un gateway oficial (ej. `useast.battle.net`) a nuestra IP vía
 203.0.113.10 useast.battle.net
 ```
 
-Funciona pero es invasivo (rompe el acceso al gateway real, irrelevante hoy)
-y requiere admin. Preferir la opción A.
+Verificado funcionando: el gateway **Northrend (Europe)** del cliente resuelve
+`europe.battle.net`, así que con esa línea el juego llega al servidor propio.
+
+En Windows moderno conviene hacerlo desde PowerShell **como administrador**,
+porque abrir el archivo desde el explorador lanza un editor sin permisos:
+
+```powershell
+Add-Content -Path "$env:SystemRoot\System32\drivers\etc\hosts" -Value "<IP> europe.battle.net"
+ipconfig /flushdns
+```
+
+Efecto colateral a saber: **rompe la app de escritorio de Battle.net**, que
+se queda colgada en "Security Check" al intentar hablar HTTPS con ese dominio.
+El juego clásico no la necesita (se abre directo con `Frozen Throne.exe` o con
+`w3l.exe`), pero si molesta, se revierte quitando la línea.
+
+Ojo: el valor `Gateways` del registro **puede no existir**; en ese caso el
+cliente usa la lista que trae compilada adentro del ejecutable, y editar el
+registro no sirve de nada. Por eso el `hosts` es más confiable para probar.
 
 ## Flujo del jugador
 

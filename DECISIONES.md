@@ -245,6 +245,34 @@ El fallo restante era solo que la cuenta del bot no existía todavía.
    caracteres, así que el nombre visible puede tener 5 como máximo. Corregido
    en los `instance-N.env` y en `.env.example`.
 
+## 14. El cliente necesita un loader sí o sí (verificado 2026-08-08)
+
+Los clientes modernos de Warcraft III **verifican una firma criptográfica del
+servidor** antes de continuar el login. PvPGN no puede generarla. Sin un
+loader que desactive esa verificación, ningún cliente conecta, por más que el
+gateway, el DNS y el firewall estén perfectos.
+
+Evidencia recogida en el servidor real (`bnetd.log`): la conexión del cliente
+llega, manda su `AUTH_INFO` (`platform=IX86, product=W3XP, versionid=0x1b`),
+PvPGN responde con el desafío de CheckRevision, y **el cliente cierra la
+conexión** (`read returned -1`). O sea: red, gateway y firewall correctos; el
+corte lo decide el cliente.
+
+- **Impacto en el proyecto**: cada jugador necesita el loader, no solo el
+  operador. Eso hay que decirlo en la guía de la fase 4 (web de registro).
+- El loader recomendado es [w3l](https://pvpgn.pro/w3l.html) (GPL v3), que no
+  distribuye nada del juego: solo parchea en memoria. Soporta 1.22a-1.28f.
+- **Corrección de este documento**: `docs/clientes.md` presentaba el loader
+  como una de varias alternativas al editor de gateways. Es incorrecto: el
+  editor de gateways resuelve *a dónde* conectarse, el loader resuelve *que
+  te dejen*. Hacen falta los dos (o el `hosts` más el loader).
+
+Dato secundario útil: el valor `Gateways` del registro **puede no existir**
+(pasó en la instalación de prueba). En ese caso el cliente usa la lista
+compilada dentro del ejecutable y editar el registro no cambia nada; el
+redirect por `hosts` de `europe.battle.net` sí funcionó, porque el gateway
+"Northrend (Europe)" resuelve ese nombre.
+
 ## 12. El hardening de SSH se separó del bootstrap (incidente del 2026-08-08)
 
 **Qué pasó**: la primera puesta en marcha real dejó el VPS **inaccesible**.
