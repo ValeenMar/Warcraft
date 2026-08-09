@@ -99,6 +99,35 @@ render "${REPO_DIR}/config/pvpgn/bnetd.conf.tpl" \
 render "${REPO_DIR}/config/pvpgn/address_translation.conf.tpl" \
        /opt/wc3/pvpgn/etc/pvpgn/address_translation.conf
 
+# --- Presentacion: banner del cliente + mensaje de bienvenida ----------------
+# El cliente muestra un banner de 468x60 arriba del chat; PvPGN lo declara en
+# ad.json y sirve el PNG desde su filedir por BNFTP (ver docs/presentacion.md).
+render "${REPO_DIR}/config/pvpgn/ad.json.tpl" /opt/wc3/pvpgn/etc/pvpgn/ad.json
+
+# El mensaje de bienvenida (w3motd.txt) esta repetido por idioma en i18n/;
+# pisamos el base y TODAS las variantes que existan, para que de el mismo
+# texto sin importar el locale del cliente (era lo que hacia aparecer el
+# saludo en aleman).
+for motd in /opt/wc3/pvpgn/etc/pvpgn/i18n/w3motd.txt \
+            /opt/wc3/pvpgn/etc/pvpgn/i18n/*/w3motd.txt; do
+    [[ -f "${motd}" ]] || continue
+    render "${REPO_DIR}/config/pvpgn/w3motd.txt.tpl" "${motd}"
+done
+
+# El banner en si: lo dibuja make-banner.py (necesita Pillow, que vive en el
+# venv). Si falta, no es fatal: queda el banner default de PvPGN.
+BANNER_PY=/opt/wc3/venv/bin/python
+if [[ -x "${BANNER_PY}" ]] && "${BANNER_PY}" -c 'import PIL' 2>/dev/null; then
+    "${BANNER_PY}" "${REPO_DIR}/scripts/make-banner.py" \
+        --title "${WC3_REALM_NAME}" \
+        --subtitle "${WC3_BANNER_SUBTITLE:-${WC3_SERVER_DESCRIPTION}}" \
+        --out /opt/wc3/pvpgn/var/pvpgn/files/ad000001.png
+    chown wc3:wc3 /opt/wc3/pvpgn/var/pvpgn/files/ad000001.png
+    log "banner regenerado (el cliente lo cachea: puede tardar una reconexion en verse)"
+else
+    log "Pillow no disponible en /opt/wc3/venv: dejo el banner que este"
+fi
+
 # --- Hostbots: una instancia por config/hostbot/instance-N.env ---------------
 shopt -s nullglob
 found_instance=0

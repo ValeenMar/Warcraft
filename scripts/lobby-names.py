@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """lobby-names.py — imprime los nombres de partida listos para copiar y pegar.
 
-Aura no tiene autohost ni saca el nombre del lobby del mapa: la partida se
-crea con `!pub <nombre>` (publica) o `!priv <nombre>` (privada), asi que el
-nombre lo escribe el operador. Este script los deja armados para pegarlos con
+El autohost (patches/aura-autohost.patch) publica cada mapa solo, con el
+nombre que make-instances.py saco de maps/lobbies.yaml. Este script sirve para
+lo demas: hostear A MANO un mapa distinto del que la instancia publica
+(`!pub <nombre>` / `!priv <nombre>`), con los nombres listos para pegar con
 Ctrl+V en el chat.
 
 Salen SIN codigos de color, porque el 2026-08-09 se verifico contra un cliente

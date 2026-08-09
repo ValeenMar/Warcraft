@@ -21,7 +21,15 @@ Como saber si tenes la version correcta:
 
 Si te da otro numero, no vas a poder entrar. Ni 1.26, ni 1.28,
 ni Reforged sirven: todos tenemos que tener la misma version.
-Pedile al que te paso este kit que te ayude a llegar a 1.27a.
+
+NO TENES EL JUEGO? Usa INSTALAR-JUEGO.bat en vez de INSTALAR.bat:
+baja los DOS instaladores oficiales de Blizzard (que instalan
+directo la 1.27a), los corre en orden, y al final te deja el
+juego ya apuntado al servidor. Lo unico que tenes que hacer vos
+es escribir TU CD key de 26 digitos cuando cada instalador la
+pida — la key es tuya, no viene en el kit. Si no tenes keys, una
+copia fisica usada de RoC + TFT con las keys legibles se consigue
+barata, y con eso alcanza (no hace falta lectora de CD).
 
 El juego NO viene en este kit y no se puede repartir.
 
@@ -165,7 +173,8 @@ sirve aca. Necesita Reforged / 1.32, y este servidor es 1.27a.
   QUE HAY ADENTRO DEL KIT
 ---------------------------------------------------------------
 
-  INSTALAR.bat            el instalador
+  INSTALAR.bat            el instalador (si ya tenes el juego)
+  INSTALAR-JUEGO.bat      baja e instala el juego oficial + lo anterior
   LEEME.txt               esto
   loader\                 w3l 1.5.1.1, bajado de pvpgn.pro
   herramientas\           el script que agrega el servidor a la

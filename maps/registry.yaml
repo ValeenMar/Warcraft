@@ -40,7 +40,7 @@ maps:
     teams: 2
     min_patch: "1.24b"
     return_bug_risk: amarillo
-    status: pendiente
+    status: descargado
     notes: >-
       6.83d es la ultima oficial de IceFrog y entra JUSTO en el limite de
       1.27a: 8.218.959 B contra un techo de 8.388.608 B, apenas ~166 KB de
@@ -98,7 +98,7 @@ maps:
     teams: null
     min_patch: null
     return_bug_risk: amarillo
-    status: pendiente
+    status: descargado
     notes: >-
       2.08b es la version estandar (998k descargas). HOMONIMOS a evitar:
       "Bleach vs Naruto vs One Piece" (9 jugadores) y "One Piece vs Bleach"
@@ -115,7 +115,7 @@ maps:
     teams: null
     min_patch: "1.24"
     return_bug_risk: verde
-    status: pendiente
+    status: validado
     notes: >-
       OJO: Elite y Ultra son DOS LINAJES DISTINTOS, no versiones del mismo
       mapa. Recomendado Ultra V10b10 (Gotenkz/Womplord). Elite 2.1c
@@ -133,7 +133,7 @@ maps:
     teams: null
     min_patch: "1.24"
     return_bug_risk: verde
-    status: pendiente
+    status: descargado
     notes: >-
       7,63 MiB: entra pero queda cerca del techo de 8 MiB, y a esa altura la
       transferencia in-lobby es impracticable. Solo por map pack.
@@ -171,7 +171,7 @@ maps:
     teams: null
     min_patch: "1.24"
     return_bug_risk: verde
-    status: pendiente
+    status: descargado
     notes: >-
       El unico del conjunto que es post-1.24 es "Anime Fight Arena AI" de
       PrideTeam. El linaje original (Anime Fight Beta 1.39o9 de Spathis, ene
@@ -208,7 +208,7 @@ maps:
     teams: null
     min_patch: null
     return_bug_risk: amarillo
-    status: pendiente
+    status: validado
     notes: >-
       Usar el remake mantenido v2.03d de Siraraz, no el original de 2006
       (epicwar.com/maps/8426), que es PRE-1.24 y es riesgo. Otras opciones:

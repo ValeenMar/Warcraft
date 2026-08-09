@@ -55,10 +55,11 @@ Se pega con **Ctrl+V** en el chat de Battle.net, susurrándole al bot:
 > entra `DotA Allstars 6.83d`, y en vez de `PUDGE WARS`, `Pudge Wars 1.26 -
 > 2 equipos`. Se perdió el color y se ganó claridad.
 
-Aura **no tiene autohost** y no saca el nombre del mapa, así que el nombre lo
-pone siempre el operador a mano. Si algún día se quiere lobby permanente sin
-tocar nada, la opción es GHost++, que sí tiene `!autohost` (ver
-`DECISIONES.md` #18).
+Desde el 2026-08-09 Aura **sí tiene autohost** — se lo agregamos nosotros
+(`patches/aura-autohost.patch`, `DECISIONES.md`): cada instancia mantiene su
+lobby abierto con el nombre de `maps/lobbies.yaml` y lo recrea sola cuando la
+partida arranca. La chuleta de `lobby-names.py` queda para hostear **a mano**
+un mapa distinto del que la instancia publica sola.
 
 ---
 
@@ -214,3 +215,35 @@ completo —generar el TGA, meterlo en el MPQ con StormLib, que Aura recalcule
 el hash y que el cliente lo muestre— funciona de punta a punta.
 
 En la misma prueba quedó descartado lo del color en los nombres (ver arriba).
+
+---
+
+## 3. El banner de arriba del chat y el mensaje de bienvenida
+
+Las otras dos cosas que el jugador ve, apenas entra. Verificado contra el
+código de PvPGN (el mismo commit que corre en el VPS) el 2026-08-09:
+
+**El banner** es el sistema de publicidad del Battle.net clásico. Se declara
+en `ad.json` (clave `adfile` de `bnetd.conf`), el archivo de imagen vive en el
+`filedir` (`/opt/wc3/pvpgn/var/pvpgn/files/`) y el cliente lo baja por BNFTP.
+Para Warcraft III sirve un **PNG común de 468×60** — `adbanner.cpp` mapea la
+extensión `.png` al tag MNG que el cliente entiende, y 468×60 es la medida del
+que PvPGN instala de fábrica (el logo de pvpgn.pro, que es lo que se ve hasta
+que lo pisamos). Al hacerle clic, el cliente abre la URL declarada.
+
+`scripts/make-banner.py` dibuja el nuestro y `40-render-configs.sh` lo instala
+junto con nuestro `ad.json` en cada render. Ojo: **el cliente cachea el
+banner**, así que después de cambiarlo puede hacer falta reconectarse para
+verlo.
+
+**El mensaje de bienvenida** (`w3motd.txt`) es el texto que aparece en el chat
+al loguearse. Dos datos útiles que salen del sample de PvPGN: tiene un límite
+de **11 líneas**, y —a diferencia de la lista de partidas— acá los códigos de
+color **sí se renderizan** (el sample de fábrica viene pintado). Además acepta
+variables: `%s` (nombre del server), `%u`/`%g` (jugadores/partidas ahora),
+`%U` (usuarios totales).
+
+El template es `config/pvpgn/w3motd.txt.tpl`. El render pisa el archivo base
+**y todas las variantes de idioma** de `i18n/` — eso es lo que mata el saludo
+en alemán: PvPGN elige el archivo según el locale del cliente, y con todos los
+idiomas pisados con el mismo texto, da igual con qué locale entre cada uno.

@@ -518,6 +518,48 @@ ser no tocarla. El único que faltaba, Pudge Wars, se resolvió componiendo un
 render del personaje sobre el fondo del tema — y `--from-image` acepta una URL,
 porque el servidor no tiene navegador para bajar la imagen a mano.
 
+## 20. Marca propia: banner del cliente y mensaje de bienvenida (2026-08-09)
+
+**Qué se quería**: que el banner de arriba del chat (que mostraba el logo de
+pvpgn.pro) y el saludo de login (que salía en alemán) sean nuestros.
+
+**Verificado en el código de PvPGN** (mismo commit que corre en el VPS):
+
+- El banner se declara en `ad.json` (clave `adfile`), el archivo vive en el
+  `filedir` y el cliente lo baja por BNFTP. Para Warcraft III sirve un **PNG
+  común**: `adbanner.cpp` mapea `.png` → tag MNG. El de fábrica mide
+  **468×60**, así que esa es la medida del hueco. El clic abre la URL del
+  entry.
+- El `w3motd.txt` admite **11 líneas** máximo, variables (`%s` server, `%u`
+  jugadores, `%g` partidas, `%U` usuarios) y — a diferencia de la lista de
+  partidas — **los códigos de color acá sí se renderizan** (el sample de
+  fábrica viene pintado).
+- El alemán venía de i18n: PvPGN elige la variante del motd según el locale
+  del cliente, y los bots caían en `deDE`. La solución no es tocar locales
+  sino **pisar el base y todas las variantes de idioma** con el mismo texto,
+  que es lo que hace ahora `40-render-configs.sh`.
+
+`make-banner.py` dibuja el banner con los mismos helpers que las previews;
+el render lo regenera en cada corrida (si Pillow está en el venv) e instala
+`ad.json` + `w3motd.txt`. Falta la mitad cliente: ver el banner y el motd
+nuevos en un login real — el cliente **cachea** el banner, puede pedir una
+reconexión.
+
+## 21. El kit puede instalar el juego desde cero (2026-08-09)
+
+`INSTALAR-JUEGO.bat` baja los dos instaladores oficiales "Legacy" de
+Blizzard (las URLs `getLegacy` documentadas en conseguir-el-juego.md, que
+instalan directo 1.27a), los corre en orden RoC → TFT y encadena con
+`INSTALAR.bat`. Con eso el camino del amigo sin nada pasa de cinco pasos
+manuales a: doble clic + tipear sus dos CD keys.
+
+**Lo que NO se automatiza, a propósito**: el ingreso de la CD key en el
+instalador oficial. No hay flag de instalación silenciosa documentado en esos
+instaladores, y aunque lo hubiera, cada persona tiene que meter SU key — el
+kit no trae ni traerá keys ni archivos del juego (regla de copyright del
+proyecto). El instalador se queda en "lo mínimo que tiene que hacer un humano
+son sus dos keys".
+
 ## 12. El hardening de SSH se separó del bootstrap (incidente del 2026-08-08)
 
 **Qué pasó**: la primera puesta en marcha real dejó el VPS **inaccesible**.

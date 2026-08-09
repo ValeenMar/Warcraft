@@ -47,6 +47,9 @@ El paso a paso real, con criterios de "listo" por fase, está en
 | `scripts/lobby-names.py` | chuleta de nombres de partida con color, lista para pegar |
 | `kit/` + `scripts/build-kit.sh` | arma el `.zip` que se le pasa a los amigos (el loader se baja, no se commitea) |
 | `scripts/recibir-mapas.sh` | pagina web temporal para subir mapas desde el navegador, sin scp |
+| `patches/aura-autohost.patch` | autohost para Aura: cada bot recrea su lobby solo (no existe en el upstream) |
+| `scripts/make-instances.py` | genera una instancia de bot por mapa, con numeración estable |
+| `scripts/make-banner.py` | dibuja el banner 468×60 que el cliente muestra arriba del chat |
 | `scripts/validate.sh` | valida TODO en seco; tiene que estar en verde |
 | `docs/conseguir-el-juego.md` | cómo llegar a una instalación limpia del juego, y errores típicos al parchear |
 | `docs/presentacion.md` | nombres de lobby con color y previews propias de los mapas |

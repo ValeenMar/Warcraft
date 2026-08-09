@@ -104,11 +104,12 @@ while IFS= read -r v; do subst+="\${${v}} "; done < <(compgen -v | grep '^WC3_')
 
 log "renderizando templates"
 envsubst "${subst}" < "${REPO_DIR}/kit/INSTALAR.bat.tpl" > "${KIT}/INSTALAR.bat"
+envsubst "${subst}" < "${REPO_DIR}/kit/INSTALAR-JUEGO.bat.tpl" > "${KIT}/INSTALAR-JUEGO.bat"
 envsubst "${subst}" < "${REPO_DIR}/kit/LEEME.txt.tpl"    > "${KIT}/LEEME.txt"
 install -m 644 "${REPO_DIR}/kit/herramientas/gateway.ps1" "${KIT}/herramientas/gateway.ps1"
 install -m 644 "${REPO_DIR}/kit/mapas/PONER-LOS-MAPAS-ACA.txt" "${KIT}/mapas/"
 
-for f in "${KIT}/INSTALAR.bat" "${KIT}/LEEME.txt"; do
+for f in "${KIT}/INSTALAR.bat" "${KIT}/INSTALAR-JUEGO.bat" "${KIT}/LEEME.txt"; do
     # shellcheck disable=SC2016  # buscamos el literal ${WC3_, sin expandirlo
     if grep -q '\${WC3_' "${f}"; then
         die "quedo un placeholder sin resolver en $(basename "${f}")"
