@@ -39,6 +39,7 @@ import argparse
 import fnmatch
 import hashlib
 import importlib.util
+import os
 import shutil
 import subprocess
 import sys
@@ -76,6 +77,27 @@ def require_smpq() -> str:
             "  Ubuntu/Debian: sudo apt install smpq"
         )
     return exe
+
+
+def heredar_dueno(destino: Path) -> None:
+    """Le pone al archivo el mismo dueno que su directorio.
+
+    Cuando esto corre con sudo, los mapas quedan de root. StormLib abre los
+    .w3x en lectura-ESCRITURA, asi que un mapa de root en un directorio del
+    usuario wc3 hace que el bot no pueda abrirlo: dice "unable to load MPQ
+    file" y el mapa queda invalido, sin partida y sin error claro. Pasa cada
+    vez que se corre el script a mano en vez de por `make brand-maps`, asi que
+    en lugar de documentarlo se arregla solo.
+    """
+    if hasattr(os, "geteuid") and os.geteuid() != 0:
+        return  # sin privilegios no se puede cambiar el dueno, y tampoco hace falta
+    try:
+        st = destino.parent.stat()
+        if (st.st_uid, st.st_gid) != (destino.stat().st_uid, destino.stat().st_gid):
+            os.chown(destino, st.st_uid, st.st_gid)
+            print(f"  dueno:   heredado del directorio (uid {st.st_uid})")
+    except OSError as exc:
+        print(f"  aviso: no pude ajustar el dueno de {destino.name}: {exc}", file=sys.stderr)
 
 
 def sha1_of(path: Path) -> str:
@@ -319,6 +341,7 @@ def brand_one(args, lobbies: list, smpq: str, src: Path) -> int:
     if ya_tiene is not None and not args.force:
         print(f"  ya trae una preview propia ({len(ya_tiene)} B): queda como esta.")
         if not args.in_place:
+            heredar_dueno(dest)
             print(f"  copiado sin cambios a: {dest}")
         print("  (--report --dump-previews DIR para verla; --force para pisarla)")
         return 0, False
@@ -381,6 +404,8 @@ def brand_one(args, lobbies: list, smpq: str, src: Path) -> int:
         else:
             dest.unlink(missing_ok=True)
         return 1, False
+
+    heredar_dueno(dest)
 
     delta = new_bytes - original_bytes
     margin = MAX_MAP_BYTES - new_bytes

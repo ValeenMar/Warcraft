@@ -183,7 +183,16 @@ ofuscados. Por eso la única verificación que vale, y la que hace el script, es
 volver a **extraer** el archivo del mapa y comparar los bytes con lo que se
 quiso escribir.
 
-Un cuarto detalle menor: si el mapa tiene prendido el flag *"Hide minimap in
+**4. El mapa tiene que ser del usuario que corre el bot.** StormLib abre los
+`.w3x` en lectura-**escritura**, así que un mapa de `root` en un directorio de
+`wc3` hace que el bot no pueda abrirlo. En el log aparece como
+`unable to load MPQ file` y el mapa queda inválido: sin partida publicada y sin
+un error que se entienda. Es el mismo problema que ya había aparecido con el
+`War3Patch.mpq` (`DECISIONES.md` #15). Desde el 2026-08-09 `brand-map.py` le
+pone al archivo de salida el mismo dueño que su directorio, así que no depende
+de acordarse del `chown`.
+
+Un quinto detalle menor: si el mapa tiene prendido el flag *"Hide minimap in
 preview screens"* del editor (bit 0 de los flags de `war3map.w3i`), el motor
 puede tapar la pantalla de preview y no mostrar nada. `brand-map.py` lee ese
 flag y avisa; es la primera cosa a mirar si la imagen no aparece.
