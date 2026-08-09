@@ -255,26 +255,17 @@ def brand_one(args, lobbies: list, smpq: str, src: Path) -> int:
     print(f"\n=== {src.name}")
     if not src.is_file():
         print(f"  ERROR: no existe {src}", file=sys.stderr)
-        return 1
-
-    # --- lo que el mapa ya trae ------------------------------------------
-    # Muchos mapas custom (sobre todo los de anime) YA vienen con una
-    # war3mapPreview.tga hecha por el autor, con arte de verdad. Pisarla con
-    # un dibujo generado es un downgrade, asi que por defecto no se toca.
-    ya_tiene = extract_file(smpq, src, PREVIEW_NAME)
-    if ya_tiene is not None and not args.force:
-        print(f"  ya trae una preview propia ({len(ya_tiene)} B): no la toco.")
-        print("  (--report --dump-previews DIR para verla; --force para pisarla)")
-        return 0
-
-    entry = pick_theme(lobbies, src, args.theme)
-    theme_id = entry.get("id", "?")
-    print(f"  tema: {theme_id}")
+        return 1, False
 
     original_bytes = src.stat().st_size
     original_sha1 = sha1_of(src)
 
     # --- destino ---------------------------------------------------------
+    # La copia va primero, ANTES de decidir si hay que tocar el mapa: cuando
+    # se usa --out-dir, este script es tambien el que instala los mapas en su
+    # lugar definitivo. Si el salto por "ya tiene preview" ocurriera antes de
+    # copiar, los mapas que no hay que modificar —que son la mayoria— nunca
+    # llegarian al directorio del bot.
     if args.in_place:
         dest = src
         backup = src.with_suffix(src.suffix + ".orig")
@@ -286,6 +277,22 @@ def brand_one(args, lobbies: list, smpq: str, src: Path) -> int:
         out_dir.mkdir(parents=True, exist_ok=True)
         dest = out_dir / src.name
         shutil.copyfile(src, dest)
+
+    # --- lo que el mapa ya trae ------------------------------------------
+    # Muchos mapas custom (sobre todo los de anime) YA vienen con una
+    # war3mapPreview.tga hecha por el autor, con arte de verdad. Pisarla con
+    # un dibujo generado es un downgrade, asi que por defecto no se toca.
+    ya_tiene = extract_file(smpq, dest, PREVIEW_NAME)
+    if ya_tiene is not None and not args.force:
+        print(f"  ya trae una preview propia ({len(ya_tiene)} B): queda como esta.")
+        if not args.in_place:
+            print(f"  copiado sin cambios a: {dest}")
+        print("  (--report --dump-previews DIR para verla; --force para pisarla)")
+        return 0, False
+
+    entry = pick_theme(lobbies, src, args.theme)
+    theme_id = entry.get("id", "?")
+    print(f"  tema: {theme_id}")
 
     # --- aviso del flag "hide minimap in preview screens" -----------------
     meta = read_w3i_flags(smpq, dest)
@@ -313,7 +320,7 @@ def brand_one(args, lobbies: list, smpq: str, src: Path) -> int:
             if not args.in_place:
                 dest.unlink(missing_ok=True)
             print(f"  ERROR: {exc}", file=sys.stderr)
-            return 1
+            return 1, False
 
     # --- verificaciones --------------------------------------------------
     new_bytes = dest.stat().st_size
@@ -338,7 +345,7 @@ def brand_one(args, lobbies: list, smpq: str, src: Path) -> int:
                 print("  restaurado desde el respaldo .orig", file=sys.stderr)
         else:
             dest.unlink(missing_ok=True)
-        return 1
+        return 1, False
 
     delta = new_bytes - original_bytes
     margin = MAX_MAP_BYTES - new_bytes
@@ -350,7 +357,7 @@ def brand_one(args, lobbies: list, smpq: str, src: Path) -> int:
     display = entry.get("display_name") or entry.get("plain_name")
     if display:
         print(f"  hostear: !pub {display}")
-    return 0
+    return 0, True
 
 
 def main(argv=None) -> int:
@@ -393,22 +400,30 @@ def main(argv=None) -> int:
         return 1 if fallos else 0
 
     failures = 0
+    modificados = 0
     for src in args.maps:
         try:
-            failures += brand_one(args, lobbies, smpq, src)
+            fallo, cambio = brand_one(args, lobbies, smpq, src)
         except BrandError as exc:
             print(f"  ERROR: {exc}", file=sys.stderr)
-            failures += 1
+            fallo, cambio = 1, False
+        failures += fallo
+        modificados += int(cambio)
 
     print()
     total = len(args.maps)
     print(f"Listo: {total - failures}/{total} mapas procesados sin error.")
     if failures:
         return 1
-    print(
-        "Acordate: el hash cambio. En el server hay que volver a cargar el mapa\n"
-        "en el bot (!map <nombre>) y los jugadores necesitan ESTE archivo."
-    )
+    # El aviso solo tiene sentido si de verdad se toco algun mapa: si estaban
+    # todos con su preview propia, ningun hash cambio y no hay nada que
+    # recargar.
+    if modificados:
+        print(
+            f"Acordate: cambio el hash de {modificados} mapa(s). En el server hay que\n"
+            "volver a cargarlos en el bot (!map <nombre>) y los jugadores necesitan\n"
+            "ESTOS archivos, no los que puedan tener bajados de otro lado."
+        )
     return 0
 
 

@@ -171,10 +171,15 @@ class TestBrandMap(unittest.TestCase):
             dest = out / src.name
             primera = dest.read_bytes()
 
-            # Segunda pasada sobre el mapa que YA tiene preview: no la toca.
+            # Segunda pasada sobre el mapa que YA tiene preview: no la toca,
+            # pero SI lo copia al destino. Con --out-dir este script es tambien
+            # el que instala los mapas donde el bot los busca, asi que saltear
+            # la copia dejaria afuera justo a los que no hay que modificar.
             out2 = tmp / "out2"
             self.assertEqual(brand.main([str(dest), "--out-dir", str(out2)]), 0)
-            self.assertFalse((out2 / dest.name).exists(), "no tendria que haber copiado")
+            copia = out2 / dest.name
+            self.assertTrue(copia.exists(), "tendria que haberlo copiado igual")
+            self.assertEqual(copia.read_bytes(), primera, "lo modifico en vez de copiarlo")
             self.assertEqual(dest.read_bytes(), primera, "piso la preview existente")
 
     def test_aborta_si_pasa_el_techo_de_8_mib(self):
