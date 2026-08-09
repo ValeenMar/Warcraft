@@ -129,8 +129,24 @@ Van a `/opt/wc3/mpq/` en el VPS (ver RUNBOOK fase 1). El bot **no ejecuta el
 juego**: solo lee estos archivos para calcular hashes de mapas.
 
 **Regla de oro**: los 4 archivos tienen que ser de la **misma versión que
-usan los jugadores**. Si el server es 1.26a, archivos de 1.26a. Mezclar
+usan los jugadores**. Si el server es 1.27a, archivos de 1.27a. Mezclar
 versiones rompe los hashes y nadie puede entrar a las partidas.
+
+**Mayúsculas: importan en Linux, y no de forma uniforme.** Verificado leyendo
+el código de Aura (`src/bncsutilinterface.cpp` y `src/aura.cpp`):
+
+- `war3.exe`, `storm.dll` y `game.dll` se buscan con `CaseInsensitiveFileExists`,
+  así que el nombre puede venir como sea de Windows.
+- **`War3Patch.mpq` NO**: se arma por concatenación literal
+  (`m_Warcraft3Path + "War3Patch.mpq"`), así que en el VPS el archivo tiene que
+  llamarse exactamente así, con W y P mayúsculas. Si queda `war3patch.mpq`, la
+  extracción de `common.j` y `blizzard.j` falla en silencio y el bot no puede
+  calcular los CRC de los mapas.
+- Detalle de versión: a partir de `war3version >= 28` Aura busca `War3.mpq` en
+  vez de `War3Patch.mpq`. Con nuestro 1.27a corresponde `War3Patch.mpq`.
+
+(La ruta de `bot_war3path` sí se normaliza sola: Aura le agrega la barra final
+con `AddPathSeparator`, así que da igual escribirla con o sin `/` al final.)
 
 ## Lo que NO hay que bajar
 
