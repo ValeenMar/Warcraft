@@ -13,8 +13,11 @@ Esta pensado para estar prendido un rato y apagarse solo:
   - la URL lleva un token aleatorio; sin el token todo devuelve 404, asi que
     un escaneo de puertos no encuentra nada util
   - se apaga solo a los N minutos (--minutes, 30 por defecto)
-  - solo acepta .w3x y .w3m, y solo hasta 8 MiB por archivo, que es el techo
-    que soportan los clientes 1.24-1.28 igual
+  - solo acepta .w3x y .w3m (y, si se pasa --banner-dest, un .png para el
+    banner del cliente), y solo hasta 8 MiB por archivo, que es el techo que
+    soportan los clientes 1.24-1.28 igual
+  - ademas del nombre se chequea el contenido: HM3W para los mapas, la firma
+    PNG para el banner. Una extension renombrada no entra
   - nunca escribe fuera del directorio de destino: del nombre que manda el
     navegador se usa unicamente el basename
 
@@ -42,6 +45,10 @@ from pathlib import Path
 
 MAX_BYTES = 8 * 1024 * 1024  # mismo techo que el cliente 1.24-1.28
 ALLOWED_SUFFIXES = {".w3x", ".w3m"}
+# El banner del cliente tambien se sube por aca: es la unica forma comoda de
+# llevar un archivo de Windows al servidor. Se guarda aparte de los mapas.
+BANNER_SUFFIXES = {".png"}
+MAX_BANNER_BYTES = 4 * 1024 * 1024
 
 # Alfabeto del token: sin 0/O ni 1/l/I. El token se lee de una consola y se
 # tipea en el navegador, y con base64 normal la primera "l" minuscula se tipea
@@ -89,9 +96,9 @@ PAGE = """<!doctype html>
 </style></head><body><main>
 <h1>Subir mapas a {realm}</h1>
 <p class="sub">Arrastrá los <code>.w3x</code> acá, o hacé clic para elegirlos.
-Máximo 8 MiB por mapa.</p>
+Máximo 8 MiB por mapa.{banner_ayuda}</p>
 <div id="zona"><b>Soltá los mapas acá</b><span>o clic para buscarlos</span></div>
-<input type="file" id="picker" multiple accept=".w3x,.w3m">
+<input type="file" id="picker" multiple accept="{acepta}">
 <ul id="lista"></ul>
 {descarga}
 {galeria}
@@ -124,10 +131,11 @@ function uno(file) {{
   // Se chequea acá antes de mandar nada: si el servidor corta a mitad de una
   // subida de 20 MB, el navegador muestra "falló la conexión" y no se entiende
   // por qué. Avisando de entrada, el motivo queda claro y no se gasta la subida.
-  const TECHO = 8 * 1024 * 1024;
+  const esPng = /\.png$/i.test(file.name);
+  const TECHO = esPng ? 4 * 1024 * 1024 : 8 * 1024 * 1024;
   if (file.size > TECHO) {{
     li.className = 'mal';
-    est.textContent = 'pesa ' + (file.size / 1048576).toFixed(1) + ' MB, el máximo es 8';
+    est.textContent = 'pesa ' + (file.size / 1048576).toFixed(1) + ' MB, el máximo es ' + (TECHO / 1048576);
     return;
   }}
 
@@ -147,6 +155,10 @@ function uno(file) {{
 """
 
 
+def es_banner(nombre: str) -> bool:
+    return Path(nombre).suffix.lower() in BANNER_SUFFIXES
+
+
 def safe_name(raw: str) -> "str | None":
     """Devuelve un nombre de archivo seguro, o None si no sirve.
 
@@ -156,7 +168,7 @@ def safe_name(raw: str) -> "str | None":
     name = os.path.basename(raw.replace("\\", "/")).strip()
     if not name or name.startswith("."):
         return None
-    if Path(name).suffix.lower() not in ALLOWED_SUFFIXES:
+    if Path(name).suffix.lower() not in (ALLOWED_SUFFIXES | BANNER_SUFFIXES):
         return None
     # Nada de caracteres raros: los mapas se llaman con letras, numeros,
     # espacios, puntos, guiones y parentesis.
@@ -174,6 +186,7 @@ class Handler(BaseHTTPRequestHandler):
     owner = None
     gallery = None
     offer = None
+    banner_dest = None
 
     def log_message(self, fmt, *args):  # noqa: A003
         sys.stderr.write("[upload] %s - %s\n" % (self.address_string(), fmt % args))
@@ -303,6 +316,10 @@ class Handler(BaseHTTPRequestHandler):
         page = PAGE.format(
             realm=html.escape(self.realm),
             base="/" + self.token,
+            acepta=".w3x,.w3m,.png" if self.banner_dest else ".w3x,.w3m",
+            banner_ayuda=(" También podés soltar un <code>.png</code> de 468×60 "
+                          "para usarlo como banner del servidor."
+                          if self.banner_dest else ""),
             descarga=self._descarga_html(),
             galeria=self._galeria_html(),
         )
@@ -326,6 +343,11 @@ class Handler(BaseHTTPRequestHandler):
             self._txt(400, "solo .w3x o .w3m, y sin nombres raros")
             return
 
+        banner = es_banner(name)
+        if banner and self.banner_dest is None:
+            self._txt(400, "este servidor no acepta banners")
+            return
+
         try:
             length = int(self.headers.get("Content-Length", "0"))
         except ValueError:
@@ -334,14 +356,16 @@ class Handler(BaseHTTPRequestHandler):
         if length <= 0:
             self._txt(400, "archivo vacio")
             return
-        if length > MAX_BYTES:
-            self._txt(413, f"pesa {length // 1024} KB y el techo son 8 MiB")
+        techo = MAX_BANNER_BYTES if banner else MAX_BYTES
+        if length > techo:
+            self._txt(413, f"pesa {length // 1024} KB y el techo son {techo // 1048576} MiB")
             return
 
         # Se escribe a un temporal y recien al final se renombra: si la subida
         # se corta, no queda un .w3x a medias que despues rompa al bot.
-        self.dest.mkdir(parents=True, exist_ok=True)
-        tmp = self.dest / (name + ".parcial")
+        destino_dir = self.banner_dest.parent if banner else self.dest
+        destino_dir.mkdir(parents=True, exist_ok=True)
+        tmp = destino_dir / (name + ".parcial")
         leidos = 0
         try:
             with tmp.open("wb") as fh:
@@ -355,11 +379,17 @@ class Handler(BaseHTTPRequestHandler):
                 tmp.unlink(missing_ok=True)
                 self._txt(400, "se corto la subida")
                 return
-            if tmp.read_bytes()[:4] != b"HM3W":
+            cabecera = tmp.read_bytes()[:8]
+            if banner:
+                if cabecera[:8] != b"\x89PNG\r\n\x1a\n":
+                    tmp.unlink(missing_ok=True)
+                    self._txt(400, "no parece un PNG")
+                    return
+            elif cabecera[:4] != b"HM3W":
                 tmp.unlink(missing_ok=True)
                 self._txt(400, "no parece un mapa de Warcraft III")
                 return
-            destino = self.dest / name
+            destino = self.banner_dest if banner else (self.dest / name)
             tmp.replace(destino)
             if self.owner is not None:
                 os.chown(destino, self.owner.pw_uid, self.owner.pw_gid)
@@ -369,7 +399,8 @@ class Handler(BaseHTTPRequestHandler):
             self._txt(500, f"no pude guardarlo: {exc}")
             return
 
-        print(f"[upload] recibido: {name} ({leidos} B)", flush=True)
+        que = "banner" if banner else "mapa"
+        print(f"[upload] recibido ({que}): {name} -> {destino} ({leidos} B)", flush=True)
         self._txt(200, "ok")
 
 
@@ -383,6 +414,8 @@ def main(argv=None) -> int:
     ap.add_argument("--chown", default="wc3",
                     help="usuario dueno de los archivos subidos ('' para no cambiarlo)")
     ap.add_argument("--token", default=None, help="fijar el token en vez de sortearlo")
+    ap.add_argument("--banner-dest", type=Path, default=None,
+                    help="si se pasa, la pagina acepta un .png y lo guarda aca")
     ap.add_argument("--offer", type=Path, default=None,
                     help="archivo (el kit) que se ofrece para descargar en la pagina")
     ap.add_argument("--gallery", type=Path, default=None,
@@ -396,6 +429,7 @@ def main(argv=None) -> int:
     Handler.realm = args.realm
     Handler.gallery = args.gallery
     Handler.offer = args.offer
+    Handler.banner_dest = args.banner_dest
     if args.chown:
         try:
             Handler.owner = pwd.getpwnam(args.chown)

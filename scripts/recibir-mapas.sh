@@ -101,9 +101,15 @@ fi
 "${PY}" "${REPO_DIR}/scripts/upload-maps.py" \
     --dest "${DEST}" --port "${PORT}" --minutes "${MINUTES}" \
     --realm "${REALM}" --token "${TOKEN}" --gallery "${GALERIA}" \
+    --banner-dest "${REPO_DIR}/config/pvpgn/banner.png" \
     "${KIT_ARGS[@]}" || true
 
 echo
+if [[ -f "${REPO_DIR}/config/pvpgn/banner.png" ]]; then
+    log "hay un banner propio en config/pvpgn/banner.png"
+    log "  aplicalo con: sudo make render-config && sudo systemctl restart pvpgn"
+fi
+
 log "listo. Quedaron en ${DEST}:"
 shopt -s nullglob
 mapas=("${DEST}"/*.w3x "${DEST}"/*.w3m)

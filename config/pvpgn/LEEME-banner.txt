@@ -31,7 +31,10 @@ QUÉ FUNCIONA BIEN A ESE TAMAÑO
 
 CÓMO SE APLICA
 --------------
-  1. Copiá tu PNG a este directorio con el nombre banner.png
+  0. Si el archivo está en tu Windows, la forma cómoda de traerlo es la
+     misma página de subir mapas: "sudo make recibir" y arrastrás el PNG
+     ahí. Lo guarda directo en este directorio como banner.png.
+  1. (O a mano) copiá tu PNG a este directorio con el nombre banner.png
   2. sudo make render-config
   3. systemctl restart pvpgn
 

@@ -7,6 +7,7 @@ internet un rato, asi que los rechazos importan tanto como las aceptaciones.
 Correr con:  python3 -m unittest discover tests
 """
 
+import base64
 import importlib.util
 import socket
 import struct
@@ -37,6 +38,10 @@ upload = _load("upload_maps", "upload-maps.py")
 
 TOKEN = "token-de-prueba"
 MAPA = build_hm3w("Mapa de prueba", 12) + b"\x00" * 256
+# PNG valido de 1x1, para el test del banner
+PNG = base64.b64decode(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+)
 
 
 def puerto_libre() -> int:
@@ -163,6 +168,32 @@ class TestServidor(unittest.TestCase):
             s.sendall(b"\x16\x03\x01\x02\x00\x01\x00\x01\xfc\x03\x03" + b"\x00" * 64)
             self.assertEqual(s.recv(64), b"", "tendria que cerrar sin contestar")
         self.assertEqual(self.put("DotA v6.83d.w3x", MAPA), 200)
+
+    def test_sube_un_banner_png(self):
+        # El banner va a un archivo fijo, no al directorio de mapas: es la
+        # unica forma comoda de llevar un PNG de Windows al servidor.
+        destino = Path(self.tmp.name) / "config" / "banner.png"
+        upload.Handler.banner_dest = destino
+        try:
+            self.assertEqual(self.put("mi-logo.png", PNG), 200)
+            self.assertTrue(destino.exists())
+            self.assertEqual(destino.read_bytes(), PNG)
+            # No ensucia el directorio de mapas
+            self.assertEqual(list(self.dest.glob("*.png")), [])
+        finally:
+            upload.Handler.banner_dest = None
+
+    def test_rechaza_png_falso(self):
+        destino = Path(self.tmp.name) / "config" / "banner.png"
+        upload.Handler.banner_dest = destino
+        try:
+            self.assertEqual(self.put("trucho.png", b"esto no es un PNG"), 400)
+            self.assertFalse(destino.exists())
+        finally:
+            upload.Handler.banner_dest = None
+
+    def test_sin_banner_dest_no_acepta_png(self):
+        self.assertEqual(self.put("mi-logo.png", PNG), 400)
 
     def test_no_deja_archivos_a_medias(self):
         # Un rechazo no puede dejar el .parcial dando vueltas.
