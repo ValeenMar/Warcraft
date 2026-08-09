@@ -208,6 +208,43 @@ se estaba intentando aplicar el parche 1.26a sobre una instalación que ya
 estaba en 1.27a, y los parches no bajan de versión. El error de checksum era
 la forma fea que tiene BNUpdate de decir eso.
 
+## 13. Resultados de la primera conexión real bot ↔ PvPGN (2026-08-08)
+
+**El TODO #1 quedó RESUELTO, y a favor.** El log de Aura contra el PvPGN real:
+
+```
+[BNET] connecting to server [127.0.0.1] on port 6112
+[BNET] connected
+[BNET] attempting to auth as Warcraft III: The Frozen Throne
+[BNET] cd keys accepted            <-- el handshake de version PASO
+[BNET] logon failed - invalid username, disconnecting
+```
+
+`cd keys accepted` significa que el `SID_AUTH_CHECK` completo (que incluye la
+verificación de versión con `exeversion`/`exeversionhash` calculados por
+bncsutil desde los MPQ) fue aceptado por PvPGN. O sea: **Aura de 2018 se
+entiende con PvPGN hablando 1.27a**, con `war3version=27` y los campos de
+`exeversion` vacíos (autocálculo). No hace falta el plan B de GHost++.
+
+El fallo restante era solo que la cuenta del bot no existía todavía.
+
+**Dos problemas menores encontrados en el mismo arranque:**
+
+1. `warning - unable to load MPQ file [...War3Patch.mpq] - error code 13`.
+   Error 13 es EACCES. Causa: Aura llama a `SFileOpenArchive(..., 0,
+   MPQ_OPEN_FORCE_MPQ_V1, &MPQ)` **sin** `MPQ_OPEN_READ_ONLY`, así que
+   StormLib abre el archivo en lectura-escritura. Con los MPQ en `640
+   root:wc3` y la unidad de systemd montando `/opt/wc3/mpq` en
+   `ReadOnlyPaths`, el open falla. Consecuencia: no extrae `common.j` ni
+   `blizzard.j`, que son los que permiten calcular `map_crc` automáticamente.
+   **Parcheado** en `install/20-build-hostbot.sh` agregando el flag; el MPQ
+   solo se lee, nunca se escribe, así que es el comportamiento correcto.
+
+2. `warning - bot_virtualhostname is longer than 15 characters`. El límite de
+   15 cuenta **también el código de color**: `|cFF4080C0` ya son 10
+   caracteres, así que el nombre visible puede tener 5 como máximo. Corregido
+   en los `instance-N.env` y en `.env.example`.
+
 ## 12. El hardening de SSH se separó del bootstrap (incidente del 2026-08-08)
 
 **Qué pasó**: la primera puesta en marcha real dejó el VPS **inaccesible**.
@@ -261,11 +298,10 @@ secundario de "preparar el sistema".
 
 ## TODO(verificar) — lista completa, ordenada por qué bloquea primero
 
-1. **Aura + clientes 1.27a contra PvPGN** (bloquea fase 1): con
-   `war3version=27` y `exeversion/exeversionhash` vacíos (autocálculo desde
-   los MPQ), el bot tiene que loguearse al PvPGN y los clientes tienen que
-   poder entrar a sus lobbies. Nota a favor: el sample de Aura apunta a 1.28+,
-   así que 1.27a le queda más cerca que 1.26a. Plan B: GHost++ clásico.
+1. ~~**Aura + PvPGN 1.27a**~~ — **RESUELTO el 2026-08-08**: `cd keys
+   accepted` en el log del bot contra el PvPGN real (ver decisión 13). Queda
+   pendiente solo la mitad del cliente: que un cliente 1.27a real entre a un
+   lobby hosteado por el bot.
 2. **PvPGN + MySQL en runtime** (bloquea fase 1): primer arranque crea las
    tablas desde `sql_DB_layout.conf`. Compiló, pero no se ejecutó contra un
    mysqld real.

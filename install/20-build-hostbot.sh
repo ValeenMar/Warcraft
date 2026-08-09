@@ -46,6 +46,19 @@ for h in "${SRC_DIR}"/src/*.h; do
     fi
 done
 
+# --- Parche: abrir War3Patch.mpq en SOLO LECTURA -----------------------------
+# Aura llama a SFileOpenArchive sin MPQ_OPEN_READ_ONLY, asi que StormLib abre
+# el MPQ en lectura-escritura. Como los archivos del juego son de root y la
+# unidad de systemd monta /opt/wc3/mpq con ReadOnlyPaths, el open falla con
+# error 13 (EACCES) y el bot no puede extraer common.j/blizzard.j, que son los
+# que necesita para calcular los CRC de los mapas. Descubierto en el VPS real
+# el 2026-08-08. El MPQ solo se lee, nunca se escribe: el flag es correcto.
+if grep -q 'MPQ_OPEN_FORCE_MPQ_V1, &MPQ' "${SRC_DIR}/src/aura.cpp"; then
+    log "aplicando parche de apertura del MPQ en solo lectura"
+    sed -i 's/MPQ_OPEN_FORCE_MPQ_V1, &MPQ/MPQ_OPEN_FORCE_MPQ_V1 | MPQ_OPEN_READ_ONLY, \&MPQ/g' \
+        "${SRC_DIR}/src/aura.cpp"
+fi
+
 # --- StormLib (vendored) -----------------------------------------------------
 log "compilando StormLib"
 cmake -S "${SRC_DIR}/StormLib" -B "${SRC_DIR}/StormLib/build" \
