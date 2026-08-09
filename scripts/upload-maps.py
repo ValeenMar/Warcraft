@@ -327,8 +327,14 @@ def main(argv=None) -> int:
         print("aviso: queda menos de 200 MB libres en el disco", file=sys.stderr)
 
     httpd = ThreadingHTTPServer(("0.0.0.0", args.port), Handler)
+    # daemon=True y cancel() al final: sin eso, un Ctrl+C deja al interprete
+    # esperando al temporizador (hasta 30 minutos) y el segundo Ctrl+C sale
+    # con un traceback feo de threading.
+    apagado = None
     if args.minutes:
-        threading.Timer(args.minutes * 60, httpd.shutdown).start()
+        apagado = threading.Timer(args.minutes * 60, httpd.shutdown)
+        apagado.daemon = True
+        apagado.start()
 
     print(f"[upload] escuchando en el puerto {args.port}, destino {args.dest}")
     print(f"[upload] token: {Handler.token}")
@@ -338,6 +344,8 @@ def main(argv=None) -> int:
         httpd.serve_forever()
     except KeyboardInterrupt:
         print("\n[upload] cortado a mano")
+    if apagado is not None:
+        apagado.cancel()
     httpd.server_close()
     return 0
 
