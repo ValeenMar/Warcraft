@@ -76,6 +76,39 @@ make backup        # dump MySQL + configs -> /opt/wc3/backups/wc3-backup-FECHA.t
   `WC3_BOT_ROOTADMINS` en `.env` + render + restart del bot. Para comandos
   de PvPGN (`/admin`), ver `command_groups.conf` del upstream.
 
+## Si quedaste afuera del servidor por SSH
+
+Pasa, y la salida es siempre la misma: **la consola web del proveedor**
+(en Vultr, la instancia → *View Console*). No pasa por SSH, así que ni el
+firewall, ni `fail2ban`, ni la config de sshd la afectan.
+
+Desde ahí, como root:
+
+```bash
+fail2ban-client status sshd                 # ¿tu IP está en "Banned IP list"?
+fail2ban-client unban --all                 # desbanear
+passwd valen                                # darle contraseña al usuario admin
+grep -r . /etc/ssh/sshd_config.d/           # ver qué config está aplicada
+sshd -T | grep -Ei 'permitrootlogin|passwordauthentication'   # config EFECTIVA
+```
+
+Ese último comando es el importante: `sshd -T` muestra la configuración
+**resuelta**, después de combinar todos los archivos. Es la única forma
+confiable de saber qué está aplicado, porque sshd usa el **primer** valor que
+encuentra leyendo `/etc/ssh/sshd_config.d/*.conf` en orden alfabético — un
+archivo `50-cloud-init.conf` le gana a uno `90-loquesea.conf`.
+
+Para revertir el endurecimiento por completo:
+
+```bash
+rm -f /etc/ssh/sshd_config.d/01-wc3-hardening.conf
+systemctl reload ssh
+```
+
+Si el teclado de la consola web te desordena los símbolos de la contraseña
+(pasa seguido con teclados en español), poné una contraseña temporal simple
+con `passwd`, entrá por SSH, y desde ahí cargá la clave pública.
+
 ## Salud del VPS en 30 segundos
 
 ```bash

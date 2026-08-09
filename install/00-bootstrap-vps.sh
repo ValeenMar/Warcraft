@@ -70,22 +70,14 @@ else
     log "usuario ${ADMIN_USER} ya existe, sigo"
 fi
 
-# --- Hardening de SSH --------------------------------------------------------
-# Antes de deshabilitar password/root, verificar que el admin tenga una key,
-# si no te quedas afuera del VPS.
+# --- Hardening de SSH: NO se hace aca ---------------------------------------
+# Se movio a install/50-harden-ssh.sh, que hay que correr a mano DESPUES de
+# confirmar que entras por clave. Motivo (aprendido a los golpes el
+# 2026-08-08): hacerlo automatico aca dejo un VPS inaccesible.
+log "SSH: el endurecimiento NO se aplica automaticamente (ver 50-harden-ssh.sh)"
 if [[ ! -s "/home/${ADMIN_USER}/.ssh/authorized_keys" ]]; then
-    log "ATENCION: /home/${ADMIN_USER}/.ssh/authorized_keys esta vacio."
-    log "Cargá tu clave publica ahi y re-corré este script para endurecer SSH."
-else
-    log "endureciendo sshd (sin password, sin root login)"
-    install -d /etc/ssh/sshd_config.d
-    cat > /etc/ssh/sshd_config.d/90-wc3-hardening.conf <<'EOF'
-PasswordAuthentication no
-PermitRootLogin no
-KbdInteractiveAuthentication no
-X11Forwarding no
-EOF
-    systemctl reload ssh
+    log "  ATENCION: ${ADMIN_USER} no tiene clave publica cargada todavia."
+    log "  Cargala antes de intentar endurecer SSH, o vas a quedar afuera."
 fi
 
 # --- Firewall ----------------------------------------------------------------

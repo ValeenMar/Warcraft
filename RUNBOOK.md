@@ -68,17 +68,23 @@ Dos caminos:
 
 ### 1.c — Instalación
 
+**Antes de nada, comprobá que entrás por clave.** En el formulario de Vultr
+tenés que haber cargado tu clave SSH; verificá que `ssh root@<IP>` entra sin
+pedirte contraseña. Si te pide contraseña, la clave no quedó: resolvelo ahora,
+antes de instalar nada.
+
 ```bash
 # --- Como root, en el VPS recién creado -----------------------------------
 apt-get update && apt-get install -y git
 git clone https://github.com/ValeenMar/Warcraft.git /opt/wc3-repo
 cd /opt/wc3-repo
 ./install/00-bootstrap-vps.sh valen     # usuario, ufw, fail2ban, swap, deps
-
-# OJO: el bootstrap DESACTIVA el login de root por SSH. Antes de cerrar esta
-# sesión, abrí otra terminal y comprobá que podés entrar como el usuario
-# nuevo. Si no podés, todavía estás a tiempo de arreglarlo desde acá.
 ```
+
+El bootstrap **ya no toca la configuración de SSH**: el endurecimiento quedó
+en `install/50-harden-ssh.sh`, que se corre a mano al final de la fase 1,
+cuando ya está confirmado que el acceso por clave funciona. Aprendido a los
+golpes: hacerlo automático dejó un VPS inaccesible (ver DECISIONES.md).
 
 ```bash
 # --- Reconectado como el usuario nuevo -------------------------------------

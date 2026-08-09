@@ -37,7 +37,7 @@ El paso a paso real, con criterios de "listo" por fase, está en
 |------|--------|
 | `RUNBOOK.md` | las 4 fases del proyecto, con checklist |
 | `DECISIONES.md` | decisiones, resultados de compilación, TODOs de verificación |
-| `install/*.sh` | bootstrap del VPS, builds, MySQL, render de configs |
+| `install/*.sh` | bootstrap del VPS, builds, MySQL, render de configs, hardening de SSH |
 | `systemd/` | `pvpgn.service` y `wc3-hostbot@.service` (instanciada) |
 | `config/` | templates de configuración (placeholders `${WC3_*}` + `.env`) |
 | `maps/registry.yaml` | **el catálogo**: 21 mapas con estado y riesgo 1.24+ |

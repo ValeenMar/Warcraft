@@ -208,6 +208,44 @@ se estaba intentando aplicar el parche 1.26a sobre una instalación que ya
 estaba en 1.27a, y los parches no bajan de versión. El error de checksum era
 la forma fea que tiene BNUpdate de decir eso.
 
+## 12. El hardening de SSH se separó del bootstrap (incidente del 2026-08-08)
+
+**Qué pasó**: la primera puesta en marcha real dejó el VPS **inaccesible**.
+El bootstrap aplicaba el endurecimiento de SSH automáticamente y la
+combinación de dos errores cerró las dos puertas a la vez:
+
+1. El archivo se escribía como `/etc/ssh/sshd_config.d/90-wc3-hardening.conf`.
+   **sshd usa el PRIMER valor que encuentra** y lee los `.conf` en orden
+   alfabético; la imagen de Ubuntu de Vultr trae `50-cloud-init.conf` con
+   `PasswordAuthentication yes`, que gana por llegar antes. Resultado: el
+   `PasswordAuthentication no` quedó sin efecto, pero el `PermitRootLogin no`
+   sí se aplicó (cloud-init no define esa clave). **Root bloqueado.**
+2. El usuario admin se crea con `adduser --disabled-password`, o sea sin
+   contraseña: solo entra por clave. Como la clave pública nunca se había
+   cargado bien, **el usuario admin tampoco entraba.**
+
+La verificación que el script tenía (`authorized_keys` no vacío) no alcanzó:
+comprobaba que el archivo existiera en el servidor, no que el operador
+tuviera la clave privada correspondiente.
+
+**Qué se cambió**:
+
+- El bootstrap **ya no toca SSH**. Solo avisa.
+- Se creó `install/50-harden-ssh.sh`, que se corre a mano y a conciencia,
+  con cuatro salvaguardas: se niega a correr sin `authorized_keys`, exige
+  confirmación explícita de que el login por clave ya fue probado en otra
+  terminal, valida con `sshd -t` antes de recargar (y revierte si falla), y
+  usa prefijo **`01-`** para ganarle a cloud-init.
+- `PermitRootLogin` pasa a **`prohibit-password`** en vez de `no`: root por
+  clave queda como red de contención si el usuario admin se rompe.
+- `docs/operacion.md` suma una sección de recuperación por consola web, con
+  `sshd -T` para ver la configuración **efectiva** (la única forma confiable
+  de saber qué quedó aplicado).
+
+**Lección transferible**: cualquier automatismo que pueda cortar el propio
+canal de acceso tiene que ser un paso explícito y reversible, nunca un efecto
+secundario de "preparar el sistema".
+
 ## 10. Las 3 decisiones más discutibles (resumen ejecutivo)
 
 1. **Aura (2018) para un servidor 1.26a** — ver decisión 2. Es el riesgo
