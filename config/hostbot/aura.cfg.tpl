@@ -78,6 +78,15 @@ bot_votekickpercentage = 70
 # extension .cfg se agrega sola).
 bot_defaultmap = ${WC3_BOT_DEFAULTMAP}
 
+# Autohost (NO es del upstream: lo agrega patches/aura-autohost.patch).
+# Si bot_autohostname no esta vacio, el bot mantiene siempre un lobby abierto
+# con bot_defaultmap, y lo vuelve a crear solo cuando la partida arranca. Sin
+# esto Aura deja de publicar nada hasta que un admin escriba !pub, porque solo
+# admite un lobby a la vez.
+# Vacio = apagado, que es el comportamiento original de Aura.
+bot_autohostname = ${WC3_BOT_AUTOHOSTNAME}
+bot_autohostowner = ${WC3_BOT_AUTOHOSTOWNER}
+
 bot_gameoverplayernumber = 1
 
 # ---------------------------------------------------------------------------

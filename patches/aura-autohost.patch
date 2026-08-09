@@ -1,0 +1,69 @@
+diff --git a/src/aura.cpp b/src/aura.cpp
+index 13e1d28..f476fa2 100644
+--- a/src/aura.cpp
++++ b/src/aura.cpp
+@@ -214,6 +214,13 @@ CAura::CAura(CConfig* CFG)
+   m_CRC->Initialize();
+   m_HostPort       = CFG->GetInt("bot_hostport", 6112);
+   m_DefaultMap     = CFG->GetString("bot_defaultmap", "dota");
++  // Autohost: si bot_autohostname no esta vacio, el bot mantiene siempre
++  // abierto un lobby con bot_defaultmap. Aura no traia esto y hace falta para
++  // que los mapas esten siempre visibles en la lista de partidas sin que nadie
++  // tenga que escribir !pub despues de cada partida.
++  m_AutoHostGameName = CFG->GetString("bot_autohostname", string());
++  m_AutoHostOwner    = CFG->GetString("bot_autohostowner", string());
++  m_LastAutoHostTime = 0;
+   m_LANWar3Version = CFG->GetInt("lan_war3version", 27);
+   m_NumPlayersToStartGameOver = CFG->GetInt("bot_gameoverplayernumber", 1);
+ 
+@@ -510,6 +517,36 @@ bool CAura::Update()
+       m_CurrentGame->UpdatePost(&send_fd);
+   }
+ 
++  // autohost: si el lobby quedo vacio, volver a crearlo solo
++  //
++  // Aura no tiene autohost y solo admite un lobby a la vez (m_CurrentGame es
++  // un puntero unico), asi que sin esto cada partida que arranca deja al bot
++  // sin nada publicado hasta que un admin escriba !pub. Con una instancia por
++  // mapa, esto es lo que hace que la lista de partidas este siempre poblada.
++  //
++  // El intervalo evita dos cosas: martillar a PvPGN si la creacion falla (por
++  // ejemplo por nombre duplicado, que CreateGame reporta por chat), y crear un
++  // lobby nuevo en el mismo instante en que el anterior arranco.
++  if (!m_AutoHostGameName.empty() && !m_CurrentGame && !m_Exiting &&
++      m_Games.size() < m_MaxGames && GetTime() - m_LastAutoHostTime >= 30)
++  {
++    m_LastAutoHostTime = GetTime();
++
++    CBNET* AutoHostServer = nullptr;
++
++    for (auto& bnet : m_BNETs)
++    {
++      if (bnet->GetLoggedIn())
++      {
++        AutoHostServer = bnet;
++        break;
++      }
++    }
++
++    if (AutoHostServer && m_Map && m_Map->GetValid())
++      CreateGame(m_Map, GAME_PUBLIC, m_AutoHostGameName, m_AutoHostOwner, m_AutoHostOwner, AutoHostServer, false);
++  }
++
+   // update battle.net connections
+ 
+   for (auto& bnet : m_BNETs)
+diff --git a/src/aura.h b/src/aura.h
+index 307f7da..53aa953 100644
+--- a/src/aura.h
++++ b/src/aura.h
+@@ -65,6 +65,9 @@ public:
+   std::string              m_Warcraft3Path;              // config value: Warcraft 3 path
+   std::string              m_BindAddress;                // config value: the address to host games on
+   std::string              m_DefaultMap;                 // config value: default map (map.cfg)
++  std::string              m_AutoHostGameName;           // config value: si no esta vacio, el bot rehostea solo con este nombre
++  std::string              m_AutoHostOwner;              // config value: dueno de las partidas que crea el autohost
++  int64_t                  m_LastAutoHostTime;           // ultimo intento de autohost, en segundos
+   uint32_t                 m_ReconnectWaitTime;          // config value: the maximum number of minutes to wait for a GProxy++ reliable reconnect
+   uint32_t                 m_MaxGames;                   // config value: maximum number of games in progress
+   uint32_t                 m_HostCounter;                // the current host counter (a unique number to identify a game, incremented each time a game is created)

@@ -34,6 +34,23 @@ else
 fi
 git -C "${SRC_DIR}" checkout --force "${AURA_REF}"
 
+# --- Parche: autohost (no existe en el upstream) ------------------------------
+# Aura no tiene autohost y solo admite UN lobby a la vez (m_CurrentGame es un
+# puntero unico), asi que cuando una partida arranca el bot deja de publicar
+# nada hasta que alguien escriba !pub. Este parche hace que recree el lobby
+# solo. Con eso, y una instancia por mapa, la lista de partidas queda siempre
+# poblada; y como al arrancar una partida Aura libera el nombre en Battle.net
+# (QueueGameUncreate), el lobby nuevo puede usar el mismo nombre — o sea que
+# un mapa "ocupado" vuelve a estar disponible enseguida.
+# Compilado y verificado en sandbox el 2026-08-09.
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+log "aplicando parche de autohost"
+if git -C "${SRC_DIR}" apply --check "${REPO_DIR}/patches/aura-autohost.patch" 2>/dev/null; then
+    git -C "${SRC_DIR}" apply "${REPO_DIR}/patches/aura-autohost.patch"
+else
+    log "  ya estaba aplicado, sigo"
+fi
+
 # --- Parche cstdint (GCC/libstdc++ >= 13) ------------------------------------
 # Varios headers usan uint8_t/uint32_t sin incluir <cstdint>; con toolchains
 # viejos entraba transitivamente, con GCC 13 el build corta. Insertamos el
@@ -117,7 +134,6 @@ install -m 644 "${SRC_DIR}/ip-to-country.csv" "${DEST}/ip-to-country.csv"
 chown -R wc3:wc3 "${DEST}"
 
 # --- Unidad systemd ----------------------------------------------------------
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 log "instalando unidad systemd wc3-hostbot@.service"
 install -m 644 "${REPO_DIR}/systemd/wc3-hostbot@.service" /etc/systemd/system/wc3-hostbot@.service
 systemctl daemon-reload
