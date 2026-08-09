@@ -53,7 +53,15 @@ set +a
 : "${WC3_PUBLIC_IP:?falta WC3_PUBLIC_IP en .env}"
 : "${WC3_REALM_NAME:?falta WC3_REALM_NAME en .env}"
 : "${WC3_BOT_CHANNEL:?falta WC3_BOT_CHANNEL en .env}"
-: "${WC3_KIT_GATEWAY_TZ:?falta WC3_KIT_GATEWAY_TZ en .env}"
+# Huso horario que se le declara al cliente en la lista de gateways. Es
+# cosmetico (el juego lo muestra al lado del nombre del server), asi que en vez
+# de exigirlo se usa el de Argentina y se avisa: quien tenga un .env viejo, de
+# antes de que existiera la variable, no tiene por que quedarse sin kit.
+if [[ -z "${WC3_KIT_GATEWAY_TZ:-}" ]]; then
+    WC3_KIT_GATEWAY_TZ=-3
+    log "WC3_KIT_GATEWAY_TZ no esta en .env: uso -3 (Argentina)"
+fi
+export WC3_KIT_GATEWAY_TZ
 
 KIT_NAME="$(printf '%s' "${WC3_REALM_NAME}" | tr ' ' '-')-Kit"
 STAGE="$(mktemp -d)"
