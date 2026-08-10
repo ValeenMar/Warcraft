@@ -330,11 +330,20 @@ class ClienteChat:
                 linea = cruda.decode("utf-8", "replace").strip()
                 if not linea:
                     continue
+                # bnetd exige el permiso "botlogin" para conexiones chat
+                # (default false): la cuenta puede existir y aun asi rebotar.
+                # sudo make dashboard lo otorga solo (UPDATE en la base).
+                if not logueado and "no bot access" in linea.lower():
+                    self.estado = (f"la cuenta '{self.usuario}' existe pero le falta "
+                                   "el permiso de bot: corre sudo make dashboard "
+                                   "de nuevo (lo otorga solo) y reinicia PvPGN")
+                    return
                 if not logueado and ("failed" in linea.lower()
                                      or "incorrect" in linea.lower()):
                     self.estado = (f"login rechazado para '{self.usuario}': crear la "
                                    "cuenta desde el juego (New Account) con la "
-                                   "contraseña del panel, o corregir el .env")
+                                   "contraseña del panel, y despues correr "
+                                   "sudo make dashboard (otorga el permiso de bot)")
                     return
                 partes = linea.split(" ", 2)
                 if len(partes) < 2 or not partes[0].isdigit():
@@ -523,6 +532,14 @@ def parcial() -> str:
       <button onclick="accion('reiniciar-pvpgn','',this)">reiniciar</button></div>
     <div class="tile"><b>{bots_activos}/{len(bots)}</b> bots activos</div>
   </div>
+
+  <p>
+    <button onclick="accion('instalar-mapas','',this)">
+      Instalar mapas subidos ({len(lista_archivos(INCOMING_DIR))})</button>
+    &nbsp;<button onclick="accion('backup','',this)">Hacer backup ahora</button>
+    &nbsp;<small style="color:#9c9c90">los "reiniciar" estan al lado de PvPGN
+    (arriba) y de cada bot (tabla de abajo)</small>
+  </p>
 
   <h2>Bots (uno por mapa) <small>— tocá el nombre para ver quien esta adentro
     y su log</small></h2>

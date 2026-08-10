@@ -55,8 +55,15 @@ ejecutar() { # ejecutar <accion> <arg> -> salida por stdout, exit code real
             # Mismo camino que `make brand-maps`: preview + instalar en la
             # carpeta del bot. Si todo salio bien, los originales se archivan
             # para que no queden como "pendientes" eternos.
+            # Con el techo de subida levantado (WC3_MAX_MAP_MB > 8 en el
+            # dashboard.env), los mapas grandes se instalan a proposito:
+            # --allow-large. Solo cargan con WFE en TODOS los clientes.
+            local extra=()
+            if [[ "${WC3_MAX_MAP_MB:-8}" =~ ^[0-9]+$ && "${WC3_MAX_MAP_MB:-8}" -gt 8 ]]; then
+                extra+=(--allow-large)
+            fi
             "${PY}" "${REPO}/scripts/brand-map.py" "${mapas[@]}" --out-dir /opt/wc3/maps \
-                || return 1
+                "${extra[@]}" || return 1
             chown wc3:wc3 /opt/wc3/maps/*.w3x /opt/wc3/maps/*.w3m 2>/dev/null || true
             install -d -o wc3 -g wc3 /opt/wc3/incoming/instalados
             mv -f "${mapas[@]}" /opt/wc3/incoming/instalados/ || return 1

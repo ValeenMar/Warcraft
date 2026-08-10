@@ -33,11 +33,25 @@ El comando imprime la dirección final, tipo `http://TU-IP:8322/`. Se abre
 desde cualquier navegador (PC o celular): usuario **admin**, la contraseña
 es la que pusiste en `WC3_DASH_PASSWORD`. Sobrevive reinicios del VPS solo.
 
-**Para el chat** falta un paso de una sola vez: crear la cuenta `panel` en el
-server, desde el cliente del juego, con "New Account" (usuario `panel`,
-contraseña la de `WC3_BOT_PASSWORD` — o la que definas en
-`WC3_DASH_CHAT_PASSWORD` antes de correr `make dashboard`). Hasta que exista,
-la sección de chat te lo recuerda; el resto del panel anda igual.
+**Para el chat** faltan dos pasos de una sola vez:
+
+1. Crear la cuenta `panel` desde el cliente del juego, con "New Account"
+   (usuario `panel`, contraseña la de `WC3_BOT_PASSWORD` — o la que definas
+   en `WC3_DASH_CHAT_PASSWORD`).
+2. Correr `sudo make dashboard` de nuevo: además de reinstalar, le otorga a
+   esa cuenta el **permiso de bot** que PvPGN exige para conexiones de chat
+   (sin eso, el server la rechaza con "no bot access" aunque exista), y te
+   dice si falta reiniciar PvPGN para que lo tome (botón del panel).
+
+Hasta entonces, la sección de chat te va diciendo exactamente qué falta; el
+resto del panel anda igual.
+
+## Dónde está cada botón
+
+- **Instalar mapas subidos** y **Hacer backup ahora**: en la barra de arriba,
+  justo debajo de los números (y repetidos en sus secciones).
+- **Reiniciar PvPGN**: en el recuadro "PvPGN" de los números de arriba.
+- **Reiniciar un bot**: al final de su fila en la tabla de bots.
 
 ## Subir un mapa, ahora todo desde la página
 
@@ -47,6 +61,11 @@ la sección de chat te lo recuerda; el resto del panel anda igual.
 3. Si el mapa **reemplaza** uno que ya se hostea, tocá "reiniciar" en el bot
    de ese mapa y listo. Si es **nuevo**, falta darle su bot (eso sí es por
    SSH): `./scripts/make-instances.py --maps-dir /opt/wc3/maps` te dice todo.
+
+Mapas de **más de 8 MB**: el techo se levanta una sola vez con
+`WC3_MAX_MAP_MB=64` en el `.env` + `sudo make dashboard`; el detalle (y lo
+que necesitan los jugadores para poder cargarlos) está en
+`docs/mapas-grandes.md`.
 
 ## Cómo hacen los botones para tocar el sistema (y por qué es seguro)
 

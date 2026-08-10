@@ -73,6 +73,37 @@ EOF
 chown root:wc3 /opt/wc3/dashboard.env
 chmod 640 /opt/wc3/dashboard.env
 
+# --- Permiso de bot para la cuenta del chat -------------------------------------
+# El login chat/telnet de bnetd exige auth\botlogin=true en la cuenta
+# (handle_telnet.cpp: "Account has no bot access", default false). La cuenta
+# se crea desde el juego; el permiso se otorga aca, directo en MySQL (tabla
+# pvpgn_BNET, columna auth_botlogin). Mejor-esfuerzo: sin esto el panel anda
+# igual, solo que sin chat.
+if [[ "${CHAT_USER}" =~ ^[A-Za-z0-9_-]+$ ]] \
+   && [[ -n "${WC3_DB_NAME:-}" && -n "${WC3_DB_USER:-}" && -n "${WC3_DB_PASS:-}" ]] \
+   && command -v mysql >/dev/null; then
+    existe="$(MYSQL_PWD="${WC3_DB_PASS}" mysql --user="${WC3_DB_USER}" \
+        --host="${WC3_DB_HOST:-127.0.0.1}" -N -B "${WC3_DB_NAME}" -e \
+        "SELECT COUNT(*) FROM pvpgn_BNET WHERE username = lower('${CHAT_USER}');" \
+        2>/dev/null || echo error)"
+    if [[ "${existe}" == "1" ]]; then
+        MYSQL_PWD="${WC3_DB_PASS}" mysql --user="${WC3_DB_USER}" \
+            --host="${WC3_DB_HOST:-127.0.0.1}" "${WC3_DB_NAME}" -e \
+            "UPDATE pvpgn_BNET SET auth_botlogin='true' WHERE username = lower('${CHAT_USER}');"
+        log "permiso de bot otorgado a la cuenta '${CHAT_USER}'"
+        log "  (si PvPGN ya estaba corriendo, reinicialo para que lo tome:"
+        log "   el boton 'reiniciar' del panel, o systemctl restart pvpgn)"
+    elif [[ "${existe}" == "0" ]]; then
+        log "AVISO: la cuenta '${CHAT_USER}' todavia no existe en PvPGN."
+        log "  Creala desde el juego (New Account) y volve a correr: sudo make dashboard"
+    else
+        log "AVISO: no pude consultar MySQL para el permiso de bot (¿base sin crear?)."
+    fi
+else
+    log "AVISO: sin credenciales de MySQL en .env; el permiso de bot del chat"
+    log "  queda pendiente (la seccion de chat del panel va a avisar)."
+fi
+
 # --- Journal ------------------------------------------------------------------
 # Para que la pagina pueda mostrar las ultimas lineas de pvpgn y de cada bot.
 if ! id -nG wc3 | grep -qw systemd-journal; then

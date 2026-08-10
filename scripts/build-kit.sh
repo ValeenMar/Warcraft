@@ -23,6 +23,16 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT_DIR="${REPO_DIR}/dist"
 MAPS_DIR=""
 
+# WFE (teclas LoL + Unlock Map Size). El BINARIO no viaja en el kit (se
+# inyecta en el juego, los antivirus lo marcan, y haria sospechoso al kit
+# entero): el kit lleva INSTALAR-WFE.bat, que lo baja del sitio oficial en
+# la maquina del jugador, pinneado a un release y un SHA-256 fijos. Aca solo
+# se necesita el WFEConfigBase.ini (texto, vive en el repo git de WFE) para
+# generar el perfil WC3Revival con make-wfe-profile.py. Todo mejor-esfuerzo:
+# sin internet, el kit sale sin extras y lo dice.
+WFE_BASE_INI_URL="https://raw.githubusercontent.com/UnryzeC/WFE-Release/d3de1601685e85a2e02e32bacb48b60835297c26/Files/WFEConfigBase.ini"
+WFE_BASE_INI_SHA256="7e42091fc92a8ef7138265ad8e41ad55419cfe5c19546bcff03e48019ed7e4a4"
+
 # w3l 1.5.1.1, el loader oficial de PvPGN. El zip trae contrasena.
 W3L_URL="${WC3_W3L_URL:-http://cdn.pvpgn.pro/w3l/w3l_1_5_1_1_by_Keres.zip}"
 W3L_ZIP_PASSWORD="pvpgn"
@@ -136,6 +146,41 @@ for f in "${KIT}/INSTALAR.bat" "${KIT}/INSTALAR-JUEGO.bat" "${KIT}/LEEME.txt"; d
     fi
 done
 
+# --- extras: WFE (teclas LoL + mapas grandes), mejor-esfuerzo -----------------
+WFE_BASE="${CACHE_DIR}/WFEConfigBase.ini"
+if [[ ! -s "${WFE_BASE}" ]]; then
+    log "bajando WFEConfigBase.ini (pinneado) para generar el perfil"
+    curl -fsSL -o "${WFE_BASE}" "${WFE_BASE_INI_URL}" || true
+fi
+wfe_ok=0
+if [[ -s "${WFE_BASE}" ]] \
+   && [[ "$(sha256sum "${WFE_BASE}" | cut -d' ' -f1)" == "${WFE_BASE_INI_SHA256}" ]] \
+   && command -v python3 >/dev/null; then
+    install -d "${KIT}/extras/WFE"
+    if python3 "${REPO_DIR}/scripts/make-wfe-profile.py" "${WFE_BASE}" \
+            --out "${KIT}/extras/WFE/WC3Revival.ini" >/dev/null; then
+        envsubst "${subst}" < "${REPO_DIR}/kit/INSTALAR-WFE.bat.tpl" \
+            > "${KIT}/extras/WFE/INSTALAR-WFE.bat"
+        envsubst "${subst}" < "${REPO_DIR}/kit/TECLAS-LOL.txt.tpl" \
+            > "${KIT}/extras/WFE/TECLAS-LOL.txt"
+        wfe_ok=1
+        for f in "${KIT}/extras/WFE/INSTALAR-WFE.bat" "${KIT}/extras/WFE/TECLAS-LOL.txt"; do
+            # shellcheck disable=SC2016  # buscamos el literal ${WC3_, sin expandirlo
+            if grep -q '\${WC3_' "${f}"; then
+                log "AVISO: placeholder sin resolver en $(basename "${f}")"
+                wfe_ok=0
+            fi
+        done
+        [[ "${wfe_ok}" -eq 1 ]] && \
+            log "extras/WFE listos (perfil + instalador; el binario lo baja el jugador)"
+    fi
+fi
+if [[ "${wfe_ok}" -eq 0 ]]; then
+    rm -rf "${KIT}/extras"
+    log "AVISO: el kit sale SIN extras/WFE (¿sin internet, o cambio el base de WFE?)."
+    log "  Sin WFE no hay teclas LoL ni mapas de mas de 8 MiB (docs/mapas-grandes.md)."
+fi
+
 # --- mapas (opcional) --------------------------------------------------------
 if [[ -n "${MAPS_DIR}" ]]; then
     [[ -d "${MAPS_DIR}" ]] || die "no existe el directorio de mapas ${MAPS_DIR}"
@@ -155,12 +200,13 @@ fi
 # Windows los quiere asi; el .bat en particular se porta raro sin ellos. Se
 # excluye loader/ a proposito: esos archivos son de terceros (latency.txt es
 # data del loader, no texto nuestro) y no se tocan.
-log "pasando .bat/.txt/.ps1 a CRLF"
+log "pasando .bat/.txt/.ps1/.ini a CRLF"
 while IFS= read -r -d '' f; do
     tmp="${f}.crlf"
     sed 's/$/\r/' "${f}" > "${tmp}" && mv "${tmp}" "${f}"
 done < <(find "${KIT}" -path "${KIT}/loader" -prune -o \
-    \( -name '*.bat' -o -name '*.txt' -o -name '*.ps1' \) -type f -print0)
+    \( -name '*.bat' -o -name '*.txt' -o -name '*.ps1' -o -name '*.ini' \) \
+    -type f -print0)
 
 # --- empaquetar --------------------------------------------------------------
 install -d "${OUT_DIR}"

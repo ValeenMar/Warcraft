@@ -149,20 +149,26 @@ tarda bastante, asi que conviene tener los del kit ya puestos.
 
 
 ---------------------------------------------------------------
-  TECLAS ESTILO LOL (opcional, NO viene en el kit a proposito)
+  TECLAS ESTILO LOL Y MAPAS GRANDES (opcional: WFE)
 ---------------------------------------------------------------
 
-Se pueden tener QWER para las habilidades, smartcast y barras de
-vida siempre visibles, con una herramienta que se llama WFE
-(Warcraft Feature Extender). NO viene en este kit a proposito:
-para funcionar se inyecta en el proceso del juego, y eso el
-antivirus lo marca como amenaza (es un falso positivo, pero mete
-miedo). Meterlo en el kit haria que el instalador parezca un
-virus, y la idea es que sea confiable.
+Se pueden tener QWER para las habilidades, smartcast, barras de
+vida siempre visibles, y cargar los mapas GRANDES del server (los
+de mas de 8 MB), con una herramienta que se llama WFE (Warcraft
+Feature Extender).
 
-Si te interesa, lo bajas por tu cuenta desde el sitio oficial:
-    github.com/UnryzeC/WFE-Release
-y le pedis al admin el perfil ya armado (WC3Revival.ini).
+El programa NO viaja dentro del kit a proposito: para funcionar
+se inyecta en el proceso del juego, y eso el antivirus lo marca
+como amenaza (es un falso positivo, pero mete miedo; meterlo aca
+haria sospechoso al kit entero). En su lugar, el kit trae
+extras\WFE\INSTALAR-WFE.bat: doble clic y lo baja del sitio
+oficial (github.com/UnryzeC/WFE-Release), verifica que la
+descarga sea exactamente la esperada, y lo deja configurado con
+el perfil del server. El paso a paso esta en
+extras\WFE\TECLAS-LOL.txt.
+
+OJO: si el server publica un mapa de mas de 8 MB, este paso deja
+de ser opcional — lo necesitan TODOS los que quieran jugarlo.
 
 Aclaracion sobre W3Champions, por si lo estabas pensando: no
 sirve aca. Necesita Reforged / 1.32, y este servidor es 1.27a.
@@ -179,6 +185,9 @@ sirve aca. Necesita Reforged / 1.32, y este servidor es 1.27a.
   herramientas\           el script que agrega el servidor a la
                           lista de Battle.net
   mapas\                  mapas para copiar (puede venir vacia)
+  extras\WFE\             teclas LoL + mapas grandes (opcional):
+                          el instalador que BAJA WFE del sitio
+                          oficial, su perfil, y el paso a paso
 
 Todo es texto plano menos el loader. Se puede leer entero antes
 de ejecutar nada.
