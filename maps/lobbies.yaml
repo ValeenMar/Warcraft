@@ -153,6 +153,22 @@ lobbies:
       shadow: "#241400"
       motif: orb
 
+  - id: anime-character-fight
+    match: ["ACF*", "*Anime Character Fight*"]
+    display_name: "|c0080ffffAnime Character Fight"
+    plain_name: "Anime Character Fight 3.0d"
+    short_name: "ACF"
+    preview:
+      # Ya trae tapa propia del autor (Unryze), asi que este tema no se usa;
+      # queda de reserva.
+      title: "ACF"
+      subtitle: "Anime Character Fight"
+      bg_top: "#2a1533"
+      bg_bottom: "#0b0410"
+      accent: "#c07fff"
+      shadow: "#160722"
+      motif: swords
+
   # ----------------------------------------------------------------- TD ----
   - id: marvel-td
     match: ["Marvel*", "*MarvelTD*"]

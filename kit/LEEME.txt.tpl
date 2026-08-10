@@ -149,19 +149,20 @@ tarda bastante, asi que conviene tener los del kit ya puestos.
 
 
 ---------------------------------------------------------------
-  TECLAS ESTILO LOL: QWER + DF, SMARTCAST, VIDA VISIBLE
+  TECLAS ESTILO LOL (opcional, NO viene en el kit a proposito)
 ---------------------------------------------------------------
 
-Si el kit trae la carpeta extras\WFE, adentro esta el Warcraft
-Feature Extender YA CONFIGURADO: QWER para las habilidades, DF
-para las extras, smartcast, items en ZXCVBN y barras de vida
-siempre visibles con color por bando.
+Se pueden tener QWER para las habilidades, smartcast y barras de
+vida siempre visibles, con una herramienta que se llama WFE
+(Warcraft Feature Extender). NO viene en este kit a proposito:
+para funcionar se inyecta en el proceso del juego, y eso el
+antivirus lo marca como amenaza (es un falso positivo, pero mete
+miedo). Meterlo en el kit haria que el instalador parezca un
+virus, y la idea es que sea confiable.
 
-Es 100% opcional y se activa una sola vez: instrucciones en
-TECLAS-LOL.txt. Ojo: como se inyecta en el proceso del juego, el
-antivirus puede quejarse (falso positivo conocido; el proyecto es
-publico: github.com/UnryzeC/WFE-Release). Si no te convence, no
-lo actives — el juego anda perfecto sin el.
+Si te interesa, lo bajas por tu cuenta desde el sitio oficial:
+    github.com/UnryzeC/WFE-Release
+y le pedis al admin el perfil ya armado (WC3Revival.ini).
 
 Aclaracion sobre W3Champions, por si lo estabas pensando: no
 sirve aca. Necesita Reforged / 1.32, y este servidor es 1.27a.
@@ -178,7 +179,6 @@ sirve aca. Necesita Reforged / 1.32, y este servidor es 1.27a.
   herramientas\           el script que agrega el servidor a la
                           lista de Battle.net
   mapas\                  mapas para copiar (puede venir vacia)
-  extras\WFE\             teclas estilo LoL, opcional (TECLAS-LOL.txt)
 
 Todo es texto plano menos el loader. Se puede leer entero antes
 de ejecutar nada.
