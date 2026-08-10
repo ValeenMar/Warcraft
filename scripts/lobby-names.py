@@ -46,7 +46,7 @@ def build(lobbies: list, plain: bool, command: str) -> "tuple[str, int]":
         if size > LIMIT:
             flag = f"  <-- SE PASA: {size} bytes, el maximo es {LIMIT}"
             problems += 1
-        lines.append(f"{entry['id']:<22} !{command} {name}{flag}")
+        lines.append(f"{entry.get('id', '?'):<22} !{command} {name}{flag}")
     lines.append("")
     if plain:
         lines.append(

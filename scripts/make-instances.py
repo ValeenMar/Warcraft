@@ -46,7 +46,12 @@ ENV_DIR = REPO_DIR / "config" / "hostbot"
 # que es lo que abre ufw en install/00-bootstrap-vps.sh.
 PUERTO_HOST_BASE = 6113
 PUERTO_RECONNECT_BASE = 6133
-MAX_INSTANCIAS = 20  # 6113+20 = 6133, que es donde arrancan los de reconnect
+# El limite real lo pone el rango del firewall: la instancia N usa el hostport
+# 6113+(N-1) y el reconnect 6133+(N-1), y el reconnect de la 9 (6141) ya cae
+# AFUERA de 6113:6140 — quedaria filtrado por ufw y las reconexiones GProxy
+# fallarian en silencio. Para mas de 8 instancias hay que agrandar
+# WC3_BOT_PORT_RANGE en .env, re-correr el bootstrap (ufw) y subir esto.
+MAX_INSTANCIAS = 8
 
 LIMITE_NOMBRE = 31  # aura.cpp:879
 LIMITE_VIRTUALHOST = 15
@@ -62,7 +67,9 @@ def cargar_lobbies() -> list:
 def elegir_entry(lobbies: list, nombre_archivo: str) -> "dict | None":
     """Mismo criterio que brand-map.py: gana el primer patron que matchea."""
     for entry in lobbies:
-        if entry.get("id") == "default":
+        # Sin id no hay instancia posible (nombra el .cfg y el env); mejor
+        # ignorar el entry que reventar con KeyError mas adelante.
+        if not entry.get("id") or entry.get("id") == "default":
             continue
         for patron in entry.get("match", []) or []:
             if fnmatch.fnmatch(nombre_archivo.lower(), patron.lower()):
@@ -155,6 +162,18 @@ def main(argv=None) -> int:
     if args.limit:
         planificadas = planificadas[: args.limit]
 
+    # Este chequeo tiene que ir ANTES de asignar numeros: con el rango lleno,
+    # min() sobre un set vacio revienta con un ValueError crudo en lugar de
+    # este mensaje.
+    if len(planificadas) > MAX_INSTANCIAS:
+        print(
+            f"error: {len(planificadas)} instancias no entran en el rango de puertos "
+            f"(maximo {MAX_INSTANCIAS}; ver WC3_BOT_PORT_RANGE en .env y el "
+            "comentario sobre MAX_INSTANCIAS en este script)",
+            file=sys.stderr,
+        )
+        return 2
+
     # Numeracion estable: si ya hay instancias generadas, cada mapa se queda
     # con el numero que tenia. Sin esto, agregar un mapa que cae antes en orden
     # alfabetico renumeraba todo, y cada bot pasaba a hostear otro mapa — con
@@ -178,13 +197,19 @@ def main(argv=None) -> int:
             asignadas[entry["id"]] = n
             libres.discard(n)
 
-    if len(planificadas) > MAX_INSTANCIAS:
-        print(
-            f"error: {len(planificadas)} instancias no entran en el rango de puertos "
-            f"(maximo {MAX_INSTANCIAS})",
-            file=sys.stderr,
-        )
-        return 2
+    # Instancias huerfanas: un instance-N.env cuyo mapa ya no esta en maps-dir.
+    # No se borran solas (puede ser a proposito, como dbz-tribute en espera),
+    # pero sin el aviso el bot sigue habilitado apuntando a un .w3x inexistente
+    # y falla en cada arranque sin que nadie sepa por que.
+    ids_planificados = {e["id"] for e, _ in planificadas}
+    huerfanas = sorted(
+        (n, mapa_id) for mapa_id, n in ya_asignados.items()
+        if mapa_id not in ids_planificados
+    )
+    for n, mapa_id in huerfanas:
+        print(f"  aviso: instance-{n}.env apunta a '{mapa_id}', que no tiene .w3x en "
+              f"{args.maps_dir}. Si ese mapa se fue en serio, borra el .env y corre:\n"
+              f"         sudo systemctl disable --now wc3-hostbot@{n}")
 
     problemas = 0
     planificadas.sort(key=lambda par: asignadas[par[0]["id"]])

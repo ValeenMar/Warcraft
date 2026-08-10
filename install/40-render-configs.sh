@@ -24,6 +24,8 @@ if [[ ! -f "${ENV_FILE}" ]]; then
     echo "Falta ${ENV_FILE}. Copia .env.example a .env y completalo." >&2
     exit 1
 fi
+# El .env tiene contraseñas; un cp normal lo deja 644 (legible por cualquiera)
+chmod 600 "${ENV_FILE}"
 
 # Cargar .env exportando todo (envsubst solo ve variables exportadas)
 set -a
@@ -41,10 +43,21 @@ source "${ENV_FILE}"
 WC3_BOT_AUTOHOSTNAME="${WC3_BOT_AUTOHOSTNAME:-}"
 if [[ -z "${WC3_BOT_AUTOHOSTOWNER:-}" ]]; then
     # Dueno de las partidas que crea el autohost: el primer admin de la lista.
-    WC3_BOT_AUTOHOSTOWNER="${WC3_BOT_ROOTADMINS%%,*}"
+    # WC3_BOT_ROOTADMINS es separada por ESPACIOS (asi la tokeniza Aura), por
+    # eso se corta en el primer espacio; y con default, para que un .env de
+    # antes de que existiera la variable no aborte con "unbound variable".
+    admins="${WC3_BOT_ROOTADMINS:-admin}"
+    WC3_BOT_AUTOHOSTOWNER="${admins%% *}"
     log "WC3_BOT_AUTOHOSTOWNER no esta en .env: uso '${WC3_BOT_AUTOHOSTOWNER}'"
 fi
 set +a
+
+# Con la contraseña del bot en CAMBIAME el render "funciona" pero los bots
+# fallan el login despues, sin pista de por que. Mejor cortar aca.
+if [[ "${WC3_BOT_PASSWORD:-}" == "CAMBIAME" ]]; then
+    echo "WC3_BOT_PASSWORD sigue en CAMBIAME en .env: los bots no van a poder loguearse." >&2
+    exit 1
+fi
 
 # Whitelist para envsubst: SOLO variables WC3_*. Asi un ${prefix} legitimo de
 # un conf de PvPGN (p. ej. sql_DB_layout.conf) jamas se pisa por accidente.
@@ -85,8 +98,11 @@ render() {
     fi
 
     if [[ -f "${dest}" ]]; then
-        install -d "${BACKUP_DIR}/${STAMP}"
-        cp -a "${dest}" "${BACKUP_DIR}/${STAMP}/$(basename "${dest}")"
+        # Se preserva la ruta completa, no solo el basename: en un mismo run
+        # se renderizan ~20 w3motd.txt (uno por locale de i18n) y con basename
+        # todos colisionarian en el mismo archivo de backup.
+        install -d "${BACKUP_DIR}/${STAMP}/$(dirname "${dest}")"
+        cp -a "${dest}" "${BACKUP_DIR}/${STAMP}${dest}"
     fi
     install -m 640 -o wc3 -g wc3 "${tmp}" "${dest}"
     rm -f "${tmp}"
@@ -143,6 +159,12 @@ found_instance=0
 for inst_env in "${REPO_DIR}"/config/hostbot/instance-*.env; do
     found_instance=1
     n="$(basename "${inst_env}" | sed -E 's/instance-([0-9]+)\.env/\1/')"
+    # Un instance-1b.env matchea el glob pero no el sed: sin este chequeo, n
+    # quedaria como el nombre entero y se crearia instances/instance-1b.env/
+    if ! [[ "${n}" =~ ^[0-9]+$ ]]; then
+        echo "ERROR: $(basename "${inst_env}") no es instance-<numero>.env; lo salteo" >&2
+        continue
+    fi
     inst_dir="/opt/wc3/hostbot/instances/${n}"
     install -d -o wc3 -g wc3 "${inst_dir}"
     # Aura busca ip-to-country.csv en su directorio de trabajo

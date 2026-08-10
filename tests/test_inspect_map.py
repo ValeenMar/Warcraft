@@ -117,8 +117,87 @@ class TestCliOnSyntheticW3x(unittest.TestCase):
             self.assertTrue("protegido" in err or "mpyq no esta instalado" in err, err)
 
 
-if __name__ == "__main__":
-    unittest.main()
+class TestUpdateRegistry(unittest.TestCase):
+    """--update-registry edita solo las lineas de los valores que cambian:
+    los comentarios (el header con los criterios, los separadores de seccion)
+    tienen que sobrevivir byte por byte. Antes se reescribia el YAML entero
+    con safe_dump y una sola corrida borraba toda esa documentacion."""
+
+    REGISTRY = """\
+# ============================================================================
+# header del registry: criterios, limites, advertencias
+# ============================================================================
+
+maps:
+  # ------------------------------------------------------------ seccion A ---
+  - name: Mapa Uno
+    aliases: [Uno]
+    size_mb: null
+    slots: null
+    teams: null
+    status: pendiente
+    notes: >-
+      un texto largo con { llaves } adentro.
+
+  - name: Mapa Dos
+    size_mb: 1.5
+    slots: 8
+    teams: 2
+    status: validado
+"""
+
+    def _registry(self, tmp: str) -> Path:
+        reg = Path(tmp) / "registry.yaml"
+        reg.write_text(self.REGISTRY, encoding="utf-8")
+        return reg
+
+    def test_actualiza_sin_borrar_comentarios(self):
+        import yaml
+
+        with tempfile.TemporaryDirectory() as tmp:
+            reg = self._registry(tmp)
+            meta = {"name": "Mapa Uno", "header_name": "Mapa Uno",
+                    "file": "Mapa Uno.w3x", "size_mb": 3.14, "slots": 10, "teams": 2}
+            msg = inspect_map.update_registry(reg, meta)
+            self.assertIn("size_mb", msg)
+
+            texto = reg.read_text(encoding="utf-8")
+            self.assertIn("# header del registry", texto)
+            self.assertIn("seccion A ---", texto)
+
+            doc = yaml.safe_load(texto)
+            uno = doc["maps"][0]
+            self.assertEqual(uno["size_mb"], 3.14)
+            self.assertEqual(uno["slots"], 10)
+            self.assertEqual(uno["status"], "descargado")
+            # el otro entry no se toca
+            self.assertEqual(doc["maps"][1]["status"], "validado")
+
+    def test_no_pisa_lo_editado_a_mano(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            reg = self._registry(tmp)
+            antes = reg.read_text(encoding="utf-8")
+            meta = {"name": "Mapa Dos", "header_name": "Mapa Dos",
+                    "file": "Mapa Dos.w3x", "size_mb": 99.9, "slots": 24, "teams": 4}
+            msg = inspect_map.update_registry(reg, meta)
+            self.assertIn("ninguno", msg)
+            self.assertEqual(reg.read_text(encoding="utf-8"), antes)
+
+    def test_registry_vacio_da_error_amable(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            reg = Path(tmp) / "registry.yaml"
+            reg.write_text("", encoding="utf-8")
+            meta = {"name": "X", "header_name": "X", "file": "X.w3x"}
+            with self.assertRaises(inspect_map.InspectError):
+                inspect_map.update_registry(reg, meta)
+
+    def test_mapa_desconocido_da_error_amable(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            reg = self._registry(tmp)
+            meta = {"name": "No Existe", "header_name": "No Existe",
+                    "file": "No Existe.w3x", "size_mb": 1.0}
+            with self.assertRaises(inspect_map.InspectError):
+                inspect_map.update_registry(reg, meta)
 
 
 class TestWtsTrigstrs(unittest.TestCase):
@@ -168,3 +247,7 @@ autor desconocido
         inspect_map.resolve_trigstrs(meta, {4: "otra cosa"})
         self.assertEqual(meta["name"], "DotA Allstars")
         self.assertEqual(meta["author"], "IceFrog")
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -2,7 +2,7 @@
 # ============================================================================
 # build-kit.sh — arma el kit que se le pasa a los amigos
 #
-#   ./scripts/build-kit.sh [directorio_de_salida]
+#   ./scripts/build-kit.sh [--maps DIR] [--out DIR]
 #
 # Junta en un .zip:
 #   - INSTALAR.bat y LEEME.txt, renderizados con los valores de .env
@@ -26,6 +26,12 @@ MAPS_DIR=""
 # w3l 1.5.1.1, el loader oficial de PvPGN. El zip trae contrasena.
 W3L_URL="${WC3_W3L_URL:-http://cdn.pvpgn.pro/w3l/w3l_1_5_1_1_by_Keres.zip}"
 W3L_ZIP_PASSWORD="pvpgn"
+# SHA-256 del zip: el loader se baja por HTTP plano (el CDN no sirve bien por
+# HTTPS) y se REDISTRIBUYE a los amigos, que lo ejecutan; sin esto, cualquiera
+# en el medio de la red podria cambiar el binario y el kit lo repartiria igual.
+# Calculado el 2026-08-10 sobre el zip del CDN. Si cambias WC3_W3L_URL a otra
+# version, pasa el hash nuevo en WC3_W3L_SHA256 (sacalo con sha256sum).
+W3L_SHA256="${WC3_W3L_SHA256:-6c6b39d5f32bfa700b7d14cf76e35d53fda3c405673173dc508b82aeb66688b7}"
 CACHE_DIR="${REPO_DIR}/.cache"
 
 log() { printf '[build-kit] %s\n' "$*"; }
@@ -76,11 +82,25 @@ W3L_ZIP="${CACHE_DIR}/w3l.zip"
 if [[ ! -s "${W3L_ZIP}" ]]; then
     log "bajando el loader de ${W3L_URL}"
     # HTTP a secas: el CDN de pvpgn.pro no sirve bien por HTTPS (curl 60).
+    # La integridad la garantiza el chequeo de SHA-256 de abajo, no el canal.
     curl -fsSL -o "${W3L_ZIP}" "${W3L_URL}" \
         || die "no pude bajar el loader. Bajalo a mano a ${W3L_ZIP} desde https://pvpgn.pro/w3l.html"
 else
     log "loader ya cacheado en ${W3L_ZIP}"
 fi
+
+# Verificar SIEMPRE, tambien el cacheado: un cache envenenado una vez seria
+# malware repartido para siempre.
+hash_real="$(sha256sum "${W3L_ZIP}" | cut -d' ' -f1)"
+if [[ "${hash_real}" != "${W3L_SHA256}" ]]; then
+    rm -f "${W3L_ZIP}"
+    die "el zip del loader NO coincide con el SHA-256 esperado (borre el cache).
+  esperado: ${W3L_SHA256}
+  obtenido: ${hash_real}
+Puede ser una descarga corrupta (reintentar) o un zip adulterado. Si cambiaste
+de version a proposito, defini WC3_W3L_SHA256 con el hash nuevo."
+fi
+log "loader verificado (sha256 OK)"
 
 log "extrayendo el loader"
 W3L_TMP="${STAGE}/w3l"

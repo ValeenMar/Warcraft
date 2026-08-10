@@ -209,9 +209,16 @@ def resolve_image(spec: "str | None", tmp_dir: Path) -> "Path | None":
     pedido = urllib.request.Request(
         str(spec), headers={"User-Agent": "wc3-revival/brand-map"}
     )
+    limite = 16 * 1024 * 1024
     try:
         with urllib.request.urlopen(pedido, timeout=30) as resp:
-            datos = resp.read(16 * 1024 * 1024)
+            datos = resp.read(limite)
+            # Un byte mas: si hay, la imagen pasa el techo y el truncado
+            # silencioso apareceria recien en Pillow como "imagen corrupta".
+            if resp.read(1):
+                raise BrandError(
+                    f"la imagen de {spec} pesa mas de 16 MiB; usa una mas chica"
+                )
     except (urllib.error.URLError, OSError) as exc:
         raise BrandError(f"no pude bajar {spec}: {exc}") from exc
     if not datos:
@@ -306,7 +313,8 @@ def report_one(smpq: str, src: Path, dump_dir: "Path | None") -> int:
     return 0
 
 
-def brand_one(args, lobbies: list, smpq: str, src: Path) -> int:
+def brand_one(args, lobbies: list, smpq: str, src: Path) -> "tuple[int, bool]":
+    """Procesa un mapa. Devuelve (fallo, cambio): fallo 0/1, cambio si se modifico."""
     print(f"\n=== {src.name}")
     if not src.is_file():
         print(f"  ERROR: no existe {src}", file=sys.stderr)
@@ -361,7 +369,16 @@ def brand_one(args, lobbies: list, smpq: str, src: Path) -> int:
         )
 
     # --- imagen ----------------------------------------------------------
-    preview = _load_sibling("make_preview", "make-preview.py")
+    # make-preview.py sale con SystemExit(3) si falta Pillow; convertido a
+    # BrandError, un lote de 10 mapas reporta el error y sigue con el resumen
+    # en vez de abortar entero en el primero.
+    try:
+        preview = _load_sibling("make_preview", "make-preview.py")
+    except SystemExit as exc:
+        raise BrandError(
+            "no pude cargar make-preview.py (¿falta Pillow? "
+            "/opt/wc3/venv/bin/pip install pillow)"
+        ) from exc
     with tempfile.TemporaryDirectory() as tmp:
         imagen = resolve_image(args.from_image, Path(tmp))
         tga = Path(tmp) / PREVIEW_NAME
@@ -375,7 +392,14 @@ def brand_one(args, lobbies: list, smpq: str, src: Path) -> int:
         try:
             inject_preview(smpq, dest, tga)
         except BrandError as exc:
-            if not args.in_place:
+            if args.in_place:
+                # smpq pudo haber dejado el MPQ escrito a medias: restaurar el
+                # original desde el respaldo, como promete el docstring.
+                backup = src.with_suffix(src.suffix + ".orig")
+                if backup.exists():
+                    shutil.copyfile(backup, src)
+                    print("  restaurado desde el respaldo .orig", file=sys.stderr)
+            else:
                 dest.unlink(missing_ok=True)
             print(f"  ERROR: {exc}", file=sys.stderr)
             return 1, False

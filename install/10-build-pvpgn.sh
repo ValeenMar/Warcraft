@@ -78,15 +78,32 @@ log "compilando (esto tarda unos minutos)"
 cmake --build "${SRC_DIR}/build" -j "$(nproc)"
 
 # --- Instalar ----------------------------------------------------------------
-# make install NO pisa los .conf existentes si ya fueron editados? Si los pisa:
-# por eso las configs reales se generan con 40-render-configs.sh que hace
-# backup fechado antes de escribir. Aca instalamos binarios + samples.
+# OJO: cmake --install SI pisa los .conf existentes (verificado contra el
+# conf/CMakeLists.txt del commit pinneado: los install(FILES ...) son
+# incondicionales). O sea que despues de cada build las configs de etc/pvpgn
+# quedan en las samples de upstream. Por eso, si ya hay un .env, este script
+# re-renderiza las configs reales al final; si no lo hace, el proximo restart
+# arranca con la config de fabrica (backend file, sin MySQL) y "desaparecen"
+# las cuentas hasta que alguien corra 40-render-configs.sh a mano.
 log "instalando en ${PREFIX}"
 cmake --install "${SRC_DIR}/build"
 chown -R wc3:wc3 "${PREFIX}/var"
 
-# --- Unidad systemd ----------------------------------------------------------
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if [[ -f "${REPO_DIR}/.env" ]]; then
+    log "re-renderizando las configs (cmake --install las piso con las samples)"
+    if ! "${REPO_DIR}/install/40-render-configs.sh"; then
+        log "ATENCION: el render fallo (ver arriba). Corregi el .env y corre"
+        log "  install/40-render-configs.sh ANTES de reiniciar pvpgn, o va a"
+        log "  arrancar con las configs de fabrica."
+    fi
+else
+    log "ATENCION: cmake --install dejo las configs de etc/pvpgn en las samples"
+    log "  de upstream. Cuando tengas el .env, corre install/40-render-configs.sh"
+    log "  ANTES de arrancar pvpgn."
+fi
+
+# --- Unidad systemd ----------------------------------------------------------
 log "instalando unidad systemd pvpgn.service"
 install -m 644 "${REPO_DIR}/systemd/pvpgn.service" /etc/systemd/system/pvpgn.service
 systemctl daemon-reload

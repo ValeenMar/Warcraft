@@ -162,8 +162,9 @@ def main(argv=None) -> int:
         return 3
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    # Sin entrelazado y sin alfa, igual que el que instala PvPGN de fabrica.
-    img.save(args.out, format="PNG", interlace=False)
+    # Sin alfa (RGB), igual que el que instala PvPGN de fabrica. Pillow nunca
+    # escribe PNG entrelazado, asi que no hay nada que apagar.
+    img.save(args.out, format="PNG")
     print(f"OK: {args.out} ({ANCHO}x{ALTO}, {args.out.stat().st_size} B)")
     if args.preview:
         from PIL import Image
