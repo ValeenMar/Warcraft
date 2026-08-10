@@ -244,14 +244,20 @@ recorta al centro hasta esa proporción en vez de deformarlo — pero conviene
 dibujarlo directo en 468×60, porque es una franja muy apaisada (7,8 : 1) y un
 logo cuadrado pierde la mitad de arriba y de abajo.
 
-**El mensaje de bienvenida** (`w3motd.txt`) es el texto que aparece en el chat
-al loguearse. Dos datos útiles que salen del sample de PvPGN: tiene un límite
-de **11 líneas**, y —a diferencia de la lista de partidas— acá los códigos de
-color **sí se renderizan** (el sample de fábrica viene pintado). Además acepta
-variables: `%s` (nombre del server), `%u`/`%g` (jugadores/partidas ahora),
-`%U` (usuarios totales).
+**El mensaje de bienvenida** (`w3motd.txt`) es el texto que aparece en el panel
+derecho al loguearse. Warcraft antepone `Rank:` a cada evento informativo, así
+que lo mantenemos en **una sola línea larga**: el cliente la envuelve según el
+ancho de la pantalla y el prefijo aparece una sola vez. Los códigos de color sí
+se renderizan. También acepta variables: `%s` (nombre del server), `%u`/`%g`
+(jugadores/partidas ahora), `%U` (usuarios totales).
 
 El template es `config/pvpgn/w3motd.txt.tpl`. El render pisa el archivo base
 **y todas las variantes de idioma** de `i18n/` — eso es lo que mata el saludo
 en alemán: PvPGN elige el archivo según el locale del cliente, y con todos los
 idiomas pisados con el mismo texto, da igual con qué locale entre cada uno.
+
+La columna grande de la izquierda sale de `news.txt`. Nuestro template es
+`config/pvpgn/news.txt.tpl` y el render también pisa todas las variantes de
+idioma, eliminando las noticias de fábrica de PvPGN. Cada bloque empieza con
+`{MM/DD/YYYY}`; usar una fecha nueva fuerza a los clientes a recibir la entrada
+nueva aunque conserven noticias viejas en `bncache.dat`.

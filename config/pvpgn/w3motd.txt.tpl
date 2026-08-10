@@ -1,8 +1,1 @@
-|c0033CCFFBienvenido a %s|r
-
-Los mapas estan |c00FFCC00SIEMPRE hosteados|r: anda a Custom Game -> Play Game
-y entra con doble clic. Cuando una partida arranca, el lobby se recrea solo.
-
-Ahora mismo: %u jugador(es) en %g partida(s), %U usuario(s) conectados.
-
-|c00999999Servidor privado - The Frozen Throne 1.27a|r
+|c00E8C96AWC3 REVIVAL|r  |c007FC8FF-|r  salas 24/7  |c007FC8FF-|r  Custom Game -> Play Game  |c007FC8FF-|r  %u jugando en %g partidas  |c008B929E- TFT 1.27b|r

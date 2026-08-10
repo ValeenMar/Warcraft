@@ -130,6 +130,16 @@ for motd in /opt/wc3/pvpgn/etc/pvpgn/i18n/w3motd.txt \
     render "${REPO_DIR}/config/pvpgn/w3motd.txt.tpl" "${motd}"
 done
 
+# La columna grande "Battle.net News" viene de news.txt. Igual que el MOTD,
+# existe una copia por locale; si no se pisan todas, cada cliente recibe un
+# contenido distinto. El cliente cachea las noticias, pero una entrada con
+# fecha nueva aparece arriba sin tener que borrar el historial anterior.
+for news in /opt/wc3/pvpgn/etc/pvpgn/i18n/news.txt \
+            /opt/wc3/pvpgn/etc/pvpgn/i18n/*/news.txt; do
+    [[ -f "${news}" ]] || continue
+    render "${REPO_DIR}/config/pvpgn/news.txt.tpl" "${news}"
+done
+
 # El banner en si: lo dibuja make-banner.py (necesita Pillow, que vive en el
 # venv). Si falta, no es fatal: queda el banner default de PvPGN.
 # Si dejaste tu propio diseno en config/pvpgn/banner.png, gana ese; si no, se

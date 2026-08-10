@@ -21,7 +21,8 @@ trabajo de install/40-render-configs.sh.
 
 Uso:
     make-banner.py --title "WC3 Revival" --subtitle "8 mapas - 22 ms" --out ad000001.png
-    make-banner.py --from-image mi-logo.png --out ad000001.png
+    make-banner.py --from-image mi-logo.png --title "WC3 Revival" \
+        --subtitle "CLASICOS - ANIME - 24/7" --out ad000001.png
     make-banner.py --title "WC3 Revival" --out banner.png --preview banner-grande.png
 
 Si preferis dibujarlo vos: PNG de 468x60, RGB, sin transparencia. El script
@@ -135,6 +136,56 @@ def adaptar(ruta: Path):
     return img
 
 
+def rotular(img, title: str, subtitle: str, accent: str):
+    """Superpone texto exacto sobre un arte propio, con antialiasing.
+
+    Los generadores de imagen son buenos para el fondo pero no para texto tan
+    chico. El rótulo se dibuja a 4x y se reduce al final, así el nombre del
+    realm queda nítido incluso en los 60 px reales del cliente clásico.
+    """
+    from PIL import Image, ImageDraw
+
+    prev = _load_preview_helpers()
+    w, h = ANCHO * SUPERSAMPLE, ALTO * SUPERSAMPLE
+    acc = prev.hex_to_rgb(accent)
+    grande = img.resize((w, h), Image.LANCZOS).convert("RGBA")
+    d = ImageDraw.Draw(grande, "RGBA")
+
+    # Placa central suave: conserva el arte de los extremos y le da contraste
+    # al título sin convertir el banner en un rectángulo opaco.
+    cx = w // 2
+    placa_w = int(w * .49)
+    for i in range(32, 0, -1):
+        alpha = round(2.8 * (33 - i))
+        d.rounded_rectangle(
+            [cx - placa_w // 2 - i, h * .08 - i // 3,
+             cx + placa_w // 2 + i, h * .91 + i // 3],
+            radius=h // 7, fill=(2, 5, 11, min(alpha, 72)),
+        )
+
+    titulo = title.upper()
+    font_t = prev.fit_font(d, titulo, int(w * .43), int(h * .45))
+    # Sombra dorada desplazada + metal claro encima.
+    d.text((cx + h * .012, h * .38 + h * .018), titulo, font=font_t,
+           fill=(*acc, 210), anchor="mm", stroke_width=max(3, h // 55),
+           stroke_fill=(0, 0, 0, 245))
+    d.text((cx, h * .38), titulo, font=font_t, fill=(235, 239, 245, 255),
+           anchor="mm", stroke_width=max(3, h // 55), stroke_fill=(0, 0, 0, 255))
+
+    if subtitle:
+        font_s = prev.fit_font(d, subtitle.upper(), int(w * .42), int(h * .18), bold=False)
+        d.text((cx, h * .73), subtitle.upper(), font=font_s, fill=(*acc, 255),
+               anchor="mm", stroke_width=max(2, h // 90), stroke_fill=(0, 0, 0, 255))
+
+    # Línea inferior azul -> oro, consistente con los dos bandos del arte.
+    for x in range(w):
+        t = x / max(1, w - 1)
+        color = tuple(round((45, 169, 255)[i] * (1 - t) + acc[i] * t) for i in range(3))
+        d.line((x, h - 4, x, h), fill=(*color, 255))
+
+    return grande.convert("RGB").resize((ANCHO, ALTO), Image.LANCZOS)
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Genera el banner 468x60 del cliente")
     ap.add_argument("--title", help="texto grande (nombre del server)")
@@ -154,6 +205,8 @@ def main(argv=None) -> int:
     try:
         if args.from_image:
             img = adaptar(args.from_image)
+            if args.title:
+                img = rotular(img, args.title, args.subtitle, args.accent)
         else:
             img = render(args.title, args.subtitle, args.accent, args.bg_top, args.bg_bottom)
     except ImportError:

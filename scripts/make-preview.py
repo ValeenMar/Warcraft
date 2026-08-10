@@ -47,14 +47,18 @@ LOBBIES_YAML = REPO_DIR / "maps" / "lobbies.yaml"
 # resultado a 128x128 queda mucho mas limpio que dibujar directo en chico.
 SUPERSAMPLE = 4
 
-# Fuentes que estan en cualquier Ubuntu server (paquete fonts-dejavu-core, que
-# viene por defecto). Se prueban en orden.
+# Fuentes disponibles en Windows y en Ubuntu (DejaVu viene por defecto). Se
+# prueban en orden para que las previews se vean bien en ambos entornos.
 FONT_CANDIDATES_BOLD = [
+    "C:/Windows/Fonts/georgiab.ttf",
+    "C:/Windows/Fonts/arialbd.ttf",
     "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
     "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
     "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf",
 ]
 FONT_CANDIDATES_REGULAR = [
+    "C:/Windows/Fonts/georgia.ttf",
+    "C:/Windows/Fonts/arial.ttf",
     "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
     "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
     "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
