@@ -1,3 +1,5 @@
+param([switch]$NoAbrir)
+
 $ErrorActionPreference = 'Stop'
 
 $Servidor = 'root@64.176.24.103'
@@ -76,4 +78,8 @@ if (-not (Test-Panel)) {
     throw 'El tunel funciona, pero el dashboard sigue sin responder.'
 }
 
-Start-Process $Url
+if ($NoAbrir) {
+    Write-Host "Panel listo en $Url" -ForegroundColor Green
+} else {
+    Start-Process $Url
+}
