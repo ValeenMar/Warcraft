@@ -14,10 +14,9 @@ Tres cosas que hay que tener claras antes de usarlo:
    bajar del bot en el lobby). Por eso el mapa modificado es el que va tanto en
    /opt/wc3/maps del server como en el kit de los amigos.
 
-2. HAY UN TECHO DE 8 MiB. El cliente 1.24-1.28 no carga mapas de mas de
-   8.388.608 bytes. Meter la preview agranda el archivo, y DotA 6.83d ya viene
-   con ~170 KB de margen. El script aborta y deja el mapa original intacto si
-   se pasa.
+2. HAY UN TECHO DE 128 MiB. El cliente objetivo 1.27b levanto el limite
+   anterior de 8 MiB a 128 MiB. Meter la preview agranda el archivo; el script
+   aborta y deja el mapa original intacto si supera el nuevo limite.
 
 3. LOS MAPAS PROTEGIDOS PUEDEN RECHAZAR LA ESCRITURA. Muchos mapas populares
    estan "protegidos" (les rompen a proposito las estructuras internas del MPQ
@@ -51,8 +50,8 @@ REPO_DIR = SCRIPT_DIR.parent
 LOBBIES_YAML = REPO_DIR / "maps" / "lobbies.yaml"
 
 PREVIEW_NAME = "war3mapPreview.tga"
-# Techo duro del cliente 1.24-1.28 (ver maps/registry.yaml).
-MAX_MAP_BYTES = 8 * 1024 * 1024
+# Techo duro del cliente objetivo 1.27b (ver maps/registry.yaml).
+MAX_MAP_BYTES = 128 * 1024 * 1024
 
 
 class BrandError(Exception):
@@ -387,16 +386,11 @@ def brand_one(args, lobbies: list, smpq: str, src: Path) -> int:
     problems = []
     if head != b"HM3W":
         problems.append("se rompio el header HM3W del .w3x")
-    if new_bytes > MAX_MAP_BYTES and not args.allow_large:
+    if new_bytes > MAX_MAP_BYTES:
         problems.append(
-            f"el mapa quedo en {new_bytes} B y el techo de 1.24-1.28 es "
-            f"{MAX_MAP_BYTES} B: no lo va a cargar ningun cliente. Si va a "
-            f"jugarse con WFE Unlock Map Size en todos los clientes, pasa "
-            f"--allow-large (ver docs/mapas-grandes.md)"
+            f"el mapa quedo en {new_bytes} B y el techo de 1.27b es "
+            f"{MAX_MAP_BYTES} B: no lo va a cargar ningun cliente"
         )
-    elif new_bytes > MAX_MAP_BYTES:
-        print(f"  AVISO: {new_bytes} B, arriba del techo de 8 MiB. Solo carga "
-              "con WFE Unlock Map Size en TODOS los clientes.")
 
     if problems:
         for p in problems:
@@ -416,7 +410,7 @@ def brand_one(args, lobbies: list, smpq: str, src: Path) -> int:
     margin = MAX_MAP_BYTES - new_bytes
     print(f"  imagen:  {args.size}x{args.size} TGA, {tga_bytes} B sin comprimir")
     print(f"  tamano:  {original_bytes} B -> {new_bytes} B ({delta:+d} B)")
-    print(f"  margen:  {margin} B hasta el techo de 8 MiB")
+    print(f"  margen:  {margin} B hasta el techo de 128 MiB")
     print(f"  sha1:    {original_sha1[:12]}... -> {sha1_of(dest)[:12]}...")
     print(f"  salida:  {dest}")
     display = entry.get("display_name") or entry.get("plain_name")
@@ -443,8 +437,6 @@ def main(argv=None) -> int:
                     help="solo informar que trae cada mapa, sin modificar nada")
     ap.add_argument("--dump-previews", type=Path, metavar="DIR",
                     help="con --report: exportar a PNG las previews que ya tengan")
-    ap.add_argument("--allow-large", action="store_true",
-                    help="permitir mapas > 8 MiB (solo cargan con WFE en todos los clientes)")
     ap.add_argument("--force", action="store_true",
                     help="pisar la preview que el mapa ya traiga (por defecto se respeta)")
     ap.add_argument("--size", type=int, default=128, choices=[128, 256],

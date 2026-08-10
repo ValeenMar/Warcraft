@@ -169,6 +169,20 @@ lobbies:
       shadow: "#160722"
       motif: swords
 
+  - id: fight-of-characters
+    match: ["FOC*", "fight_of_characters*", "*Fight Of Characters*"]
+    display_name: "|cFFFF8844Fight of Characters"
+    plain_name: "Fight of Characters 7.7b E"
+    short_name: "FOC"
+    preview:
+      title: "FOC"
+      subtitle: "Fight of Characters 7.7b E"
+      bg_top: "#35141c"
+      bg_bottom: "#0d0407"
+      accent: "#ff8844"
+      shadow: "#1b080d"
+      motif: clash
+
   # ----------------------------------------------------------------- TD ----
   - id: marvel-td
     match: ["Marvel*", "*MarvelTD*"]

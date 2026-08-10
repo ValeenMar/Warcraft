@@ -14,7 +14,7 @@ set -euo pipefail
 ADMIN_USER="${1:-wc3admin}"
 TIMEZONE="${WC3_TIMEZONE:-America/Argentina/Buenos_Aires}"
 # Rango de puertos de los hostbots; mantener en sintonia con WC3_BOT_PORT_RANGE
-BOT_PORT_RANGE="${WC3_BOT_PORT_RANGE:-6113:6140}"
+BOT_PORT_RANGE="${WC3_BOT_PORT_RANGE:-6113:6141}"
 
 log() { printf '[bootstrap] %s\n' "$*"; }
 

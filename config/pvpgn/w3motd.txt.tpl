@@ -6,4 +6,4 @@ En el lobby escribi |c00FFCC00!ready|r: con todos listos arranca sola en 30s.
 
 Ahora mismo: %u jugador(es) en %g partida(s), %U usuario(s) conectados.
 
-|c00999999Servidor privado - The Frozen Throne 1.27a|r
+|c00999999Servidor privado - The Frozen Throne 1.27b|r

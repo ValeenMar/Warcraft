@@ -87,7 +87,8 @@ W3L_TMP="${STAGE}/w3l"
 install -d "${W3L_TMP}"
 unzip -qq -o -P "${W3L_ZIP_PASSWORD}" "${W3L_ZIP}" -d "${W3L_TMP}"
 
-# wl27.dll es la DLL de 1.27; sin ella el loader no engancha esa version.
+# wl27.dll es la DLL de la familia 1.27 (a y b); sin ella el loader no
+# engancha esa version.
 for f in w3l.exe w3lh.dll wl27.dll; do
     src="$(find "${W3L_TMP}" -iname "${f}" -type f -print -quit)"
     [[ -n "${src}" ]] || die "el zip del loader no trae ${f}"

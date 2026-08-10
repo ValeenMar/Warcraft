@@ -2,7 +2,7 @@
 
 ## Qué necesita el jugador
 
-1. **Warcraft III: The Frozen Throne 1.27a** instalado (RoC + TFT). Todos
+1. **Warcraft III: The Frozen Throne 1.27b** instalado (RoC + TFT). Todos
    los jugadores tienen que estar en la MISMA versión: versiones distintas no
    juegan entre sí. La instalación la consigue cada uno por su lado; este
    proyecto no distribuye archivos del juego. El camino concreto está en
@@ -40,7 +40,7 @@ el firewall están bien: el corte es decisión del cliente.
 
 **Solución**: [Warcraft 3 Loader (w3l)](https://pvpgn.pro/w3l.html), GPL v3.
 Se baja el paquete de la versión que corresponda (soporta de 1.22a a 1.28f),
-se copian `w3l.exe`, `w3lh.dll` y la DLL de la versión (para 1.27a es
+se copian `w3l.exe`, `w3lh.dll` y la DLL de la versión (para 1.27b es
 `wl27.dll`) a la carpeta de Warcraft III, y se abre el juego con **`w3l.exe`**
 en vez del ejecutable normal. Los zips del sitio traen contraseña: `pvpgn`.
 
@@ -58,7 +58,7 @@ Dos herramientas libres, verificadas vigentes en 2026:
   distribuye nada del juego: parchea en memoria tu `war3.exe` para que apunte
   a un PvPGN. Soporta de 1.22a a 1.28f.
 - **Warcraft Feature Extender (WFE)** — https://github.com/UnryzeC/WFE-Release
-  — soporta 1.26a y 1.27a explícitamente, y además suma widescreen, borderless y
+  — soporta la familia 1.27 y además suma widescreen, borderless y
   smartcast.
 
 También sirven los editores de gateway clásicos ("BNGatewayEditor", "W3
