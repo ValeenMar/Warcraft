@@ -48,6 +48,7 @@ El paso a paso real, con criterios de "listo" por fase, está en
 | `kit/` + `scripts/build-kit.sh` | arma el `.zip` que se le pasa a los amigos (el loader se baja, no se commitea) |
 | `scripts/recibir-mapas.sh` | pagina web temporal para subir mapas desde el navegador, sin scp |
 | `patches/aura-autohost.patch` | autohost para Aura: cada bot recrea su lobby solo (no existe en el upstream) |
+| `patches/aura-readycheck.patch` | `!ready` para Aura: si estan todos listos arranca sola en 30s (no existe en el upstream) |
 | `scripts/make-instances.py` | genera una instancia de bot por mapa, con numeración estable |
 | `scripts/make-banner.py` | dibuja el banner 468×60 que el cliente muestra arriba del chat |
 | `scripts/validate.sh` | valida TODO en seco; tiene que estar en verde |

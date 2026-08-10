@@ -164,6 +164,16 @@ ejemplo `/w hostbotN !start` (solo admins). La `N` es el número del bot que
 hostea esa partida: se ve en el lobby, en el nombre del jugador virtual. Si no sos admin no te hace falta
 nada de esto: entrás al lobby y esperás que arranque.
 
+### Arrancar la partida sin admin: `!ready`
+
+No hace falta que haya un admin para empezar. Cualquiera puede escribir
+**`!ready`** en el chat del lobby (esto **no** necesita verificación). Cuando
+**todos** los que están en el lobby pusieron `!ready` —y son al menos 2— el bot
+avisa y arranca **solo en 30 segundos**. Si querés saltarte la espera, con
+todos listos alguien escribe **`!start`** y arranca en el acto. `!notready`
+saca tu "listo" si te arrepentís (y frena la cuenta regresiva). Si alguien se
+va o alguien deja de estar listo, la cuenta se cancela.
+
 ### Mapas
 
 - Los mapas livianos **te los manda el bot solo** en el lobby (se ve la

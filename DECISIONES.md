@@ -625,6 +625,40 @@ error no pasa en silencio.
 efectivamente cargue con el Unlock activado. El camino sale de la doc de WFE y
 de foros; falta la prueba con el juego. Todo en docs/mapas-grandes.md.
 
+## 24. Arranque automático por `!ready` (parche propio, 2026-08-10)
+
+**Pedido**: que no dependa de un admin para empezar. Que cualquiera pueda
+marcarse listo, y si están todos, la partida arranque sola en 30 s; y si están
+todos y alguien pone `!start`, que arranque en el acto.
+
+**Hallazgo**: Aura no tiene ningún sistema de "listo". La partida solo arranca
+con el `!start` de un admin (`StartCountDown`, gate de admin+spoofcheck en
+`EventPlayerBotCommand`). Hubo que agregarlo, como con el autohost.
+
+**Solución** (`patches/aura-readycheck.patch`, 4 archivos):
+- `CGamePlayer` gana un `m_Ready` (se crea en `false`, muere con el jugador:
+  no hay que limpiar nada al salir ni hay líos con PIDs reciclados).
+- `!ready` / `!notready` van en el switch de comandos NO-admin, que corre para
+  todos sin spoofcheck — o sea que un jugador común los usa sin verificarse.
+- `CGame::GetAllReady()` = hay ≥2 humanos y TODOS los del lobby están `ready`
+  y ya bajaron el mapa (chequeo de descarga a mano, porque el arranque usa
+  `force` y se saltea el chequeo normal).
+- En `CGame::Update()` (solo en lobby): cuando `GetAllReady()` se arma una
+  cuenta de 30 s (`m_ReadyCheckArmed`/`m_ReadyCheckStartTime`) y al vencer se
+  hace `StartCountDown(true)`. Si deja de estar todo listo, se cancela.
+- `!start` para no-admin: solo hace algo si `GetAllReady()`, y arranca ya. El
+  `!start` de admin de siempre queda intacto (arranca sin exigir readys).
+
+**Por qué `force`**: el arranque automático no puede depender de que un admin
+haya hecho spoofcheck ni de los pings; con todos marcados `ready` la intención
+es clara. El único chequeo que sí importa —que nadie esté a mitad de bajada—
+se hace explícito en `GetAllReady()`.
+
+**Verificado**: compila limpio en el sandbox junto al resto de los parches
+(autohost, cstdint, MPQ read-only, 12 jugadores). **Falta prueba funcional**
+con 2+ jugadores reales: que los mensajes se vean, que la cuenta de 30 s
+arranque y que el auto-start no choque con el spoofcheck en un lobby real.
+
 ## 12. El hardening de SSH se separó del bootstrap (incidente del 2026-08-08)
 
 **Qué pasó**: la primera puesta en marcha real dejó el VPS **inaccesible**.

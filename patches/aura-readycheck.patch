@@ -1,0 +1,235 @@
+diff --git a/src/game.cpp b/src/game.cpp
+index 4f59261..abc7b01 100644
+--- a/src/game.cpp
++++ b/src/game.cpp
+@@ -98,7 +98,9 @@ CGame::CGame(CAura* nAura, CMap* nMap, uint16_t nHostPort, uint8_t nGameState, s
+     m_GameLoading(false),
+     m_GameLoaded(false),
+     m_Lagging(false),
+-    m_Desynced(false)
++    m_Desynced(false),
++    m_ReadyCheckArmed(false),
++    m_ReadyCheckStartTime(0)
+ {
+ 
+   // wait time of 1 minute  = 0 empty actions required
+@@ -225,6 +227,34 @@ uint32_t CGame::GetNumHumanPlayers() const
+   return NumHumanPlayers;
+ }
+ 
++bool CGame::GetAllReady() const
++{
++  // arranque automatico: verdadero cuando hay al menos 2 jugadores humanos y
++  // TODOS los que estan en el lobby marcaron !ready y ya bajaron el mapa. Los
++  // slots de computadora no cuentan. No existe en el Aura de upstream.
++
++  if (GetNumHumanPlayers() < 2)
++    return false;
++
++  for (auto& player : m_Players)
++  {
++    if (player->GetLeftMessageSent())
++      continue;
++
++    if (!player->GetReady())
++      return false;
++
++    // no arrancar si alguien todavia esta bajando el mapa: el arranque usa
++    // force y se saltea ese chequeo, asi que lo hacemos aca a mano
++    const uint8_t SID = GetSIDFromPID(player->GetPID());
++
++    if (SID < m_Slots.size() && m_Slots[SID].GetDownloadStatus() != 100)
++      return false;
++  }
++
++  return true;
++}
++
+ string CGame::GetDescription() const
+ {
+   string Description = m_GameName + " : " + m_OwnerName + " : " + to_string(GetNumHumanPlayers()) + "/" + to_string(m_GameLoading || m_GameLoaded ? m_StartPlayers : m_Slots.size());
+@@ -604,6 +634,36 @@ bool CGame::Update(void* fd, void* send_fd)
+   if (m_GameLoaded)
+     return m_Exiting;
+ 
++  // arranque automatico por !ready (no existe en el Aura de upstream)
++  //
++  // Cuando todos los jugadores del lobby marcaron !ready se arma una cuenta
++  // regresiva de 30 segundos; si al terminar siguen todos listos, la partida
++  // arranca sola sin que haga falta un admin. Si alguien se va, cae el lobby o
++  // alguien saca su !ready, GetAllReady() vuelve a dar falso y se cancela.
++
++  if (!m_CountDownStarted)
++  {
++    if (GetAllReady())
++    {
++      if (!m_ReadyCheckArmed)
++      {
++        m_ReadyCheckArmed     = true;
++        m_ReadyCheckStartTime = Time;
++        SendAllChat("Todos listos. La partida arranca sola en 30 segundos (el primero en entrar puede poner !start para arrancar ya)");
++      }
++      else if (Time - m_ReadyCheckStartTime >= 30)
++      {
++        SendAllChat("Todos listos: arrancando la partida");
++        StartCountDown(true);
++      }
++    }
++    else if (m_ReadyCheckArmed)
++    {
++      m_ReadyCheckArmed = false;
++      SendAllChat("Arranque automatico cancelado (ya no estan todos listos)");
++    }
++  }
++
+   // refresh every 3 seconds
+ 
+   if (!m_RefreshError && !m_CountDownStarted && m_GameState == GAME_PUBLIC && GetSlotsOpen() > 0 && Time - m_LastRefreshTime >= 3)
+@@ -3435,6 +3495,86 @@ bool CGame::EventPlayerBotCommand(CGamePlayer* player, string& command, string&
+ 
+       break;
+     }
++
++    //
++    // !READY
++    // !R
++    //
++    // Cualquier jugador se marca listo. Cuando estan todos listos arranca la
++    // cuenta regresiva de 30s (ver CGame::Update). No existe en upstream.
++    //
++
++    case HashCode("ready"):
++    case HashCode("r"):
++    {
++      if (m_GameLoading || m_GameLoaded || m_CountDownStarted)
++        break;
++
++      player->SetReady(true);
++
++      // contar cuantos humanos faltan por marcarse listos
++      uint32_t Ready = 0, Humans = 0;
++
++      for (auto& p : m_Players)
++      {
++        if (p->GetLeftMessageSent())
++          continue;
++
++        ++Humans;
++
++        if (p->GetReady())
++          ++Ready;
++      }
++
++      if (Humans < 2)
++        SendAllChat("[" + User + "] esta listo. Hacen falta al menos 2 jugadores para arrancar");
++      else if (Ready < Humans)
++        SendAllChat("[" + User + "] esta listo (" + to_string(Ready) + "/" + to_string(Humans) + "). Escriban !ready cuando esten");
++
++      break;
++    }
++
++    //
++    // !NOTREADY
++    // !UNREADY
++    //
++
++    case HashCode("notready"):
++    case HashCode("unready"):
++    {
++      if (m_GameLoading || m_GameLoaded || m_CountDownStarted)
++        break;
++
++      player->SetReady(false);
++      SendAllChat("[" + User + "] ya no esta listo");
++
++      break;
++    }
++
++    //
++    // !START (para jugadores comunes)
++    // !S
++    //
++    // Si estan TODOS listos, cualquier jugador puede arrancar en el acto sin
++    // esperar los 30 segundos. Los admins ya tienen su propio !start mas arriba
++    // (que no exige que todos esten listos), asi que este caso solo hace algo
++    // para los que no son admin.
++    //
++
++    case HashCode("start"):
++    case HashCode("s"):
++    {
++      if (m_CountDownStarted)
++        break;
++
++      if (GetAllReady() && GetTicks() - m_LastPlayerLeaveTicks >= 2000)
++      {
++        SendAllChat("Todos listos: arrancando la partida");
++        StartCountDown(true);
++      }
++
++      break;
++    }
+   }
+ 
+   return true;
+diff --git a/src/game.h b/src/game.h
+index 8327c1f..60a14be 100644
+--- a/src/game.h
++++ b/src/game.h
+@@ -117,6 +117,8 @@ protected:
+   bool                           m_GameLoaded;                    // if the game has loaded or not
+   bool                           m_Lagging;                       // if the lag screen is active or not
+   bool                           m_Desynced;                      // if the game has desynced or not
++  bool                           m_ReadyCheckArmed;               // arranque automatico: hay una cuenta regresiva de 30s corriendo porque todos pusieron !ready
++  int64_t                        m_ReadyCheckStartTime;           // GetTime cuando se armo la cuenta regresiva de !ready
+ 
+ public:
+   CGame(CAura* nAura, CMap* nMap, uint16_t nHostPort, uint8_t nGameState, std::string& nGameName, std::string& nOwnerName, std::string& nCreatorName, CBNET* nCreatorServer);
+@@ -148,6 +150,7 @@ public:
+   uint32_t    GetSlotsOpen() const;
+   uint32_t    GetNumPlayers() const;
+   uint32_t    GetNumHumanPlayers() const;
++  bool        GetAllReady() const;
+   std::string GetDescription() const;
+   std::string GetPlayers() const;
+   std::string GetObservers() const;
+diff --git a/src/gameplayer.cpp b/src/gameplayer.cpp
+index 0cca61e..2ea861e 100644
+--- a/src/gameplayer.cpp
++++ b/src/gameplayer.cpp
+@@ -158,6 +158,7 @@ CGamePlayer::CGamePlayer(CPotentialPlayer* potential, uint8_t nPID, string nJoin
+     m_LeftMessageSent(false),
+     m_GProxy(false),
+     m_GProxyDisconnectNoticeSent(false),
++    m_Ready(false),
+     m_DeleteMe(false)
+ {
+ }
+diff --git a/src/gameplayer.h b/src/gameplayer.h
+index 7166a7b..cd98a27 100644
+--- a/src/gameplayer.h
++++ b/src/gameplayer.h
+@@ -122,6 +122,7 @@ private:
+   bool                             m_LeftMessageSent;              // if the playerleave message has been sent or not
+   bool                             m_GProxy;                       // if the player is using GProxy++
+   bool                             m_GProxyDisconnectNoticeSent;   // if a disconnection notice has been sent or not when using GProxy++
++  bool                             m_Ready;                        // if the player marked themselves ready with !ready (arranque automatico)
+ 
+ protected:
+   bool m_DeleteMe;
+@@ -170,6 +171,7 @@ public:
+   inline bool                  GetKickVote() const { return m_KickVote; }
+   inline bool                  GetMuted() const { return m_Muted; }
+   inline bool                  GetLeftMessageSent() const { return m_LeftMessageSent; }
++  inline bool                  GetReady() const { return m_Ready; }
+   inline void SetSocket(CTCPSocket* nSocket) { m_Socket = nSocket; }
+   inline void SetDeleteMe(bool nDeleteMe) { m_DeleteMe = nDeleteMe; }
+   inline void SetLeftReason(const std::string& nLeftReason) { m_LeftReason = nLeftReason; }
+@@ -192,6 +194,7 @@ public:
+   inline void SetKickVote(bool nKickVote) { m_KickVote = nKickVote; }
+   inline void SetMuted(bool nMuted) { m_Muted = nMuted; }
+   inline void SetLeftMessageSent(bool nLeftMessageSent) { m_LeftMessageSent = nLeftMessageSent; }
++  inline void SetReady(bool nReady) { m_Ready = nReady; }
+   inline void SetGProxyDisconnectNoticeSent(bool nGProxyDisconnectNoticeSent) { m_GProxyDisconnectNoticeSent = nGProxyDisconnectNoticeSent; }
+   inline void SetLastGProxyWaitNoticeSentTime(uint64_t nLastGProxyWaitNoticeSentTime) { m_LastGProxyWaitNoticeSentTime = nLastGProxyWaitNoticeSentTime; }
+ 

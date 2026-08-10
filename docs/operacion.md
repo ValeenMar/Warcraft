@@ -144,11 +144,25 @@ es doble clic o escribir el nombre exacto).
 
 ### El bot no responde comandos en el lobby
 
-Los comandos escritos DENTRO del lobby requieren spoofcheck (verificación de
-identidad): una vez por partida, `/w hostbot sc` desde el chat del lobby.
-Alternativa directa para admins: mandar el comando por susurro,
-`/w hostbot !start`. Los comandos en el CANAL o por susurro no necesitan
-nada de esto: ahí la identidad ya viene autenticada por el login.
+Los comandos de ADMIN escritos DENTRO del lobby requieren spoofcheck
+(verificación de identidad): una vez por partida, `/w hostbot sc` desde el
+chat del lobby. Alternativa directa para admins: mandar el comando por
+susurro, `/w hostbot !start`. Los comandos en el CANAL o por susurro no
+necesitan nada de esto: ahí la identidad ya viene autenticada por el login.
+
+Los comandos que puede usar CUALQUIER jugador (no piden spoofcheck) incluyen
+`!ready` / `!notready` / `!start` del arranque automático, más `!checkme`,
+`!stats`, `!votekick`/`!yes`.
+
+### Arranque automático por `!ready` (parche propio)
+
+`patches/aura-readycheck.patch` agrega a Aura un sistema de "listo" que el
+upstream no tiene. Cualquier jugador escribe `!ready` en el lobby; cuando
+todos los presentes están listos (mínimo 2) el bot lanza una cuenta regresiva
+de 30 s y arranca solo, sin que haga falta un admin. Con todos listos, un
+`!start` de cualquiera arranca en el acto. Se cancela si alguien se va, deja
+de estar listo (`!notready`) o sigue bajando el mapa. No pisa el `!start` de
+admin de siempre, que arranca aunque no estén todos listos.
 
 ### Diagnóstico de un join que no anda
 

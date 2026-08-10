@@ -51,6 +51,20 @@ else
     log "  ya estaba aplicado, sigo"
 fi
 
+# --- Parche: arranque automatico por !ready (no existe en el upstream) --------
+# Aura no tiene ningun sistema de "listo": la partida solo arranca cuando un
+# admin escribe !start. Este parche agrega el comando !ready para cualquier
+# jugador; cuando TODOS los del lobby estan listos (y son al menos 2) se lanza
+# una cuenta regresiva de 30 segundos y la partida arranca sola, sin admin. Si
+# ademas alguien escribe !start estando todos listos, arranca en el acto.
+# Compilado y verificado en sandbox junto al resto de los parches.
+log "aplicando parche de arranque por !ready"
+if git -C "${SRC_DIR}" apply --check "${REPO_DIR}/patches/aura-readycheck.patch" 2>/dev/null; then
+    git -C "${SRC_DIR}" apply "${REPO_DIR}/patches/aura-readycheck.patch"
+else
+    log "  ya estaba aplicado, sigo"
+fi
+
 # --- Parche cstdint (GCC/libstdc++ >= 13) ------------------------------------
 # Varios headers usan uint8_t/uint32_t sin incluir <cstdint>; con toolchains
 # viejos entraba transitivamente, con GCC 13 el build corta. Insertamos el
