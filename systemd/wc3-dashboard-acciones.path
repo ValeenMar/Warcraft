@@ -1,0 +1,13 @@
+# Vigila el spool de pedidos del dashboard: cuando aparece un pedido,
+# dispara wc3-dashboard-acciones.service (que corre como root y ejecuta
+# solo la lista blanca de dashboard-acciones.sh).
+
+[Unit]
+Description=Vigila los pedidos de accion del dashboard WC3
+
+[Path]
+DirectoryNotEmpty=/opt/wc3/dashboard/spool
+Unit=wc3-dashboard-acciones.service
+
+[Install]
+WantedBy=multi-user.target

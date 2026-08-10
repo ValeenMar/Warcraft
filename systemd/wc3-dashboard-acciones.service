@@ -1,0 +1,17 @@
+# Procesa los pedidos de accion del dashboard (lista blanca, como root).
+# No se prende solo: lo dispara wc3-dashboard-acciones.path al aparecer un
+# pedido en el spool. Ver scripts/dashboard-acciones.sh para el porque de
+# esta separacion de privilegios.
+
+[Unit]
+Description=Acciones del dashboard WC3 (companero de root, lista blanca)
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/opt/wc3/dashboard.env
+ExecStart=/opt/wc3/dashboard/acciones.sh
+# Root a proposito (systemctl restart, chown): el recinto es la lista blanca
+# del script, no el usuario. Igual, un poco de contencion basica:
+NoNewPrivileges=true
+ProtectHome=true
+PrivateTmp=true

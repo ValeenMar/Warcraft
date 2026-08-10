@@ -5,10 +5,11 @@
 #
 #   sudo ./install/60-setup-dashboard.sh      (o: sudo make dashboard)
 #
-# Que hace: copia scripts/dashboard.py a /opt/wc3/dashboard/, arma
-# /opt/wc3/dashboard.env con la contraseña y el puerto del .env, agrega el
-# usuario wc3 al grupo systemd-journal (para que la pagina muestre los logs),
-# abre el puerto en ufw e instala/prende la unidad systemd.
+# Que hace: copia dashboard.py y su companero de acciones a /opt/wc3/dashboard/,
+# arma /opt/wc3/dashboard.env con las claves del .env, agrega el usuario wc3
+# al grupo systemd-journal (para que la pagina muestre los logs), abre el
+# puerto en ufw e instala/prende las unidades systemd (el panel + el par
+# .path/.service que ejecuta los botones como root con lista blanca).
 #
 # Despues de esto el dashboard queda SIEMPRE prendido en
 #   http://IP-del-VPS:PUERTO/   (usuario: admin, contraseña: WC3_DASH_PASSWORD)
@@ -42,18 +43,32 @@ if [[ -z "${WC3_DASH_PASSWORD:-}" || "${WC3_DASH_PASSWORD}" == "CAMBIAME" ]]; th
     exit 1
 fi
 
+# La cuenta PvPGN con la que el panel entra al chat. Se crea UNA vez desde el
+# cliente del juego (New Account) con este usuario y esta contraseña; si no
+# existe, el panel anda igual pero la seccion de chat dice que falta crearla.
+CHAT_USER="${WC3_DASH_CHAT_USER:-panel}"
+CHAT_PASS="${WC3_DASH_CHAT_PASSWORD:-${WC3_BOT_PASSWORD:-}}"
+
 # --- Archivos -----------------------------------------------------------------
-log "instalando dashboard.py en /opt/wc3/dashboard/"
+log "instalando dashboard.py y acciones.sh en /opt/wc3/dashboard/"
 install -d -o root -g wc3 -m 750 /opt/wc3/dashboard
 install -m 644 "${REPO_DIR}/scripts/dashboard.py" /opt/wc3/dashboard/dashboard.py
+install -m 755 "${REPO_DIR}/scripts/dashboard-acciones.sh" /opt/wc3/dashboard/acciones.sh
 install -d -o wc3 -g wc3 /opt/wc3/incoming
+# spool: wc3 escribe los pedidos; resultados: root escribe, wc3 lee
+install -d -o wc3 -g wc3 -m 750 /opt/wc3/dashboard/spool
+install -d -o root -g wc3 -m 750 /opt/wc3/dashboard/resultados
 
-log "escribiendo /opt/wc3/dashboard.env (la contraseña vive ahi, 640 root:wc3)"
+log "escribiendo /opt/wc3/dashboard.env (las claves viven ahi, 640 root:wc3)"
 cat > /opt/wc3/dashboard.env <<EOF
 WC3_DASH_PASSWORD=${WC3_DASH_PASSWORD}
 WC3_DASH_PORT=${DASH_PORT}
+WC3_DASH_CHAT_USER=${CHAT_USER}
+WC3_DASH_CHAT_PASSWORD=${CHAT_PASS}
+WC3_BOT_CHANNEL=${WC3_BOT_CHANNEL:-W3}
 WC3_REALM_NAME=${WC3_REALM_NAME:-WC3}
 WC3_MAX_MAP_MB=${WC3_MAX_MAP_MB:-8}
+DASH_REPO_DIR=${REPO_DIR}
 EOF
 chown root:wc3 /opt/wc3/dashboard.env
 chmod 640 /opt/wc3/dashboard.env
@@ -69,11 +84,16 @@ fi
 log "abriendo el puerto ${DASH_PORT}/tcp en ufw (permanente)"
 ufw allow "${DASH_PORT}/tcp" comment 'dashboard admin wc3' >/dev/null
 
-# --- Unidad -------------------------------------------------------------------
-log "instalando y prendiendo wc3-dashboard.service"
+# --- Unidades -------------------------------------------------------------------
+log "instalando y prendiendo wc3-dashboard + el companero de acciones"
 install -m 644 "${REPO_DIR}/systemd/wc3-dashboard.service" \
     /etc/systemd/system/wc3-dashboard.service
+install -m 644 "${REPO_DIR}/systemd/wc3-dashboard-acciones.service" \
+    /etc/systemd/system/wc3-dashboard-acciones.service
+install -m 644 "${REPO_DIR}/systemd/wc3-dashboard-acciones.path" \
+    /etc/systemd/system/wc3-dashboard-acciones.path
 systemctl daemon-reload
+systemctl enable --now wc3-dashboard-acciones.path
 systemctl enable --now wc3-dashboard
 # Si ya estaba corriendo, reiniciar para tomar script/config nuevos
 systemctl restart wc3-dashboard
@@ -92,3 +112,8 @@ log "    http://${IP}:${DASH_PORT}/"
 log ""
 log "  usuario: admin   contraseña: la de WC3_DASH_PASSWORD en .env"
 log "  (guardala en el navegador y ya queda un clic)"
+log ""
+log "Para que el CHAT del panel funcione, la cuenta '${CHAT_USER}' tiene que"
+log "existir en PvPGN: se crea una unica vez desde el cliente del juego con"
+log "New Account (usuario '${CHAT_USER}', la contraseña del panel de chat)."
+log "Hasta entonces, la seccion de chat de la pagina avisa que falta."

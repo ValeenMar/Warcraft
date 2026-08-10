@@ -38,7 +38,7 @@ if command -v systemd-analyze >/dev/null; then
     # stubbeamos SOLO en la copia temporal, para seguir verificando sintaxis
     # y opciones de las unidades reales.
     tmpunits="$(mktemp -d)"
-    cp "${REPO_DIR}"/systemd/*.service "${tmpunits}/"
+    cp "${REPO_DIR}"/systemd/*.service "${REPO_DIR}"/systemd/*.path "${tmpunits}/"
     if [[ ! -x /opt/wc3/hostbot/aura++ ]]; then
         sed -i 's|^ExecStart=/opt/wc3/hostbot/aura++|ExecStart=/bin/true|' \
             "${tmpunits}/wc3-hostbot@.service"
@@ -53,8 +53,13 @@ if command -v systemd-analyze >/dev/null; then
             "${tmpunits}/pvpgn.service"
         echo "  (bnetd no instalado: ExecStart stubbeado solo para el verify)"
     fi
+    if [[ ! -x /opt/wc3/dashboard/acciones.sh ]]; then
+        sed -i 's|^ExecStart=/opt/wc3/dashboard/acciones.sh|ExecStart=/bin/true|' \
+            "${tmpunits}/wc3-dashboard-acciones.service"
+    fi
     # la unidad instanciada se verifica con una instancia concreta
-    for unit in pvpgn.service wc3-hostbot@1.service wc3-dashboard.service; do
+    for unit in pvpgn.service wc3-hostbot@1.service wc3-dashboard.service \
+                wc3-dashboard-acciones.service wc3-dashboard-acciones.path; do
         check "systemd-analyze verify ${unit}" \
             systemd-analyze verify --recursive-errors=no "${tmpunits}/${unit}"
     done
