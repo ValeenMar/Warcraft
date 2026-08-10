@@ -99,6 +99,13 @@ a 1.28.5) es:
    versión (la tabla de arriba se genera leyendo ese archivo).
 5. Redistribuir el cliente a los jugadores: **todos migran o nadie**, porque
    versiones distintas no juegan entre sí.
+6. **Los tres lugares versión-dependientes que NO salen de `WC3_WAR3_VERSION`**
+   (fáciles de olvidar):
+   - `config/pvpgn/w3motd.txt.tpl` saluda con "1.27a" hardcodeado;
+   - `kit/INSTALAR.bat.tpl` verifica que `war3.exe` pese 514.536 bytes, que
+     es el tamaño DE 1.27a (buscar el de la versión nueva);
+   - el loader del kit usa `wl27.dll` para enganchar 1.27 (`build-kit.sh`);
+     otra versión necesita su propia DLL, y 1.28+ directamente otro loader.
 
 ## Historia de la decisión
 
@@ -111,8 +118,11 @@ las comunidades latinas de DotA de la era clásica. Se cambió a **1.27a** el
    o comprar una copia usada, porque el canje de CD keys clásicas cerró el
    21/11/2025.
 2. **PvPGN lo soporta de fábrica**, sin tocar el versioncheck.
-3. **Los 21 mapas del catálogo son formato 1.24a-1.28c**, así que andan
-   igual en 1.27a que en 1.26a.
+3. **La gran mayoría del catálogo es formato 1.24a-1.28c** (13 de los 22
+   entries confirmados `verde`, 7 `amarillo` casi seguros), así que andan
+   igual en 1.27a que en 1.26a. Los 2 `rojo` (pre-1.24) hay que probarlos
+   antes de publicar en cualquiera de las dos versiones — el registry es la
+   fuente de verdad de esto.
 4. **Anda mejor en Windows moderno**: 1.27a fue la versión que agregó soporte
    oficial de Windows 7-10 y abandonó Direct3D 8, que es de donde salen los
    crashes de 1.26a en Windows 11 24H2.

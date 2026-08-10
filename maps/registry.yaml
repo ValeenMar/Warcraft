@@ -165,7 +165,7 @@ maps:
     aliases: [Anime Fight Arena, AF]
     category: aos
     target_version: "Anime Fight Arena AI"
-    versions_known: ["Anime Fight Arena AI", "Beta 1.39o9"]
+    versions_known: ["Anime Fight Arena AI", "Beta 1.39o9", "Beta 1.39b"]
     size_mb: 5.96
     slots: 10
     teams: null
@@ -176,7 +176,30 @@ maps:
       El unico del conjunto que es post-1.24 es "Anime Fight Arena AI" de
       PrideTeam. El linaje original (Anime Fight Beta 1.39o9 de Spathis, ene
       2008, 0,41 MiB, epicwar.com/maps/41277) es PRE-1.24 y es riesgo.
+      OJO: "Beta 1.39b" es la que hostea la instancia 2 (maps/lobbies.yaml);
+      es del linaje pre-1.24, o sea que arrastra el mismo riesgo — pasarla
+      por la prueba de carga en 1.27a antes de darla por buena.
     source_url: https://www.epicwar.com/maps/152876/
+
+  - name: Anime Character Fight
+    aliases: [ACF]
+    category: arena
+    target_version: "3.0d"
+    versions_known: ["3.0d"]
+    size_mb: null
+    slots: null
+    teams: 2
+    min_patch: null
+    return_bug_risk: amarillo
+    status: descargado
+    notes: >-
+      Arena de 2 equipos que se disfruta de a dos; entro al catalogo el
+      2026-08-10 reemplazando a DBZ Tribute en la instancia 8 (DBZ pide 8
+      jugadores para tener sentido). El .w3x esta cargado en el server
+      (por eso descargado), pero la fecha de release y el formato de editor
+      no estan verificados: correr make map-scan para completar size/slots
+      y probar carga en 1.27a antes de marcar validado.
+    source_url: null
 
   - name: Custom Hero Arena
     aliases: [CHA]

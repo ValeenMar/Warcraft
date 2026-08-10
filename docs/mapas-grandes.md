@@ -25,12 +25,15 @@ Dos caminos, verificados en foros (ENT Gaming, Hive) el 2026-08-09:
    este servidor es 1.27**a**: migrar es rehacer el versioncheck de PvPGN, el
    loader, y que todos reinstalen. Un proyecto aparte, no lo cubre esto.
 
-2. **WFE → "Unlock Map Size"** — la misma herramienta de las teclas
-   (`docs/presentacion.md`, `TECLAS-LOL.txt` del kit) quita el tope. Su texto:
-   *"removes 4 MB and 8 MB map limit from Online Hosting"*. El perfil
-   `WC3Revival` que arma `scripts/make-wfe-profile.py` ya trae
-   `REMOVEMAPSIZELIMIT = yes`, así que **cualquiera que active WFE ya lo tiene
-   habilitado**. Es el camino de este proyecto.
+2. **WFE → "Unlock Map Size"** — la misma herramienta de las teclas estilo
+   LoL (`docs/presentacion.md`) quita el tope. Su texto: *"removes 4 MB and
+   8 MB map limit from Online Hosting"*. El perfil `WC3Revival` que arma
+   `scripts/make-wfe-profile.py` ya trae `REMOVEMAPSIZELIMIT = yes`, así que
+   **cualquiera que active WFE con ese perfil ya lo tiene habilitado**. Es el
+   camino de este proyecto. OJO: WFE **no viene en el kit** (decisión del
+   2026-08-10: inyecta en el proceso del juego y los antivirus lo marcan, y
+   eso hacía desconfiar de todo el kit) — cada jugador lo baja del sitio
+   oficial (github.com/UnryzeC/WFE-Release) y el admin le pasa el perfil.
 
 ## El costo, sin vueltas
 
