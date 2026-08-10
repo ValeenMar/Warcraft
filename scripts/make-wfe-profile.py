@@ -46,6 +46,10 @@ from pathlib import Path
 CAMBIOS = {
     # Teclas que ganan sobre las del mapa, y solo para heroes
     ("FUNCTIONS", "ENFORCEHOTKEYS"): "yes",
+    # Quita el tope de 8 MB del cliente. Inofensivo para los mapas chicos, y
+    # es lo unico que permite cargar mapas grandes (FOCS y compania). OJO: solo
+    # sirve si TODOS los jugadores lo tienen activado. Ver docs/mapas-grandes.md.
+    ("FUNCTIONS", "REMOVEMAPSIZELIMIT"): "yes",
     ("HOTKEYS", "ISHEROONLY"): "On",
     # QWER en la fila de abajo (habilidades), DF en la derecha del medio
     ("KEYBINDS", "A_X0Y2"): "Q",

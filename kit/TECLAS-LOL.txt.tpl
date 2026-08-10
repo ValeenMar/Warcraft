@@ -16,6 +16,10 @@ fabrica. Ya viene CONFIGURADA con el perfil "WC3Revival":
   VIDA      barras de vida siempre visibles, con color por bando:
             verde la tuya, celeste aliados, rojo enemigos. Y barra
             de mana en los heroes.
+  MAPAS     tope de 8 MB del cliente quitado (Unlock Map Size), lo
+            unico que permite cargar mapas grandes tipo FOCS. Para
+            esos mapas, WFE NO es opcional: lo necesita todo el que
+            quiera jugarlos.
 
 Las teclas solo aplican a HEROES: manejar aldeanos o construir
 torres en un TD sigue funcionando como siempre.

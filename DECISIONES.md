@@ -599,6 +599,32 @@ sin release, el kit sale sin extras y lo dice.
 real. Las claves y el formato salen del ini real del repo, pero la prueba de
 fuego es de 5 minutos con el juego.
 
+## 23. Mapas de más de 8 MiB: se pueden, con WFE Unlock Map Size (2026-08-09)
+
+**Pregunta**: ¿hay forma de hostear un mapa que pese más de 8 MiB (FOCS pesa
+15-18 MB)? El techo de 8 MiB estaba documentado como muro duro.
+
+**Hallazgo**: el muro es del CLIENTE, no del servidor. `src/map.cpp` de Aura
+calcula el tamaño real y hostea sin límite propio; el que rechaza > 8 MiB es
+el `game.dll` de cada jugador. Y ese límite se levanta de dos formas
+(confirmado en ENT Gaming / Hive): el parche 1.27b lo sacó de fábrica, o WFE
+con `REMOVEMAPSIZELIMIT` (su "Unlock Map Size"). Como WFE ya está en el kit,
+el perfil `WC3Revival` pasó a traer `REMOVEMAPSIZELIMIT = yes` — inofensivo
+para los mapas chicos, habilita los grandes.
+
+**Costo, y por eso queda OPT-IN**: para un mapa grande, WFE deja de ser
+opcional (lo necesita TODO el que lo juegue), el mapa va sí o sí en el kit
+(15 MB por el lobby es inviable), y se arrastra la fragilidad del inyectado.
+No es gratis como un mapa chico. Por eso el techo de 8 MiB sigue siendo el
+DEFAULT en todo el pipeline (`upload-maps.py` MAX_BYTES, `brand-map.py`
+MAX_MAP_BYTES) y hay que levantarlo a propósito: `WC3_MAX_MAP_MB=64 make
+recibir` para subir, `--allow-large` para brandear. Un mapa grande subido por
+error no pasa en silencio.
+
+**No verificado** (necesita Windows + varios clientes): que un mapa > 8 MiB
+efectivamente cargue con el Unlock activado. El camino sale de la doc de WFE y
+de foros; falta la prueba con el juego. Todo en docs/mapas-grandes.md.
+
 ## 12. El hardening de SSH se separó del bootstrap (incidente del 2026-08-08)
 
 **Qué pasó**: la primera puesta en marcha real dejó el VPS **inaccesible**.

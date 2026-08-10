@@ -53,6 +53,7 @@ El paso a paso real, con criterios de "listo" por fase, está en
 | `scripts/validate.sh` | valida TODO en seco; tiene que estar en verde |
 | `docs/conseguir-el-juego.md` | cómo llegar a una instalación limpia del juego, y errores típicos al parchear |
 | `docs/presentacion.md` | nombres de lobby con color y previews propias de los mapas |
+| `docs/mapas-grandes.md` | cómo jugar mapas > 8 MiB (FOCS) con WFE Unlock Map Size |
 | `docs/` | versión del juego y return bug, mapas, clientes, VPS, operación, Docker futuro |
 
 ## Layout en el servidor

@@ -17,6 +17,9 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MINUTES="${1:-30}"
 PORT="${WC3_UPLOAD_PORT:-8099}"
 DEST="${WC3_INCOMING_DIR:-/opt/wc3/incoming}"
+# Techo por mapa. 8 = el del cliente. Subilo (WC3_MAX_MAP_MB=64) solo para
+# mapas grandes que se jueguen con WFE Unlock Map Size (docs/mapas-grandes.md).
+MAX_MAP_MB="${WC3_MAX_MAP_MB:-8}"
 
 log() { printf '[recibir] %s\n' "$*"; }
 
@@ -102,6 +105,7 @@ fi
     --dest "${DEST}" --port "${PORT}" --minutes "${MINUTES}" \
     --realm "${REALM}" --token "${TOKEN}" --gallery "${GALERIA}" \
     --banner-dest "${REPO_DIR}/config/pvpgn/banner.png" \
+    --max-map-mb "${MAX_MAP_MB}" \
     "${KIT_ARGS[@]}" || true
 
 echo

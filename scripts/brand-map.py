@@ -387,11 +387,16 @@ def brand_one(args, lobbies: list, smpq: str, src: Path) -> int:
     problems = []
     if head != b"HM3W":
         problems.append("se rompio el header HM3W del .w3x")
-    if new_bytes > MAX_MAP_BYTES:
+    if new_bytes > MAX_MAP_BYTES and not args.allow_large:
         problems.append(
             f"el mapa quedo en {new_bytes} B y el techo de 1.24-1.28 es "
-            f"{MAX_MAP_BYTES} B: no lo va a cargar ningun cliente"
+            f"{MAX_MAP_BYTES} B: no lo va a cargar ningun cliente. Si va a "
+            f"jugarse con WFE Unlock Map Size en todos los clientes, pasa "
+            f"--allow-large (ver docs/mapas-grandes.md)"
         )
+    elif new_bytes > MAX_MAP_BYTES:
+        print(f"  AVISO: {new_bytes} B, arriba del techo de 8 MiB. Solo carga "
+              "con WFE Unlock Map Size en TODOS los clientes.")
 
     if problems:
         for p in problems:
@@ -438,6 +443,8 @@ def main(argv=None) -> int:
                     help="solo informar que trae cada mapa, sin modificar nada")
     ap.add_argument("--dump-previews", type=Path, metavar="DIR",
                     help="con --report: exportar a PNG las previews que ya tengan")
+    ap.add_argument("--allow-large", action="store_true",
+                    help="permitir mapas > 8 MiB (solo cargan con WFE en todos los clientes)")
     ap.add_argument("--force", action="store_true",
                     help="pisar la preview que el mapa ya traiga (por defecto se respeta)")
     ap.add_argument("--size", type=int, default=128, choices=[128, 256],

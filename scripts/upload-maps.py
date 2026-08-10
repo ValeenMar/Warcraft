@@ -43,7 +43,10 @@ import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-MAX_BYTES = 8 * 1024 * 1024  # mismo techo que el cliente 1.24-1.28
+# Techo por defecto: el del cliente 1.24-1.28. Se puede subir con --max-map-mb
+# para mapas grandes (FOCS y cia.), que solo cargan con WFE Unlock Map Size en
+# TODOS los clientes (ver docs/mapas-grandes.md).
+MAX_BYTES = 8 * 1024 * 1024
 ALLOWED_SUFFIXES = {".w3x", ".w3m"}
 # El banner del cliente tambien se sube por aca: es la unica forma comoda de
 # llevar un archivo de Windows al servidor. Se guarda aparte de los mapas.
@@ -96,7 +99,7 @@ PAGE = """<!doctype html>
 </style></head><body><main>
 <h1>Subir mapas a {realm}</h1>
 <p class="sub">Arrastrá los <code>.w3x</code> acá, o hacé clic para elegirlos.
-Máximo 8 MiB por mapa.{banner_ayuda}</p>
+Máximo {max_map_mb} MiB por mapa.{banner_ayuda}</p>
 <div id="zona"><b>Soltá los mapas acá</b><span>o clic para buscarlos</span></div>
 <input type="file" id="picker" multiple accept="{acepta}">
 <ul id="lista"></ul>
@@ -132,7 +135,7 @@ function uno(file) {{
   // subida de 20 MB, el navegador muestra "falló la conexión" y no se entiende
   // por qué. Avisando de entrada, el motivo queda claro y no se gasta la subida.
   const esPng = /\.png$/i.test(file.name);
-  const TECHO = esPng ? 4 * 1024 * 1024 : 8 * 1024 * 1024;
+  const TECHO = esPng ? 4 * 1024 * 1024 : {max_map_bytes};
   if (file.size > TECHO) {{
     li.className = 'mal';
     est.textContent = 'pesa ' + (file.size / 1048576).toFixed(1) + ' MB, el máximo es ' + (TECHO / 1048576);
@@ -182,6 +185,7 @@ class Handler(BaseHTTPRequestHandler):
     # Los inyecta main()
     token = ""
     dest = Path("/opt/wc3/incoming")
+    max_map_bytes = MAX_BYTES
     realm = "el servidor"
     owner = None
     gallery = None
@@ -317,6 +321,8 @@ class Handler(BaseHTTPRequestHandler):
             realm=html.escape(self.realm),
             base="/" + self.token,
             acepta=".w3x,.w3m,.png" if self.banner_dest else ".w3x,.w3m",
+            max_map_mb=self.max_map_bytes // (1024 * 1024),
+            max_map_bytes=self.max_map_bytes,
             banner_ayuda=(" También podés soltar un <code>.png</code> de 468×60 "
                           "para usarlo como banner del servidor."
                           if self.banner_dest else ""),
@@ -356,7 +362,7 @@ class Handler(BaseHTTPRequestHandler):
         if length <= 0:
             self._txt(400, "archivo vacio")
             return
-        techo = MAX_BANNER_BYTES if banner else MAX_BYTES
+        techo = MAX_BANNER_BYTES if banner else self.max_map_bytes
         if length > techo:
             self._txt(413, f"pesa {length // 1024} KB y el techo son {techo // 1048576} MiB")
             return
@@ -414,6 +420,8 @@ def main(argv=None) -> int:
     ap.add_argument("--chown", default="wc3",
                     help="usuario dueno de los archivos subidos ('' para no cambiarlo)")
     ap.add_argument("--token", default=None, help="fijar el token en vez de sortearlo")
+    ap.add_argument("--max-map-mb", type=int, default=8,
+                    help="techo por mapa en MiB (subir solo para mapas grandes con WFE)")
     ap.add_argument("--banner-dest", type=Path, default=None,
                     help="si se pasa, la pagina acepta un .png y lo guarda aca")
     ap.add_argument("--offer", type=Path, default=None,
@@ -430,6 +438,7 @@ def main(argv=None) -> int:
     Handler.gallery = args.gallery
     Handler.offer = args.offer
     Handler.banner_dest = args.banner_dest
+    Handler.max_map_bytes = args.max_map_mb * 1024 * 1024
     if args.chown:
         try:
             Handler.owner = pwd.getpwnam(args.chown)
