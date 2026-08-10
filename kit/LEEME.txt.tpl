@@ -147,6 +147,12 @@ Los que no tengas te los manda el bot solo cuando entras al
 lobby (se ve una barra de descarga). Con los mapas grandes eso
 tarda bastante, asi que conviene tener los del kit ya puestos.
 
+Fight of Characters trae muchos textos coreanos incrustados y el
+idioma de Warcraft no los puede traducir. El kit deja una guia
+offline en el escritorio: "Guia FOC - ${WC3_REALM_NAME}". Tiene
+la traduccion de las tiendas, builds iniciales y enlaces a las
+habilidades de cada personaje.
+
 
 ---------------------------------------------------------------
   TECLAS ESTILO LOL Y MAPAS GRANDES (opcional: WFE)
@@ -184,6 +190,7 @@ sirve aca. Necesita Reforged / 1.32, y este servidor es 1.27a.
   loader\                 w3l 1.5.1.1, bajado de pvpgn.pro
   herramientas\           el script que agrega el servidor a la
                           lista de Battle.net
+  guias\                  guia offline de FOC en español
   mapas\                  mapas para copiar (puede venir vacia)
   extras\WFE\             teclas LoL + mapas grandes (opcional):
                           el instalador que BAJA WFE del sitio

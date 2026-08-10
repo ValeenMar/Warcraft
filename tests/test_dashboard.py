@@ -45,6 +45,11 @@ class TestDashboard(unittest.TestCase):
         cls.spool = Path(cls.tmp.name) / "spool"
         dashboard.SPOOL_DIR = cls.spool
         dashboard.RESULTADOS_DIR = Path(cls.tmp.name) / "resultados"
+        dashboard.GUIAS_DIR = Path(cls.tmp.name) / "guias"
+        dashboard.GUIAS_DIR.mkdir()
+        (dashboard.GUIAS_DIR / "foc-96b03-es.html").write_text(
+            "<!doctype html><title>Guia FOC</title>", encoding="utf-8"
+        )
         os.environ["WC3_DASH_PASSWORD"] = PASSWORD
 
         cls.server = ThreadingHTTPServer(("127.0.0.1", 0), dashboard.Handler)
@@ -130,6 +135,12 @@ class TestDashboard(unittest.TestCase):
         with urllib.request.urlopen(req, timeout=10) as resp:
             self.assertEqual(resp.status, 200)
             self.assertIn("Salud del VPS", resp.read().decode())
+
+    def test_guia_foc_devuelve_html(self):
+        req = urllib.request.Request(self._url("/guia/foc"), headers=_auth())
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            self.assertEqual(resp.status, 200)
+            self.assertIn("Guia FOC", resp.read().decode())
 
     def test_chat_estado_json(self):
         req = urllib.request.Request(self._url("/chat?desde=0"), headers=_auth())

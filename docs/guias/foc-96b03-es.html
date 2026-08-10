@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Guía FOC 9.6B03 — WC3 Revival</title>
+  <style>
+    :root { color-scheme: dark; --bg:#111318; --panel:#1b1f26; --gold:#d7ae53;
+      --text:#eee9dc; --muted:#aaa69c; --green:#5fbd74; --line:#343943; }
+    * { box-sizing:border-box } body { margin:0; background:var(--bg); color:var(--text);
+      font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    main { max-width:1050px; margin:auto; padding:28px 18px 60px; }
+    h1 { margin:.1rem 0; font-size:clamp(1.8rem,4vw,2.7rem); color:var(--gold); }
+    h2 { margin-top:2rem; padding-bottom:.35rem; border-bottom:1px solid var(--line);
+      color:var(--gold); } h3 { color:#e6c77e; margin-bottom:.3rem; }
+    p { max-width:80ch } a { color:#87bdec } code,kbd { background:#282d36;
+      border:1px solid #414753; border-radius:4px; padding:.08rem .35rem; color:#fff; }
+    .aviso,.card { background:var(--panel); border:1px solid var(--line); border-radius:9px;
+      padding:14px 16px; } .aviso { border-left:5px solid var(--gold); margin:1rem 0; }
+    .ok { color:var(--green); font-weight:700 } .muted,small { color:var(--muted) }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; }
+    table { border-collapse:collapse; width:100%; background:var(--panel); }
+    th,td { padding:8px 10px; border:1px solid var(--line); text-align:left; vertical-align:top; }
+    th { color:#f3d792; background:#222731 } .key { font-size:1.05rem; font-weight:800;
+      color:#fff; white-space:nowrap } ul,ol { padding-left:1.35rem } li { margin:.25rem 0 }
+    .build strong { color:#f3d792 } .sources { font-size:.9rem; color:var(--muted) }
+    @media(max-width:650px){ table{font-size:.88rem} th,td{padding:6px} }
+  </style>
+</head>
+<body><main>
+  <p class="muted">WC3 Revival · mapa estable: FOCS3 Another 9.6B03 · Warcraft III 1.27b</p>
+  <h1>Fight of Characters — guía rápida en español</h1>
+
+  <div class="aviso">
+    <strong>Por qué aparecen cuadros vacíos o textos cortados:</strong> el mapa fue hecho con
+    texto coreano incrustado. El idioma del Warcraft traduce la interfaz normal, pero no puede
+    traducir el contenido personalizado de un <code>.w3x</code>. La edición “9.6G03 ES” sólo
+    traduce los mensajes generales: sus habilidades todavía están en coreano y fue guardada para
+    Warcraft 1.29. Por eso el servidor conserva la <span class="ok">9.6B03 compatible</span> y
+    usa esta guía como traducción segura.
+  </div>
+
+  <h2>La tienda de la captura: tomos</h2>
+  <table>
+    <tr><th>Tecla</th><th>Compra</th><th>Costo</th><th>Uso</th></tr>
+    <tr><td class="key">Q</td><td>+2 Fuerza</td><td>250</td><td>Vida y héroes cuyo daño escala con Fuerza.</td></tr>
+    <tr><td class="key">W</td><td>+5 Fuerza</td><td>600</td><td>Mejor compra repetida de Fuerza.</td></tr>
+    <tr><td class="key">E</td><td>+2 Agilidad</td><td>200</td><td>Ataque, armadura y héroes de Agilidad.</td></tr>
+    <tr><td class="key">R</td><td>+5 Agilidad</td><td>500</td><td>Mejor compra repetida de Agilidad.</td></tr>
+    <tr><td class="key">A</td><td>+100 Fuerza y +100 Agilidad</td><td>19.000</td><td>Compra de juego avanzado.</td></tr>
+    <tr><td class="key">S</td><td>+150 experiencia</td><td>150</td><td>Alcanzar antes un nivel/habilidad clave.</td></tr>
+    <tr><td class="key">D</td><td>+500 experiencia</td><td>500</td><td>La misma idea, en compra grande.</td></tr>
+  </table>
+  <p><small>Los tomos se consumen al comprarlos y no ocupan inventario. En algunas revisiones el
+    precio o un valor puede variar, pero el orden QWER/ASD es el mismo.</small></p>
+
+  <h2>Tiendas comunes</h2>
+  <div class="grid">
+    <section class="card">
+      <h3>Dragón verde — equipo</h3>
+      <ul>
+        <li><kbd>Q</kbd> Cinturón: +25 Fuerza y ataque.</li>
+        <li><kbd>W</kbd> Zapatillas: +30 Agilidad y movimiento.</li>
+        <li><kbd>E</kbd> Camisa de fuego: daño alrededor del héroe.</li>
+        <li><kbd>R</kbd> Botas: gran aumento de movimiento.</li>
+        <li><kbd>A</kbd> Piedra de salud: +1000 HP.</li>
+        <li><kbd>S</kbd> Hacha: daño y velocidad de ataque.</li>
+        <li><kbd>D</kbd> Escudo: +100 armadura.</li>
+        <li><kbd>F</kbd> Ojo: revela invisibles.</li>
+        <li><kbd>Z</kbd> Máscara: ataque + visión verdadera.</li>
+        <li><kbd>X</kbd> Pergamino: mejora la camisa de fuego.</li>
+      </ul>
+    </section>
+    <section class="card">
+      <h3>Choza/Murloc — consumibles</h3>
+      <ul>
+        <li><kbd>Q</kbd> cura 500 HP; <kbd>W</kbd> cura 1000 HP.</li>
+        <li><kbd>E</kbd> cura 5000 HP.</li>
+        <li><kbd>R</kbd> regeneración durante 30 segundos.</li>
+        <li><kbd>A</kbd> velocidad máxima temporal.</li>
+        <li><kbd>S</kbd> ilusión durante 20 segundos.</li>
+        <li><kbd>D</kbd> muñeco/tronco: trampa con stun de área.</li>
+        <li><kbd>F</kbd> bloquea brevemente el teleport enemigo.</li>
+      </ul>
+    </section>
+    <section class="card">
+      <h3>Dragones rojo, azul y negro</h3>
+      <p>Venden el <strong>artefacto propio de cada personaje</strong>. En el rojo y azul, la
+      posición del héroe en la selección coincide con la posición de su arma. El negro reúne
+      artefactos adicionales y utilidades como stun, invisibilidad, silencio y bloqueo.</p>
+      <p>No compres un arma “porque parece fuerte”: buscá la que lleva el nombre o icono de tu
+      personaje. Es el pico de poder más importante de muchas builds.</p>
+    </section>
+  </div>
+
+  <h2>Builds para empezar sin quedar vendido</h2>
+  <div class="grid">
+    <section class="card build"><h3>Fuerza / luchador cuerpo a cuerpo</h3>
+      <p><strong>Cinturón Q → Botas R → Piedra A → arma del personaje → Hacha S.</strong></p>
+      <p>Con el oro sobrante, tomos de Fuerza <kbd>W</kbd>. Si te borran antes de pegar, adelantá
+      Piedra/Escudo; daño muerto no hace daño.</p></section>
+    <section class="card build"><h3>Agilidad / carry de ataques</h3>
+      <p><strong>Zapatillas W → Piedra A → Botas R → arma del personaje → Hacha S.</strong></p>
+      <p>Después, tomos de Agilidad <kbd>R</kbd>. Contra invisibles reservá un hueco para Ojo o
+      terminá la Máscara.</p></section>
+    <section class="card build"><h3>Caster / burst</h3>
+      <p><strong>Piedra A → Botas R → arma del personaje → defensa situacional.</strong></p>
+      <p>Uno o dos libros de XP al comienzo sirven sólo si desbloquean antes tu combo. Priorizá
+      supervivencia y movilidad: la mayoría de estos héroes mata con habilidades, no con el ataque
+      básico.</p></section>
+    <section class="card build"><h3>Tanque / control</h3>
+      <p><strong>Piedra A → Escudo D → Botas R → Muñeco D → arma del personaje.</strong></p>
+      <p>Entrá primero, forzá cooldowns y dejá que el carry termine. Contra mucho daño mágico, más
+      HP y movimiento suelen rendir mejor que seguir apilando armadura.</p></section>
+  </div>
+  <p><strong>Regla simple:</strong> si morís antes de usar dos habilidades, comprá HP/movimiento;
+    si sobrevivís pero no rematás, comprá tu atributo y artefacto; si el rival se escapa, movilidad
+    y control.</p>
+
+  <h2>Combinaciones conocidas de Season 3</h2>
+  <ul>
+    <li>Botas + Zapatillas de Agilidad → botas mejoradas con Agilidad.</li>
+    <li>Cinturón de Fuerza + Zapatillas + Muñeco → collar de atributos y regeneración.</li>
+    <li>Muñeco + objeto de ataque → pergamino de atributos que puede invocar un gólem.</li>
+  </ul>
+  <p><small>Las recetas cambiaron entre ramas de FOC. Se incluyen como orientación de Season 3;
+    comprobá la combinación en el círculo de la base antes de armar toda la build alrededor de ella.</small></p>
+
+  <h2>Cómo entender las habilidades</h2>
+  <ol>
+    <li>Las teclas principales son <kbd>Q</kbd>, <kbd>W</kbd>, <kbd>E</kbd>, <kbd>R</kbd> y las
+      avanzadas suelen aparecer en <kbd>T</kbd>/<kbd>V</kbd>.</li>
+    <li>Abrí la <a href="https://focs.fandom.com/wiki/Fight_of_Characters_Wiki" target="_blank"
+      rel="noopener">wiki de Fight of Characters</a> y buscá el nombre del héroe más
+      <code>(English)</code>. Las fichas disponibles explican alcance, daño, stun y cooldown nivel
+      por nivel.</li>
+    <li>Para objetos y precios completos usá
+      <a href="https://focs.fandom.com/wiki/Shops_%28English%29" target="_blank" rel="noopener">Shops (English)</a>.
+      Para reconocer iconos y posiciones sirve también la
+      <a href="https://clansperanza.weebly.com/item-guide.html" target="_blank" rel="noopener">guía visual de Clan Speranza</a>.</li>
+  </ol>
+  <p class="sources">Fuentes contrastadas: Fight of Characters Wiki (tiendas y fichas de
+    personajes), Clan Speranza (orden visual de los objetos) y la inspección directa de las
+    ediciones 9.6B03/9.6G03. Los datos de la comunidad corresponden al linaje Season 3 y pueden
+    tener pequeños cambios de balance respecto de 9.6B03.</p>
+</main></body></html>

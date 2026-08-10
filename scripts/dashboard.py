@@ -71,6 +71,7 @@ BACKUPS_DIR = Path("/opt/wc3/backups")
 INSTANCES_DIR = Path("/opt/wc3/hostbot/instances")
 SPOOL_DIR = Path("/opt/wc3/dashboard/spool")
 RESULTADOS_DIR = Path("/opt/wc3/dashboard/resultados")
+GUIAS_DIR = Path("/opt/wc3/dashboard/guias")
 
 PVPGN_HOST = "127.0.0.1"
 PVPGN_PORT = 6112
@@ -662,6 +663,8 @@ def pagina() -> str:
       <li>Escribí <code>!start</code> en el lobby, o tocá <b>iniciar</b> en el bot de abajo.</li>
       <li>Si el comando del juego no responde: <code>/w hostbotN sc</code> y después <code>!start</code>.</li>
     </ol>
+    <p><a href="/guia/foc" target="_blank" rel="noopener"><strong>Abrir guía FOC en español:</strong>
+      objetos, builds y habilidades</a></p>
   </div>
 
   <h2>Chat del canal {canal} <small id="chatestado" style="color:#9c9c90"></small></h2>
@@ -908,6 +911,16 @@ class Handler(BaseHTTPRequestHandler):
         elif url.path == "/parcial":
             self.send_response(200)
             self._cuerpo(parcial().encode("utf-8"), "text/html; charset=utf-8")
+        elif url.path == "/guia/foc":
+            guia = GUIAS_DIR / "foc-96b03-es.html"
+            try:
+                datos = guia.read_bytes()
+            except OSError:
+                self.send_response(503)
+                self._cuerpo(b"La guia FOC no esta instalada. Reinstala el dashboard.\n")
+                return
+            self.send_response(200)
+            self._cuerpo(datos, "text/html; charset=utf-8")
         elif url.path == "/chat":
             try:
                 desde = int(parse_qs(url.query).get("desde", ["0"])[0])

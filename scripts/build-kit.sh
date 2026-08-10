@@ -83,7 +83,8 @@ KIT_NAME="$(printf '%s' "${WC3_REALM_NAME}" | tr ' ' '-')-Kit"
 STAGE="$(mktemp -d)"
 trap 'rm -rf "${STAGE}"' EXIT
 KIT="${STAGE}/${KIT_NAME}"
-install -d "${KIT}" "${KIT}/loader" "${KIT}/mapas" "${KIT}/herramientas"
+install -d "${KIT}" "${KIT}/loader" "${KIT}/mapas" "${KIT}/herramientas" \
+    "${KIT}/guias"
 
 # --- loader ------------------------------------------------------------------
 # Se cachea para no golpear el CDN en cada build. .cache esta en .gitignore.
@@ -138,6 +139,8 @@ envsubst "${subst}" < "${REPO_DIR}/kit/INSTALAR-JUEGO.bat.tpl" > "${KIT}/INSTALA
 envsubst "${subst}" < "${REPO_DIR}/kit/LEEME.txt.tpl"    > "${KIT}/LEEME.txt"
 install -m 644 "${REPO_DIR}/kit/herramientas/gateway.ps1" "${KIT}/herramientas/gateway.ps1"
 install -m 644 "${REPO_DIR}/kit/mapas/PONER-LOS-MAPAS-ACA.txt" "${KIT}/mapas/"
+install -m 644 "${REPO_DIR}/docs/guias/foc-96b03-es.html" \
+    "${KIT}/guias/GUIA-FOC-9.6B03.html"
 
 for f in "${KIT}/INSTALAR.bat" "${KIT}/INSTALAR-JUEGO.bat" "${KIT}/LEEME.txt"; do
     # shellcheck disable=SC2016  # buscamos el literal ${WC3_, sin expandirlo

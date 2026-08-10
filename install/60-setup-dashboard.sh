@@ -55,6 +55,9 @@ log "instalando dashboard.py y acciones.sh en /opt/wc3/dashboard/"
 install -d -o root -g wc3 -m 750 /opt/wc3/dashboard
 install -m 644 "${REPO_DIR}/scripts/dashboard.py" /opt/wc3/dashboard/dashboard.py
 install -m 755 "${REPO_DIR}/scripts/dashboard-acciones.sh" /opt/wc3/dashboard/acciones.sh
+install -d -o root -g wc3 -m 750 /opt/wc3/dashboard/guias
+install -m 644 "${REPO_DIR}/docs/guias/foc-96b03-es.html" \
+    /opt/wc3/dashboard/guias/foc-96b03-es.html
 install -d -o wc3 -g wc3 /opt/wc3/incoming
 install -d -o root -g wc3 -m 750 /opt/wc3/backups
 # spool: wc3 escribe los pedidos; resultados: root escribe, wc3 lee
