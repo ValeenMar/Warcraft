@@ -25,8 +25,9 @@ de comandos arbitrarios.
 
 Seguridad, sin vueltas
 ----------------------
-- Toda la proteccion es la contraseña (HTTP Basic, usuario "admin"). Viaja
-  por HTTP plano: el mismo tradeoff asumido que el resto del proyecto.
+- La autenticacion es HTTP Basic (usuario "admin"). Con WC3_DASH_BIND en
+  127.0.0.1 se usa adentro de un tunel SSH y no queda expuesta a Internet.
+  En 0.0.0.0 viaja por HTTP plano y hace falta HTTPS delante.
 - Los POST exigen ademas mismo-origen (Origin/Sec-Fetch-Site) para que otra
   pagina no pueda disparar acciones con la sesion del navegador.
 - Subida de mapas con las defensas de upload-maps.py + cuota total.
@@ -37,6 +38,7 @@ Configuracion por variables de entorno (systemd las carga de
 /opt/wc3/dashboard.env, que arma el instalador desde el .env del repo):
   WC3_DASH_PASSWORD       obligatoria
   WC3_DASH_PORT           default 8322
+  WC3_DASH_BIND           interfaz (default 0.0.0.0; usar 127.0.0.1 con tunel SSH)
   WC3_DASH_CHAT_USER      cuenta PvPGN del panel (default: panel)
   WC3_DASH_CHAT_PASSWORD  su contraseña (el instalador usa WC3_BOT_PASSWORD
                           si no se define otra)
@@ -80,7 +82,10 @@ NOMBRE_MAPA_RE = re.compile(r"^[\w \-\.\(\)\[\]'!,&]+\.(w3x|w3m)$", re.IGNORECAS
 
 # Acciones permitidas: tienen que coincidir con la lista blanca de
 # dashboard-acciones.sh (el que ejecuta es ese script, como root).
-ACCIONES = {"instalar-mapas", "backup", "reiniciar-pvpgn", "reiniciar-bot"}
+ACCIONES = {
+    "instalar-mapas", "backup", "reparar-caidos",
+    "reiniciar-pvpgn", "reiniciar-bot",
+}
 
 
 # ---------------------------------------------------------------------------
@@ -194,6 +199,9 @@ def instancias() -> list:
             cfg = leer_cfg(d / "aura.cfg")
             puerto = int(cfg.get("bot_hostport") or 0)
             unidad = f"wc3-hostbot@{d.name}"
+            cuenta = cfg.get("bnet_username") or f"hostbot{d.name}"
+            if not re.fullmatch(r"[A-Za-z0-9_-]{1,32}", cuenta):
+                cuenta = f"hostbot{d.name}"
             resultado.append({
                 "n": d.name,
                 "unidad": unidad,
@@ -201,8 +209,20 @@ def instancias() -> list:
                 "nombre": cfg.get("bot_autohostname") or cfg.get("bot_defaultmap") or "?",
                 "puerto": puerto,
                 "jugadores": conexiones.get(puerto, 0),
+                "cuenta": cuenta,
             })
     return resultado
+
+
+def cuenta_de_bot(numero: str) -> str:
+    """Cuenta PvPGN de una instancia, sin aceptar rutas ni texto arbitrario."""
+    if not re.fullmatch(r"[0-9]{1,2}", numero or ""):
+        return ""
+    ruta = INSTANCES_DIR / numero / "aura.cfg"
+    if not ruta.is_file():
+        return ""
+    cuenta = leer_cfg(ruta).get("bnet_username") or f"hostbot{numero}"
+    return cuenta if re.fullmatch(r"[A-Za-z0-9_-]{1,32}", cuenta) else ""
 
 
 def lista_archivos(directorio: Path, patrones=(".w3x", ".w3m")) -> list:
@@ -476,7 +496,11 @@ def parcial() -> str:
       </details></td>
       <td>{punto(b['estado'])}</td><td>{b['puerto'] or '?'}</td>
       <td style='text-align:right'>{b['jugadores']}</td>
-      <td><button onclick="accion('reiniciar-bot','{b['n']}',this)">reiniciar</button></td>
+      <td class="acciones-bot">
+        <button class="primario" onclick="iniciarBot('{b['n']}',this)">iniciar</button>
+        <button onclick="copiar('/w {b['cuenta']} !start')">copiar !start</button>
+        <button onclick="accion('reiniciar-bot','{b['n']}',this)">reiniciar</button>
+      </td>
     </tr>""")
     tabla_bots = "".join(filas_bots) or \
         "<tr><td colspan=6>(no hay instancias en /opt/wc3/hostbot/instances)</td></tr>"
@@ -523,8 +547,18 @@ def parcial() -> str:
                            "backup.</strong></p>")
 
     journal_pvpgn = html.escape(journal_de("pvpgn", 12))
+    todo_listo = pvpgn_estado == "active" and bool(bots) and bots_activos == len(bots)
+    clase_general = "ok" if todo_listo else "alerta"
+    texto_general = "Todo listo para jugar" if todo_listo else "Hay servicios que necesitan atencion"
+    ultimo_backup = hace(bks[0][2]) if bks else "todavia no hay"
 
     return f"""
+  <div class="estado-general {clase_general}">
+    <div><strong>{texto_general}</strong><br>
+      <small>{bots_activos}/{len(bots)} bots + PvPGN; ultimo backup: {ultimo_backup}</small></div>
+    <button onclick="accion('reparar-caidos','',this)">Reparar caidos</button>
+  </div>
+
   <div class="tiles">
     <div class="tile"><b>{en_chat}</b> conectados al chat</div>
     <div class="tile"><b>{en_lobbies}</b> en lobbies/partidas</div>
@@ -587,6 +621,17 @@ def pagina() -> str:
   button {{ background: #2a2d33; color: #e5e1d5; border: 1px solid #4a4d55;
            border-radius: 4px; padding: .25rem .7rem; cursor: pointer; }}
   button:hover {{ border-color: #d2ad5c; }}
+  button.primario {{ background: #80611f; border-color: #d2ad5c; font-weight: 700; }}
+  .estado-general {{ display:flex; justify-content:space-between; align-items:center;
+    gap:1rem; border-radius:8px; padding:.85rem 1rem; margin:1rem 0; }}
+  .estado-general.ok {{ background:#17351f; border:1px solid #3d9950; }}
+  .estado-general.alerta {{ background:#3b2716; border:1px solid #b58a1f; }}
+  .estado-general strong {{ font-size:1.15rem; }}
+  .guia {{ background:#1f2227; border-left:4px solid #d2ad5c; border-radius:6px;
+    padding:.75rem 1rem; margin:1rem 0; }}
+  .guia ol {{ margin:.4rem 0 .2rem 1.2rem; padding:0; }}
+  .acciones-bot {{ white-space:nowrap; }}
+  .acciones-bot button {{ margin:.1rem; }}
   .tiles {{ display: flex; flex-wrap: wrap; gap: .8rem; margin: 1rem 0; }}
   .tile {{ background: #1f2227; border-radius: 6px; padding: .7rem 1rem; min-width: 8rem; }}
   .tile b {{ display: block; font-size: 1.3rem; }}
@@ -609,6 +654,15 @@ def pagina() -> str:
     en vivo, se actualiza solo</small></h1>
 
   <div id="avisos"></div>
+
+  <div class="guia">
+    <strong>Para mandar una partida</strong>
+    <ol>
+      <li>Entrá al lobby desde Warcraft y esperá unos 5 segundos.</li>
+      <li>Escribí <code>!start</code> en el lobby, o tocá <b>iniciar</b> en el bot de abajo.</li>
+      <li>Si el comando del juego no responde: <code>/w hostbotN sc</code> y después <code>!start</code>.</li>
+    </ol>
+  </div>
 
   <h2>Chat del canal {canal} <small id="chatestado" style="color:#9c9c90"></small></h2>
   <div id="chatlog"></div>
@@ -701,6 +755,7 @@ async function accion(nombre, arg, boton) {{
   const etiquetas = {{
     'instalar-mapas': 'instalar los mapas subidos',
     'backup': 'hacer un backup ahora',
+    'reparar-caidos': 'levantar solamente los servicios que estan caidos',
     'reiniciar-pvpgn': 'REINICIAR PvPGN (corta el chat a todos unos segundos)',
     'reiniciar-bot': 'reiniciar el bot ' + arg + ' (si hay partida en curso, se cae)',
   }};
@@ -722,6 +777,27 @@ async function accion(nombre, arg, boton) {{
     }}
     aviso('El pedido sigue corriendo; mira la seccion de nuevo en un rato.');
   }} finally {{ if (boton) boton.disabled = false; }}
+}}
+
+async function iniciarBot(numero, boton) {{
+  if (!confirm('¿Iniciar ahora la partida del bot ' + numero + '?')) return;
+  if (boton) boton.disabled = true;
+  try {{
+    const r = await fetch('bot/iniciar', {{ method: 'POST', body: numero }});
+    const salida = await r.text();
+    aviso(r.ok ? salida : 'No se pudo iniciar: ' + salida);
+  }} finally {{ if (boton) boton.disabled = false; }}
+}}
+
+async function copiar(texto) {{
+  try {{
+    await navigator.clipboard.writeText(texto);
+  }} catch (_) {{
+    const t = document.createElement('textarea');
+    t.value = texto; document.body.appendChild(t); t.select();
+    document.execCommand('copy'); t.remove();
+  }}
+  aviso('Copiado: ' + texto);
 }}
 
 // ---- subida -------------------------------------------------------------------
@@ -868,6 +944,20 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(503)
                 self._cuerpo(f"el chat no esta conectado ({CHAT.estado})\n"
                              .encode("utf-8"))
+        elif url.path == "/bot/iniciar":
+            numero = self._leer_cuerpo(16).strip()
+            cuenta = cuenta_de_bot(numero)
+            if not cuenta:
+                self.send_response(400)
+                self._cuerpo(b"bot invalido\n")
+            elif CHAT.enviar(f"/w {cuenta} !start"):
+                print(f"[dashboard] !start enviado a {cuenta}", flush=True)
+                self.send_response(200)
+                self._cuerpo(f"Listo: !start enviado a {cuenta}\n".encode("utf-8"))
+            else:
+                self.send_response(503)
+                self._cuerpo(f"el chat no esta conectado ({CHAT.estado})\n"
+                             .encode("utf-8"))
         elif url.path.startswith("/accion/"):
             accion = url.path[len("/accion/"):]
             arg = self._leer_cuerpo(64).strip()
@@ -967,9 +1057,10 @@ def main() -> int:
         return 1
     threading.Thread(target=CHAT.correr, daemon=True).start()
     puerto = int(os.environ.get("WC3_DASH_PORT", "8322"))
-    servidor = ThreadingHTTPServer(("0.0.0.0", puerto), Handler)
+    bind = os.environ.get("WC3_DASH_BIND", "0.0.0.0")
+    servidor = ThreadingHTTPServer((bind, puerto), Handler)
     servidor.daemon_threads = True
-    print(f"[dashboard] escuchando en :{puerto}", flush=True)
+    print(f"[dashboard] escuchando en {bind}:{puerto}", flush=True)
     try:
         servidor.serve_forever()
     except KeyboardInterrupt:

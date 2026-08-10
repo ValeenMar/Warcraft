@@ -147,6 +147,43 @@ class TestDashboard(unittest.TestCase):
             urllib.request.urlopen(req, timeout=10)
         self.assertEqual(ctx.exception.code, 503)
 
+    def test_iniciar_bot_manda_whisper_autenticado(self):
+        instancia = dashboard.INSTANCES_DIR / "9"
+        instancia.mkdir(parents=True, exist_ok=True)
+        (instancia / "aura.cfg").write_text("bnet_username = hostbot9\n")
+
+        enviados = []
+        chat_real = dashboard.CHAT
+
+        class ChatFalso:
+            estado = "conectado"
+
+            @staticmethod
+            def enviar(texto):
+                enviados.append(texto)
+                return True
+
+        dashboard.CHAT = ChatFalso()
+        try:
+            req = urllib.request.Request(
+                self._url("/bot/iniciar"), data=b"9", method="POST", headers=_auth()
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                self.assertEqual(resp.status, 200)
+                self.assertIn("hostbot9", resp.read().decode())
+        finally:
+            dashboard.CHAT = chat_real
+
+        self.assertEqual(enviados, ["/w hostbot9 !start"])
+
+    def test_iniciar_bot_no_acepta_instancia_inventada(self):
+        req = urllib.request.Request(
+            self._url("/bot/iniciar"), data=b"99", method="POST", headers=_auth()
+        )
+        with self.assertRaises(urllib.error.HTTPError) as ctx:
+            urllib.request.urlopen(req, timeout=10)
+        self.assertEqual(ctx.exception.code, 400)
+
     # --- acciones ---------------------------------------------------------------
     def test_accion_valida_encola_pedido(self):
         req = urllib.request.Request(
@@ -157,6 +194,17 @@ class TestDashboard(unittest.TestCase):
         pedido = self.spool / f"{datos['id']}.pedido"
         self.assertTrue(pedido.is_file())
         self.assertEqual(pedido.read_text().splitlines()[0], "backup")
+        pedido.unlink()
+
+    def test_reparar_caidos_encola_pedido(self):
+        req = urllib.request.Request(
+            self._url("/accion/reparar-caidos"), data=b"", method="POST", headers=_auth()
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            datos = json.loads(resp.read().decode())
+        pedido = self.spool / f"{datos['id']}.pedido"
+        self.assertTrue(pedido.is_file())
+        self.assertEqual(pedido.read_text().splitlines()[0], "reparar-caidos")
         pedido.unlink()
 
     def test_accion_desconocida_400(self):

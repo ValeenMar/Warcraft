@@ -45,6 +45,25 @@ ejecutar() { # ejecutar <accion> <arg> -> salida por stdout, exit code real
         backup)
             "${REPO}/scripts/backup.sh" || return 1
             ;;
+        reparar-caidos)
+            local unidades=(pvpgn)
+            local d n unidad
+            shopt -s nullglob
+            for d in /opt/wc3/hostbot/instances/*; do
+                [[ -d "${d}" ]] || continue
+                n="$(basename "${d}")"
+                [[ "${n}" =~ ^[0-9]{1,2}$ ]] || continue
+                unidades+=("wc3-hostbot@${n}")
+            done
+            for unidad in "${unidades[@]}"; do
+                if systemctl is-active --quiet "${unidad}"; then
+                    echo "${unidad}: ya estaba active"
+                else
+                    systemctl restart "${unidad}" || return 1
+                    echo "${unidad}: recuperado ($(systemctl is-active "${unidad}"))"
+                fi
+            done
+            ;;
         instalar-mapas)
             shopt -s nullglob
             local mapas=("/opt/wc3/incoming/"*.w3x "/opt/wc3/incoming/"*.w3m)

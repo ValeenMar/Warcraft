@@ -49,8 +49,12 @@ install -d "${WORK}/dump" "${WORK}/configs"
 log "dump de MySQL (${WC3_DB_NAME})"
 # MYSQL_PWD y no --password=: lo segundo queda visible en ps/proc mientras corre
 MYSQL_PWD="${WC3_DB_PASS}" mysqldump --user="${WC3_DB_USER}" \
-    --host="${WC3_DB_HOST}" --single-transaction --routines \
+    --host="${WC3_DB_HOST}" --single-transaction --routines --no-tablespaces \
     "${WC3_DB_NAME}" > "${WORK}/dump/${WC3_DB_NAME}.sql"
+if [[ ! -s "${WORK}/dump/${WC3_DB_NAME}.sql" ]]; then
+    echo "El dump de MySQL quedo vacio; no creo un backup falso." >&2
+    exit 1
+fi
 
 log "copiando configs"
 cp -a /opt/wc3/pvpgn/etc/pvpgn "${WORK}/configs/pvpgn"
@@ -72,6 +76,7 @@ install -d "${BACKUP_ROOT}"
 TARBALL="${BACKUP_ROOT}/wc3-backup-${STAMP}.tar.gz"
 tar -czf "${TARBALL}" -C "${WORK}" dump configs
 chmod 600 "${TARBALL}"
+tar -tzf "${TARBALL}" >/dev/null
 log "backup escrito: ${TARBALL} ($(du -h "${TARBALL}" | cut -f1))"
 
 # --- Retencion: dejar los 14 mas nuevos --------------------------------------

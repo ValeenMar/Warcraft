@@ -13,8 +13,9 @@ Una página web que queda **siempre prendida** en el VPS y muestra **en vivo**
 - cuánta gente hay conectada y jugando, los mapas, los backups (con alerta
   roja si el último es viejo), el disco y la RAM;
 - subir mapas **arrastrándolos al navegador**, y **botones** para lo demás:
-  instalar los mapas subidos, hacer backup ya, reiniciar PvPGN o un bot
-  puntual. Cada botón pide confirmación y muestra el resultado.
+  iniciar una partida, instalar mapas, hacer backup, reparar servicios caídos
+  y reiniciar PvPGN o un bot puntual. Cada botón pide confirmación y muestra
+  el resultado.
 
 ## Prenderlo (una sola vez)
 
@@ -29,9 +30,14 @@ nano .env
 sudo make dashboard
 ```
 
-El comando imprime la dirección final, tipo `http://TU-IP:8322/`. Se abre
-desde cualquier navegador (PC o celular): usuario **admin**, la contraseña
-es la que pusiste en `WC3_DASH_PASSWORD`. Sobrevive reinicios del VPS solo.
+La forma recomendada es `WC3_DASH_BIND=127.0.0.1`: el panel no queda expuesto
+a Internet y se abre desde Windows con `ABRIR-PANEL-WC3.bat`, que crea un
+túnel SSH seguro y abre `http://127.0.0.1:18322/`. Usuario **admin**, con la
+contraseña de `WC3_DASH_PASSWORD`; el navegador puede recordarla. El lanzador
+también reinicia el dashboard si lo encuentra caído.
+
+Dejar `WC3_DASH_BIND=0.0.0.0` conserva el acceso público anterior, pero HTTP
+Basic viaja sin cifrado y no se recomienda sin HTTPS delante.
 
 **Para el chat** faltan dos pasos de una sola vez:
 
@@ -46,12 +52,23 @@ es la que pusiste en `WC3_DASH_PASSWORD`. Sobrevive reinicios del VPS solo.
 Hasta entonces, la sección de chat te va diciendo exactamente qué falta; el
 resto del panel anda igual.
 
+Para que el botón **Iniciar** controle los bots, la cuenta del panel también
+debe figurar en `WC3_BOT_ROOTADMINS`, por ejemplo:
+`WC3_BOT_ROOTADMINS="LoboGriz panel"`.
+
 ## Dónde está cada botón
 
 - **Instalar mapas subidos** y **Hacer backup ahora**: en la barra de arriba,
   justo debajo de los números (y repetidos en sus secciones).
+- **Iniciar**: al lado de cada lobby; manda `/w hostbotN !start` usando la
+  cuenta autenticada del panel.
+- **Reparar caídos**: levanta PvPGN o bots detenidos sin reiniciar los que ya
+  están sanos, por lo que no corta partidas activas.
 - **Reiniciar PvPGN**: en el recuadro "PvPGN" de los números de arriba.
 - **Reiniciar un bot**: al final de su fila en la tabla de bots.
+
+Al instalar el panel también queda habilitado `wc3-backup.timer`: hace un
+backup verificado todos los días a las 04:15 y conserva los últimos 14.
 
 ## Subir un mapa, ahora todo desde la página
 
@@ -73,7 +90,8 @@ La página corre como el usuario `wc3`, que **no puede** reiniciar servicios
 ni escribir en las carpetas del server. Cuando tocás un botón, la página
 deja un *pedido* por escrito y un ayudante de root (otro servicio de
 systemd) lo lee y ejecuta **solo si está en su lista blanca fija**:
-instalar-mapas, backup, reiniciar-pvpgn, reiniciar-bot N. Nada más. Aunque
+instalar-mapas, backup, reparar-caidos, reiniciar-pvpgn, reiniciar-bot N.
+Nada más. Aunque
 alguien robara la contraseña del panel, no puede mandarle comandos propios
 al servidor: como mucho aprieta esos mismos botones.
 
@@ -90,5 +108,6 @@ lo demás está SSH (desde el celular, una app como Termius funciona bien).
 systemctl status wc3-dashboard          # ¿está corriendo el panel?
 journalctl -u wc3-dashboard -n 30       # ¿qué dice su log?
 journalctl -u wc3-dashboard-acciones -n 30   # ¿y el ayudante de los botones?
+systemctl status wc3-backup.timer       # ¿está agendado el backup diario?
 sudo make dashboard                     # reinstala/reinicia con la config del .env
 ```

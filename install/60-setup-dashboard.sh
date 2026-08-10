@@ -8,7 +8,7 @@
 # Que hace: copia dashboard.py y su companero de acciones a /opt/wc3/dashboard/,
 # arma /opt/wc3/dashboard.env con las claves del .env, agrega el usuario wc3
 # al grupo systemd-journal (para que la pagina muestre los logs), abre el
-# puerto en ufw e instala/prende las unidades systemd (el panel + el par
+# puerto en ufw solo si el bind es publico e instala/prende las unidades (panel + el par
 # .path/.service que ejecuta los botones como root con lista blanca).
 #
 # Despues de esto el dashboard queda SIEMPRE prendido en
@@ -36,6 +36,7 @@ source "${ENV_FILE}"
 set +a
 
 DASH_PORT="${WC3_DASH_PORT:-8322}"
+DASH_BIND="${WC3_DASH_BIND:-0.0.0.0}"
 if [[ -z "${WC3_DASH_PASSWORD:-}" || "${WC3_DASH_PASSWORD}" == "CAMBIAME" ]]; then
     echo "WC3_DASH_PASSWORD falta o sigue en CAMBIAME en .env." >&2
     echo "La contraseña es lo UNICO que separa el dashboard de internet." >&2
@@ -55,6 +56,7 @@ install -d -o root -g wc3 -m 750 /opt/wc3/dashboard
 install -m 644 "${REPO_DIR}/scripts/dashboard.py" /opt/wc3/dashboard/dashboard.py
 install -m 755 "${REPO_DIR}/scripts/dashboard-acciones.sh" /opt/wc3/dashboard/acciones.sh
 install -d -o wc3 -g wc3 /opt/wc3/incoming
+install -d -o root -g wc3 -m 750 /opt/wc3/backups
 # spool: wc3 escribe los pedidos; resultados: root escribe, wc3 lee
 install -d -o wc3 -g wc3 -m 750 /opt/wc3/dashboard/spool
 install -d -o root -g wc3 -m 750 /opt/wc3/dashboard/resultados
@@ -63,6 +65,7 @@ log "escribiendo /opt/wc3/dashboard.env (las claves viven ahi, 640 root:wc3)"
 cat > /opt/wc3/dashboard.env <<EOF
 WC3_DASH_PASSWORD=${WC3_DASH_PASSWORD}
 WC3_DASH_PORT=${DASH_PORT}
+WC3_DASH_BIND=${DASH_BIND}
 WC3_DASH_CHAT_USER=${CHAT_USER}
 WC3_DASH_CHAT_PASSWORD=${CHAT_PASS}
 WC3_BOT_CHANNEL=${WC3_BOT_CHANNEL:-W3}
@@ -112,8 +115,13 @@ if ! id -nG wc3 | grep -qw systemd-journal; then
 fi
 
 # --- Firewall -----------------------------------------------------------------
-log "abriendo el puerto ${DASH_PORT}/tcp en ufw (permanente)"
-ufw allow "${DASH_PORT}/tcp" comment 'dashboard admin wc3' >/dev/null
+if [[ "${DASH_BIND}" == "127.0.0.1" || "${DASH_BIND}" == "::1" \
+      || "${DASH_BIND}" == "localhost" ]]; then
+    log "panel privado en ${DASH_BIND}: acceso por tunel SSH; no abro firewall"
+else
+    log "abriendo el puerto ${DASH_PORT}/tcp en ufw (permanente)"
+    ufw allow "${DASH_PORT}/tcp" comment 'dashboard admin wc3' >/dev/null
+fi
 
 # --- Unidades -------------------------------------------------------------------
 log "instalando y prendiendo wc3-dashboard + el companero de acciones"
@@ -123,8 +131,13 @@ install -m 644 "${REPO_DIR}/systemd/wc3-dashboard-acciones.service" \
     /etc/systemd/system/wc3-dashboard-acciones.service
 install -m 644 "${REPO_DIR}/systemd/wc3-dashboard-acciones.path" \
     /etc/systemd/system/wc3-dashboard-acciones.path
+install -m 644 "${REPO_DIR}/systemd/wc3-backup.service" \
+    /etc/systemd/system/wc3-backup.service
+install -m 644 "${REPO_DIR}/systemd/wc3-backup.timer" \
+    /etc/systemd/system/wc3-backup.timer
 systemctl daemon-reload
 systemctl enable --now wc3-dashboard-acciones.path
+systemctl enable --now wc3-backup.timer
 systemctl enable --now wc3-dashboard
 # Si ya estaba corriendo, reiniciar para tomar script/config nuevos
 systemctl restart wc3-dashboard
@@ -137,9 +150,14 @@ if ! systemctl is-active --quiet wc3-dashboard; then
 fi
 
 IP="${WC3_PUBLIC_IP:-$(hostname -I | awk '{print $1}')}"
-log "listo. El dashboard quedo prendido para siempre en:"
+log "listo. El dashboard y el backup diario quedaron prendidos para siempre."
 log ""
-log "    http://${IP}:${DASH_PORT}/"
+if [[ "${DASH_BIND}" == "127.0.0.1" || "${DASH_BIND}" == "localhost" ]]; then
+    log "    acceso privado: abrir con el lanzador de Windows (tunel SSH)"
+    log "    direccion local: http://127.0.0.1:${DASH_PORT}/"
+else
+    log "    http://${IP}:${DASH_PORT}/"
+fi
 log ""
 log "  usuario: admin   contraseña: la de WC3_DASH_PASSWORD en .env"
 log "  (guardala en el navegador y ya queda un clic)"
