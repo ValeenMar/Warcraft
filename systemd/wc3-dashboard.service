@@ -1,0 +1,43 @@
+# Dashboard de admin: pagina web permanente con el estado del server
+# (servicios, jugadores, mapas, backups) y subida de mapas.
+# La instala install/60-setup-dashboard.sh; la contraseña y el puerto salen
+# de /opt/wc3/dashboard.env, que ese script arma desde el .env del repo.
+
+[Unit]
+Description=Dashboard web de admin del servidor WC3
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=wc3
+Group=wc3
+# El - hace opcional el archivo para la validacion en seco; si falta en el
+# server de verdad, el script sale solo con un mensaje claro (sin contraseña
+# no arranca).
+EnvironmentFile=-/opt/wc3/dashboard.env
+ExecStart=/usr/bin/python3 /opt/wc3/dashboard/dashboard.py
+Restart=on-failure
+RestartSec=5
+
+# --- Limites de recursos ------------------------------------------------------
+MemoryMax=128M
+TasksMax=32
+
+# --- Hardening (mismo criterio que pvpgn.service) ------------------------------
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+# Lo unico que escribe son los mapas subidos
+ReadWritePaths=/opt/wc3/incoming
+ReadOnlyPaths=/opt/wc3/maps /opt/wc3/backups /opt/wc3/hostbot
+
+[Install]
+WantedBy=multi-user.target

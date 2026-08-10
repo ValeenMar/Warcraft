@@ -40,13 +40,14 @@ El paso a paso real, con criterios de "listo" por fase, está en
 | `install/*.sh` | bootstrap del VPS, builds, MySQL, render de configs, hardening de SSH |
 | `systemd/` | `pvpgn.service` y `wc3-hostbot@.service` (instanciada) |
 | `config/` | templates de configuración (placeholders `${WC3_*}` + `.env`) |
-| `maps/registry.yaml` | **el catálogo**: 21 mapas con estado y riesgo 1.24+ |
+| `maps/registry.yaml` | **el catálogo**: 23 mapas con estado y riesgo 1.24+ |
 | `maps/lobbies.yaml` | cómo se ve cada mapa: nombre con color + tema de la preview |
 | `scripts/inspect-map.py` | lee un `.w3x` y alimenta el registry |
 | `scripts/brand-map.py` | mete una preview propia (`war3mapPreview.tga`) adentro del `.w3x` |
 | `scripts/lobby-names.py` | chuleta de nombres de partida con color, lista para pegar |
 | `kit/` + `scripts/build-kit.sh` | arma el `.zip` que se le pasa a los amigos (el loader se baja, no se commitea) |
 | `scripts/recibir-mapas.sh` | pagina web temporal para subir mapas desde el navegador, sin scp |
+| `scripts/dashboard.py` + `make dashboard` | panel web de admin permanente: servicios, jugadores, mapas, backups y subida (`docs/dashboard.md`) |
 | `patches/aura-autohost.patch` | autohost para Aura: cada bot recrea su lobby solo (no existe en el upstream) |
 | `scripts/make-instances.py` | genera una instancia de bot por mapa, con numeración estable |
 | `scripts/make-banner.py` | dibuja el banner 468×60 que el cliente muestra arriba del chat |
@@ -65,9 +66,11 @@ Todo bajo `/opt/wc3/`, dueño el usuario de sistema `wc3` (sin shell):
 
 ## Estado de verificación
 
-- **Compilado y probado en sandbox**: PvPGN (bnetd arranca y escucha) y Aura
-  (arranca y lee config). 
+- **Verificado en el servidor real (2026-08-09)**: PvPGN + MySQL con tablas
+  creadas, bot logueado a 1.27a (`cd keys accepted`), partida real jugada
+  (detalle en `RUNBOOK.md`, sección "Estado real").
 - **Validado en seco**: scripts (shellcheck), unidades (systemd-analyze),
-  registry (schema), templates (render completo), inspect-map (6 tests).
-- **Pendiente de juego real**: login del bot 1.27a, MySQL en runtime,
-  validación de mapas — lista priorizada al final de `DECISIONES.md`.
+  registry (schema), templates (render completo), tests unitarios.
+- **Pendiente**: prueba de desync con dos clientes desde redes distintas,
+  validación del resto del catálogo — lista priorizada al final de
+  `DECISIONES.md`.

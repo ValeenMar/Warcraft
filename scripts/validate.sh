@@ -54,7 +54,7 @@ if command -v systemd-analyze >/dev/null; then
         echo "  (bnetd no instalado: ExecStart stubbeado solo para el verify)"
     fi
     # la unidad instanciada se verifica con una instancia concreta
-    for unit in pvpgn.service wc3-hostbot@1.service; do
+    for unit in pvpgn.service wc3-hostbot@1.service wc3-dashboard.service; do
         check "systemd-analyze verify ${unit}" \
             systemd-analyze verify --recursive-errors=no "${tmpunits}/${unit}"
     done
