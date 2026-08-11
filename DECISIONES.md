@@ -733,32 +733,51 @@ secundario de "preparar el sistema".
    cualquiera que encuentre la IP puede crearse cuenta. Alternativa anotada
    en docs/operacion.md: cerrar `new_accounts` después de la fase 1.
 
+## 25. Integración reproducible, nueve bots y objetivo 1.27b (2026-08-11)
+
+**Reemplaza la decisión 11 como objetivo vigente y la decisión 23 como
+camino para mapas grandes.** Las decisiones viejas se conservan arriba como
+historial.
+
+- La rama de integración nace de `origin/main`, para conservar los parches
+  propios `aura-autohost.patch` y `aura-readycheck.patch`. Antes de cualquier
+  build, `grep -c readycheck install/20-build-hostbot.sh` debe seguir dando 2.
+- La versión objetivo pasa a **1.27b**. En la PC del operador se verificó
+  `war3.exe` de 515.048 B, versión `1.27.1.7085`, junto a `w3l.exe`,
+  `w3lh.dll` y `wl27.dll`. El loader ya fue usado para entrar al PvPGN; el
+  servidor no registra la etiqueta exacta del cliente, por lo que ese detalle
+  no se inventa en los reportes.
+- 1.27b admite mapas de hasta 128 MiB sin WFE. WFE sale del kit: evitar un
+  inyector marcado como HackTool vale más que conservar teclas estilo LoL.
+- El estado real tiene **nueve** cuentas/instancias. Los puertos son 6113-6121
+  para host y 6133-6141 para reconexión; firewall, generador y documentación
+  deben moverse juntos.
+- El checkout que había en el VPS no era reproducible: rama vieja, 47 cambios
+  sin registrar y fuente sin `readycheck`, aunque el binario instalado sí lo
+  contenía. Se respaldó completo antes de reemplazarlo. No se recompila Aura
+  hasta validar esta integración y desplegar primero una sola instancia.
+- La instancia 9 no se considera estable todavía: el proceso está activo pero
+  el sandbox montó `/opt/wc3/maps` como sólo lectura y StormLib devolvió
+  `invalid map_crc`. La corrección es devolver esa ruta a `ReadWritePaths`,
+  no parchear Aura a ciegas.
+
 ---
 
 ## TODO(verificar) — lista completa, ordenada por qué bloquea primero
 
-1. ~~**Aura + PvPGN 1.27a**~~ — **RESUELTO el 2026-08-08**: `cd keys
-   accepted` en el log del bot contra el PvPGN real (ver decisión 13). Queda
-   pendiente solo la mitad del cliente: que un cliente 1.27a real entre a un
-   lobby hosteado por el bot.
-2. **PvPGN + MySQL en runtime** (bloquea fase 1): primer arranque crea las
-   tablas desde `sql_DB_layout.conf`. Compiló, pero no se ejecutó contra un
-   mysqld real.
-3. **Autenticación de clientes 1.27a reales** (bloquea fase 1): el
-   versioncheck de fábrica trae `W3XP_127A` con el `war3.exe` esperado de
-   514.536 bytes; con `allow_bad_version=true` y `allow_unknown_version=true`
-   (defaults) debería entrar cualquier 1.27a, pero solo un cliente real lo
-   confirma.
-4. **Descarga in-lobby: hasta qué tamaño es tolerable** (fase 1-2): el techo
-   duro de 1.26a son 8 MiB (el límite de 4 MB era pre-1.24, corregido el
-   2026-08-08). Falta medir con qué tamaño la espera en el lobby se vuelve
-   insoportable y a partir de ahí el map pack es obligatorio.
-5. **Parser de war3map.w3i contra mapas reales** (fase 2): validado solo
-   contra .w3i sintéticos; probar con 2-3 mapas reales (uno RoC fmt 18, uno
-   TFT fmt 25, uno protegido).
-6. **Hardening de systemd vs StormLib** (fase 1): `ProtectSystem=strict` con
-   `ReadWritePaths` puede pisar algún acceso inesperado de Aura (p. ej.
-   escribir logs junto al binario). Si una instancia muere al arrancar,
-   relajar primero `ProtectSystem` y reportar.
-7. **`MemoryMax=384M` por instancia de bot** (fase 2): estimación
-   conservadora; medir con `systemctl status` bajo carga real de 2 partidas.
+1. **Instancia 9 / FOC 9.6G03 ES**: comprobar CRC sin errores, lobby público,
+   entrada con cliente 1.27b y una partida real. Hasta entonces el nombre
+   lleva `PRUEBA` y no se anuncia como mapa estable.
+2. **`!ready` funcional**: probar con dos jugadores que arma/cancela la cuenta
+   de 30 segundos y que `!start` sólo acelera cuando todos están listos.
+3. **Desincronización**: jugar desde dos redes distintas al menos diez minutos
+   en FOC y en un mapa clásico ya validado.
+4. **Backup fuera del VPS**: ejecutar el descargador de Windows y abrir con
+   `tar -tzf` el archivo recibido. Un backup que vive sólo en el VPS no cierra
+   recuperación ante pérdida completa de la máquina.
+5. **Latencia**: probar `!latency 70` y `!sl 90` durante varias partidas antes
+   de fijar valores nuevos en `aura.cfg.tpl`.
+6. **Catálogo restante**: validar o descartar cada mapa pendiente con versión,
+   hash y prueba de juego real; no inferir compatibilidad por fecha.
+7. **Recursos bajo carga**: medir `MemoryCurrent` y CPU de los nueve bots con
+   dos partidas simultáneas antes de bajar `MemoryMax=384M`.

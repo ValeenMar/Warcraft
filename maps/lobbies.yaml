@@ -169,14 +169,14 @@ lobbies:
       shadow: "#160722"
       motif: swords
 
-  - id: fight-of-characters
-    match: ["FOC*", "fight_of_characters*", "*Fight Of Characters*"]
+  - id: foc-96g03-es
+    match: ["FOCS3*9.6G03*", "FOC*9.6G03*", "*Fight Of Characters*9.6G03*"]
     display_name: "|cFFFF8844Fight of Characters"
-    plain_name: "Fight of Characters 7.7b E"
+    plain_name: "FOC 9.6G03 ES - PRUEBA"
     short_name: "FOC"
     preview:
       title: "FOC"
-      subtitle: "Fight of Characters 7.7b E"
+      subtitle: "9.6G03 ES"
       bg_top: "#35141c"
       bg_bottom: "#0d0407"
       accent: "#ff8844"

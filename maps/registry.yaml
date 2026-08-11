@@ -464,23 +464,24 @@ maps:
     source_url: https://www.epicwar.com/maps/133385/
 
   - name: Fight of Characters
-    aliases: [FOC]
+    aliases: [FOC, FOCS3]
     category: arena
-    target_version: "7.7b E"
-    versions_known: ["7.7b E"]
-    size_mb: 3.95
-    slots: 8
-    teams: 2
+    target_version: "9.6G03 ES"
+    versions_known: ["9.6G03 ES", "7.7b E"]
+    size_mb: 17.79
+    slots: 10
+    teams: null
     min_patch: null
-    return_bug_risk: rojo
+    return_bug_risk: amarillo
     status: descargado
     notes: >-
-      Edicion inglesa de 2008 (formato 1.19-1.21b). El archivo real de
-      EpicWar se descargo y su JASS protegido se descifro para auditarlo:
-      1.205 funciones, sin H2I/C2I ni retornos de tipos incompatibles. El
-      cliente 1.27b lo cargo durante una prueba local sin cierre ni log de
-      error; falta cerrar la validacion con dos clientes en una partida real.
-    source_url: https://www.epicwar.com/maps/62224/
+      Archivo real verificado en el VPS el 2026-08-11: 18.658.023 B,
+      SHA-256 5951ba05701723f7ce68bf8a2bda00a48d47c8a977c0f2bb849890d5b9b9fa4f.
+      El header declara Fight Of Characters 9.6G03 y 10 jugadores. El MPQ
+      esta protegido y el inspector no puede descifrarlo. Falta lobby sin
+      error, entrada y partida con dos clientes 1.27b. URL de origen: NO
+      VERIFICADA.
+    source_url: null
 
   # ------------------------------------------------------------------- TD ---
   - name: Marvel TD

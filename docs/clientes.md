@@ -115,7 +115,7 @@ una prueba rápida a mano.
    poner usuario/contraseña nuevos en la pantalla de login la primera vez.
 3. Entrar al canal `W3` (`/join W3`), donde viven todos los bots, y usar sus
    comandos:
-   `!games` (qué hay hosteado), o pedir una partida.
+   `!getgames` por susurro a un bot (su lobby actual) y `!gp 0` (quién espera).
 4. Entrar a la partida desde Custom Games; si el mapa es chico (hasta ~2-3 MB)
    lo baja del bot ahí mismo; si es más pesado, la descarga in-lobby es
    impracticable y hace falta el map pack.

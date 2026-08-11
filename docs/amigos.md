@@ -139,7 +139,7 @@ publica un lobby nuevo del mismo mapa en menos de un minuto, así que un mapa
 que se está jugando sigue estando disponible.
 
 El canal sirve para chatear y para susurrarle a un bot si hace falta
-(`!games` te dice qué partidas hay corriendo).
+(`!getgames` por susurro le pregunta a cada bot por su lobby).
 
 **Para entrar a una partida**: menú *Custom Game* → *Play Game*. En la lista
 va a aparecer la partida. **Doble clic sobre ella.** Ojo con esta trampa del
@@ -191,8 +191,8 @@ va o alguien deja de estar listo, la cuenta se cancela.
 | Síntoma | Causa y solución |
 |---|---|
 | `Unable to connect to Battle.net...` | O el juego se abrió sin el loader (usá `w3l.exe`, paso 3), o el gateway elegido no es el nuestro. Con el kit: que arriba diga **WC3 Revival**. A mano: que diga **Northrend (Europe)** y que la línea del `hosts` esté puesta (paso 2). |
-| Veo la partida en la lista pero no puedo entrar | Versión distinta del juego (los 514.536 bytes del paso 1) o versión distinta del mapa. Los mapas del servidor llevan una preview propia inyectada, así que el archivo tiene que ser exactamente el nuestro: borrá el que tengas y dejá que te lo mande el bot. |
-| Al entrar a una partida, `...could not be found` o vuelve a la lista | Ese lobby ya no existe (la partida arrancó, o venció por tiempo). Pedí en el canal que la hosteen de nuevo (`!pub`) y verificá con `!games`. |
+| Veo la partida en la lista pero no puedo entrar | Versión distinta del juego (los 515.048 bytes del paso 1) o versión distinta del mapa. Los mapas del servidor llevan una preview propia inyectada, así que el archivo tiene que ser exactamente el nuestro: borrá el que tengas y dejá que te lo mande el bot. |
+| Al entrar a una partida, `...could not be found` o vuelve a la lista | Ese lobby ya no existe (la partida arrancó, o venció por tiempo). Esperá su recreación automática y verificá por susurro con `!getgames`. |
 | El juego crashea (típico en Windows 11 24H2) | [DDrawCompat](https://github.com/narzoul/DDrawCompat/releases): copiar su `ddraw.dll` a la carpeta del juego, junto al ejecutable. No hay que configurar nada. |
 | La app de Battle.net cuelga en "Security Check" | Es la línea del `hosts` (paso 2). Esperable; revertila solo si necesitás la app. |
 

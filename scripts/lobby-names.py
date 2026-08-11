@@ -8,7 +8,7 @@ lo demas: hostear A MANO un mapa distinto del que la instancia publica
 Ctrl+V en el chat.
 
 Salen SIN codigos de color, porque el 2026-08-09 se verifico contra un cliente
-1.27a real que la lista de partidas no los pinta: se los come sin mostrarlos,
+1.27b real que la lista de partidas no los pinta: se los come sin mostrarlos,
 asi que los 10 bytes que gasta cada codigo se tiran a la basura. Con --color
 se imprimen igual, por si alguna vez se prueba otro cliente.
 
@@ -50,14 +50,14 @@ def build(lobbies: list, plain: bool, command: str) -> "tuple[str, int]":
     lines.append("")
     if plain:
         lines.append(
-            "Sin codigos de color a proposito: el cliente 1.27a no los pinta en la\n"
+            "Sin codigos de color a proposito: el cliente 1.27b no los pinta en la\n"
             "lista de partidas (verificado). Como cada codigo gasta 10 de los 31\n"
             "bytes que permite el nombre, sacarlos deja lugar para nombres mas\n"
             "descriptivos, que es lo que se ve arriba."
         )
     else:
         lines.append(
-            "OJO: estos NO se ven de colores en la lista de partidas del 1.27a.\n"
+            "OJO: estos NO se ven de colores en la lista de partidas del 1.27b.\n"
             "El cliente se come los codigos sin pintarlos. Quedan por si alguna\n"
             "vez se prueba con otro cliente."
         )

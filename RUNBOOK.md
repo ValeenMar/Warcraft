@@ -14,10 +14,10 @@ máquina.
       **Ubuntu 24.04 LTS x64**. Facturación por hora, así que probarlo sale
       centavos. Al crearla: subí tu clave SSH en el paso "SSH Keys" y NO
       habilites el firewall de Vultr (lo maneja `ufw` desde el bootstrap).
-- [ ] Instalación de W3 TFT **1.27a** (build `1.27.0.52240`): de ella salen
+- [ ] Instalación de W3 TFT **1.27b** (build visible `1.27.1.7085`): de ella salen
       `war3.exe`, `Storm.dll`, `Game.dll` y `War3Patch.mpq` para
       `/opt/wc3/mpq/`. Verificación rápida de que es genuina: `war3.exe` tiene
-      que pesar **514.536 bytes**. El paso a paso y los errores típicos están
+      que pesar **515.048 bytes**. El paso a paso y los errores típicos están
       en **docs/conseguir-el-juego.md**.
 - [ ] Los primeros 3 mapas (sugeridos: DotA 6.83d, Footmen Frenzy, Sheep Tag.
       Footmen y Sheep Tag son `verde` en el registry; DotA 6.83d es
@@ -110,7 +110,7 @@ Lo mínimo a completar en `.env`: `WC3_PUBLIC_IP` (la IP que asignó Vultr),
 ### Archivos del juego
 
 ```bash
-# desde tu maquina (sacados de una instalacion 1.27a):
+# desde tu maquina (sacados de una instalacion 1.27b):
 scp war3.exe storm.dll game.dll War3Patch.mpq vps:/tmp/
 # en el VPS:
 sudo mv /tmp/{war3.exe,storm.dll,game.dll,War3Patch.mpq} /opt/wc3/mpq/
@@ -139,7 +139,7 @@ journalctl -u wc3-hostbot@1 -f               # ver: login al PvPGN OK
 
 Para cada mapa, el protocolo completo de docs/mapas.md:
 
-1. Cargar en Custom Game **single player en 1.27a**; anotar que carga.
+1. Cargar en Custom Game **single player en 1.27b**; anotar que carga.
 2. `inspect-map.py --update-registry`: tamaño y slots al registry.
 3. Copiar a `/opt/wc3/maps/`, `!map ElMapa` en el canal del bot: el bot
    calcula el hash sin quejarse.
@@ -162,6 +162,12 @@ registry. Para el cierre formal de la fase quedan: la prueba de
 desincronización con **dos clientes desde redes distintas**, el test de
 `sudo reboot`, y correr `install/50-harden-ssh.sh`.
 
+**2026-08-11, migración**: la instalación del operador quedó en 1.27b
+(`war3.exe` 515.048 B, versión de archivo `1.27.1.7085`) con w3l y `wl27.dll`.
+PvPGN, MySQL y ocho lobbies siguen activos. La instancia 9 carga FOCS
+9.6G03 ES pero todavía debe pasar el canario de CRC y una partida real antes
+de anunciarse como estable.
+
 ### Criterio de listo
 
 - [ ] `systemctl status pvpgn wc3-hostbot@1` ambos `active (running)` y
@@ -181,8 +187,8 @@ desincronización con **dos clientes desde redes distintas**, el test de
   primero los `verde`, después `amarillo`, y los `rojo` al final (con plan B
   de remakes — ver notas del registry).
 - Cada mapa pasa por el protocolo de docs/mapas.md; los que pasen de
-  ~2-3 MB quedan marcados "solo map pack" (el techo duro de carga son
-  8 MiB).
+  ~2-3 MB quedan marcados "solo map pack" (el techo duro de 1.27b son
+  128 MiB, pero la transferencia del lobby sigue siendo lenta).
 - Armar `wc3revival-maps-v01.zip` con todos los `validado` (docs/mapas.md,
   sección map pack) y publicarlo donde el grupo lo baje.
 - Segunda instancia de bot arriba (`wc3-hostbot@2`, arena) con su canal.

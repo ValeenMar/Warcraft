@@ -83,7 +83,8 @@ propia pantalla de Battle.net del juego.
 4. Ya adentro, escribi:  /join ${WC3_BOT_CHANNEL}
    Ese es el canal donde vive el bot que abre las partidas.
 
-5. Para ver que hay abierto ahora, escribi:  !games
+5. Para recibir avisos cuando alguien entre a jugar, escribi una
+   sola vez:  /watchall
 
 6. Para entrar a una partida: menu Custom Game -> Play Game, y
    DOBLE CLIC sobre la partida en la lista.
@@ -92,6 +93,13 @@ propia pantalla de Battle.net del juego.
    campo del nombre, asi que apretar "Join" con la partida
    apenas marcada no hace nada y parece que estuviera roto. Es
    doble clic.
+
+7. Adentro del lobby, todos escriben !ready. Cuando estan todos
+   listos la partida arranca sola en 30 segundos. Tambien existen
+   !notready, !checkme, !votekick y !yes.
+
+Por susurro a cualquier bot podes usar !getgames para ver su
+lobby, !gp 0 para ver quienes esperan, !stats y !status.
 
 
 ---------------------------------------------------------------
@@ -111,7 +119,7 @@ a la lista
 
 Veo la partida en la lista pero no puedo entrar
     Casi siempre es version distinta de Warcraft (mira los
-    514.536 bytes de arriba) o que tenes una version distinta
+    515.048 bytes de arriba) o que tenes una version distinta
     del mapa. Los mapas de este servidor estan modificados para
     que muestren una imagen propia en el lobby, asi que tiene
     que ser exactamente el que esta en la carpeta "mapas" o el
@@ -147,37 +155,8 @@ Los que no tengas te los manda el bot solo cuando entras al
 lobby (se ve una barra de descarga). Con los mapas grandes eso
 tarda bastante, asi que conviene tener los del kit ya puestos.
 
-Fight of Characters trae muchos textos coreanos incrustados y el
-idioma de Warcraft no los puede traducir. El kit deja una guia
-offline en el escritorio: "Guia FOC - ${WC3_REALM_NAME}". Tiene
-la traduccion de las tiendas, builds iniciales y enlaces a las
-habilidades de cada personaje.
-
-
----------------------------------------------------------------
-  TECLAS ESTILO LOL Y MAPAS GRANDES (opcional: WFE)
----------------------------------------------------------------
-
-Se pueden tener QWER para las habilidades, smartcast, barras de
-vida siempre visibles, y cargar los mapas GRANDES del server (los
-de mas de 8 MB), con una herramienta que se llama WFE (Warcraft
-Feature Extender).
-
-El programa NO viaja dentro del kit a proposito: para funcionar
-se inyecta en el proceso del juego, y eso el antivirus lo marca
-como amenaza (es un falso positivo, pero mete miedo; meterlo aca
-haria sospechoso al kit entero). En su lugar, el kit trae
-extras\WFE\INSTALAR-WFE.bat: doble clic y lo baja del sitio
-oficial (github.com/UnryzeC/WFE-Release), verifica que la
-descarga sea exactamente la esperada, y lo deja configurado con
-el perfil del server. El paso a paso esta en
-extras\WFE\TECLAS-LOL.txt.
-
-OJO: si el server publica un mapa de mas de 8 MB, este paso deja
-de ser opcional — lo necesitan TODOS los que quieran jugarlo.
-
-Aclaracion sobre W3Champions, por si lo estabas pensando: no
-sirve aca. Necesita Reforged / 1.32, y este servidor es 1.27b.
+1.27b admite mapas de hasta 128 MiB sin WFE. El kit no instala
+inyectores ni herramientas que los antivirus marquen como HackTool.
 
 
 ---------------------------------------------------------------
@@ -190,11 +169,7 @@ sirve aca. Necesita Reforged / 1.32, y este servidor es 1.27b.
   loader\                 w3l 1.5.1.1, bajado de pvpgn.pro
   herramientas\           el script que agrega el servidor a la
                           lista de Battle.net
-  guias\                  guia offline de FOC en español
   mapas\                  mapas para copiar (puede venir vacia)
-  extras\WFE\             teclas LoL + mapas grandes (opcional):
-                          el instalador que BAJA WFE del sitio
-                          oficial, su perfil, y el paso a paso
 
 Todo es texto plano menos el loader. Se puede leer entero antes
 de ejecutar nada.

@@ -97,11 +97,10 @@ Para migrar el servidor existente de 1.27a a 1.27b:
    oficial 1.27b después de los instaladores Legacy.
 6. Redistribuir el cliente a los jugadores: **todos migran o nadie**, porque
    versiones distintas no juegan entre sí.
-6. **Los tres lugares versión-dependientes que NO salen de `WC3_WAR3_VERSION`**
+7. **Los tres lugares versión-dependientes que NO salen de `WC3_WAR3_VERSION`**
    (fáciles de olvidar):
-   - `config/pvpgn/w3motd.txt.tpl` saluda con "1.27a" hardcodeado;
-   - `kit/INSTALAR.bat.tpl` verifica que `war3.exe` pese 514.536 bytes, que
-     es el tamaño DE 1.27a (buscar el de la versión nueva);
+   - `config/pvpgn/w3motd.txt.tpl` saluda con "1.27b";
+   - `kit/INSTALAR.bat.tpl` verifica exactamente 515.048 bytes;
    - el loader del kit usa `wl27.dll` para enganchar 1.27 (`build-kit.sh`);
      otra versión necesita su propia DLL, y 1.28+ directamente otro loader.
 
