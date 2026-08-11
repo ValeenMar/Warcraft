@@ -2,6 +2,7 @@
 # ============================================================================
 # validate.sh — valida el repo entero EN SECO: sin VPS, sin archivos del juego
 #   - shellcheck de todos los .sh
+#   - todos los .sh instalables conservan el bit ejecutable
 #   - systemd-analyze verify de las unidades (si systemd esta disponible)
 #   - registry.yaml contra maps/schema.json
 #   - render de templates con .env.example (no debe quedar ${WC3_*} vivo)
@@ -28,6 +29,11 @@ check() { # check <nombre> <comando...>
 echo "== shellcheck =="
 for sh in "${REPO_DIR}"/install/*.sh "${REPO_DIR}"/scripts/*.sh; do
     check "shellcheck $(basename "${sh}")" shellcheck "${sh}"
+done
+
+echo "== permisos ejecutables =="
+for sh in "${REPO_DIR}"/install/*.sh "${REPO_DIR}"/scripts/*.sh; do
+    check "ejecutable $(basename "${sh}")" test -x "${sh}"
 done
 
 echo "== systemd =="
