@@ -29,6 +29,10 @@ RestartSec=5
 # --- Limites de recursos (VPS de 2 GB) --------------------------------------
 MemoryMax=512M
 TasksMax=128
+CPUAccounting=yes
+# En reposo usa ~0,3 % del vCPU. Este techo permite picos amplios de juego y
+# evita que una regresion del daemon vuelva a monopolizar el plan compartido.
+CPUQuota=50%
 
 # --- Hardening ---------------------------------------------------------------
 NoNewPrivileges=true

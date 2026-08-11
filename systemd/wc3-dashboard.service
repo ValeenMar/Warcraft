@@ -7,6 +7,8 @@
 Description=Dashboard web de admin del servidor WC3
 After=network-online.target
 Wants=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=10
 
 [Service]
 Type=simple
@@ -23,6 +25,10 @@ RestartSec=5
 # --- Limites de recursos ------------------------------------------------------
 MemoryMax=128M
 TasksMax=32
+CPUAccounting=yes
+# El panel medido en reposo usa ~0,03 %. Diez por ciento alcanza incluso para
+# previews y evita que una ruta defectuosa afecte el unico vCPU del servidor.
+CPUQuota=10%
 
 # --- Hardening (mismo criterio que pvpgn.service) ------------------------------
 NoNewPrivileges=true

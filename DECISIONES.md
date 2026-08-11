@@ -794,6 +794,21 @@ historial.
   entre 0,03 y 0,10 %, el panel 0,03 % y Discord 0,00 %. La verificación bajo
   carga real sigue separada porque requiere jugadores.
 
+## 28. Causa de la tormenta de reinicios y defensa de CPU (2026-08-11)
+
+- El journal persistente mostró el incidente: las unidades viejas de PvPGN y
+  dashboard fallaron juntas con `status=200/CHDIR` y reiniciaron cada cinco
+  segundos, 22 veces, mientras faltó temporalmente `/opt/wc3-repo` durante un
+  cambio de checkout. No apareció un proceso desconocido ni evidencia de
+  minero en procesos, servicios o puertos activos.
+- Las unidades actuales ya no usan ese checkout como directorio de trabajo:
+  PvPGN ejecuta desde `/opt/wc3/pvpgn` y el panel desde `/opt/wc3/dashboard`.
+  El intercambio de repositorio conserva el anterior y activa el nuevo sin
+  borrar datos.
+- PvPGN queda limitado al 50 % de un vCPU, el panel al 10 %, Aura al 15 % por
+  instancia y Discord al 10 %. PvPGN, panel, Aura y Discord tienen además una
+  ráfaga máxima de diez arranques cada cinco minutos.
+
 ---
 
 ## TODO(verificar) — lista completa, ordenada por qué bloquea primero
