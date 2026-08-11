@@ -1,0 +1,12 @@
+/opt/wc3/pvpgn/var/pvpgn/bnetd.log {
+    daily
+    size 10M
+    rotate 14
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+    su wc3 wc3
+    create 0640 wc3 wc3
+}

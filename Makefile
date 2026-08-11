@@ -5,7 +5,7 @@
 # ============================================================================
 
 .PHONY: help bootstrap build install render-config validate map-scan test backup \
-	lobby-names brand-maps kit recibir dashboard
+	lobby-names brand-maps kit recibir dashboard maintenance
 
 # install = bootstrap + build + mysql, EN ORDEN: con make -j los prerequisitos
 # correrian en paralelo y el build arrancaria sin las dependencias del bootstrap.
@@ -26,6 +26,7 @@ help:
 	@echo "  lobby-names    chuleta de nombres de partida con color, para pegar"
 	@echo "  brand-maps     mete la preview propia a los .w3x de /opt/wc3/incoming"
 	@echo "  backup         dump de MySQL + configs a tar fechado (sudo)"
+	@echo "  maintenance    limita journald y rota bnetd.log (sudo)"
 
 bootstrap:
 	sudo ./install/00-bootstrap-vps.sh
@@ -98,3 +99,6 @@ brand-maps:
 
 backup:
 	sudo ./scripts/backup.sh
+
+maintenance:
+	sudo ./install/70-setup-maintenance.sh

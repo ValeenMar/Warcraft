@@ -31,7 +31,11 @@ if [[ ! -f "${ENV_FILE}" ]]; then
     echo "Falta ${ENV_FILE} (necesito las credenciales de la base)." >&2
     exit 1
 fi
-chmod 600 "${ENV_FILE}"
+env_mode="$(stat -c '%a' "${ENV_FILE}")"
+if [[ "${env_mode}" != "600" ]]; then
+    echo "${ENV_FILE} debe tener modo 600 (tiene ${env_mode}); no lo corrijo en silencio." >&2
+    exit 1
+fi
 set -a
 # shellcheck source=/dev/null
 source "${ENV_FILE}"
@@ -56,7 +60,11 @@ if [[ ! -s "${WORK}/dump/${WC3_DB_NAME}.sql" ]]; then
     exit 1
 fi
 
-log "copiando configs"
+log "copiando configs y secretos de recuperacion"
+install -m 600 "${ENV_FILE}" "${WORK}/configs/repo.env"
+if [[ -f /opt/wc3/discord-avisos.env ]]; then
+    install -m 600 /opt/wc3/discord-avisos.env "${WORK}/configs/discord-avisos.env"
+fi
 cp -a /opt/wc3/pvpgn/etc/pvpgn "${WORK}/configs/pvpgn"
 if compgen -G '/opt/wc3/hostbot/instances/*/aura.cfg' >/dev/null; then
     for cfg in /opt/wc3/hostbot/instances/*/aura.cfg; do

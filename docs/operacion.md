@@ -22,6 +22,13 @@ tail -f /opt/wc3/pvpgn/var/pvpgn/bnetd.log   # log de aplicacion de PvPGN (el ut
 journalctl -u wc3-hostbot@1 -f               # Aura loguea todo a stdout
 ```
 
+Los logs no crecen sin límite: `sudo make maintenance` instala un techo de
+256 MiB/14 días para journald y logrotate diario para `bnetd.log`.
+
+El backup diario incluye el `.env` con modo 600. Para tener una copia fuera
+del VPS, en Windows se ejecuta `admin-windows\BAJAR-ULTIMO-BACKUP.bat`: baja
+el tarball más reciente a Documentos\WC3-Backups y valida su índice.
+
 Nivel de log de PvPGN: clave `loglevels` en bnetd.conf (default
 `fatal,error,warn,info,debug,trace` — bajar a `fatal,error,warn,info` cuando
 el server esté estable, editando el template y re-renderizando).
@@ -147,7 +154,7 @@ es doble clic o escribir el nombre exacto).
 - En cualquier chat de PvPGN: `/games` — lista todas las partidas
   anunciadas, con su IP:puerto (útil para verificar que se anuncia la IP
   pública y no otra cosa).
-- En el canal del bot: `!games`.
+- Por susurro a un bot: `!getgames` (su lobby) y `!gp 0` (jugadores esperando).
 
 ### El bot no responde comandos en el lobby
 

@@ -4,7 +4,8 @@ After=mysql.service
 
 [Service]
 Type=oneshot
-ExecStart=/opt/wc3-repo/scripts/backup.sh
+EnvironmentFile=/opt/wc3/dashboard.env
+ExecStart=/usr/bin/bash -c 'exec "${DASH_REPO_DIR:?falta DASH_REPO_DIR}/scripts/backup.sh"'
 User=root
 Group=root
 UMask=0077
@@ -15,4 +16,4 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectHome=true
 ProtectSystem=strict
-ReadWritePaths=/opt/wc3/backups /opt/wc3-repo/.env
+ReadWritePaths=/opt/wc3/backups

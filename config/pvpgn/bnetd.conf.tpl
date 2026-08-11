@@ -137,8 +137,7 @@ localize_by_country = true
 #   warn
 #   error
 #   fatal
-loglevels = fatal,error,warn,info,debug,trace
-#loglevels = fatal,error,warn,info
+loglevels = fatal,error,warn,info
 
 #                                                                            #
 ##############################################################################
