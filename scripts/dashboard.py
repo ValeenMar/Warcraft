@@ -38,13 +38,13 @@ Configuracion por variables de entorno (systemd las carga de
 /opt/wc3/dashboard.env, que arma el instalador desde el .env del repo):
   WC3_DASH_PASSWORD       obligatoria
   WC3_DASH_PORT           default 8322
-  WC3_DASH_BIND           interfaz (default 0.0.0.0; usar 127.0.0.1 con tunel SSH)
+  WC3_DASH_BIND           interfaz (default 127.0.0.1; acceso por tunel SSH)
   WC3_DASH_CHAT_USER      cuenta PvPGN del panel (default: panel)
   WC3_DASH_CHAT_PASSWORD  su contraseña (el instalador usa WC3_BOT_PASSWORD
                           si no se define otra)
   WC3_BOT_CHANNEL         canal a mirar (default: W3)
   WC3_REALM_NAME          para el titulo
-  WC3_MAX_MAP_MB          techo por mapa (default 8)
+  WC3_MAX_MAP_MB          techo por mapa (default 128, limite de 1.27b)
 """
 
 import html
@@ -75,7 +75,7 @@ GUIAS_DIR = Path("/opt/wc3/dashboard/guias")
 
 PVPGN_HOST = "127.0.0.1"
 PVPGN_PORT = 6112
-MAX_MAP_BYTES = int(os.environ.get("WC3_MAX_MAP_MB", "8")) * 1024 * 1024
+MAX_MAP_BYTES = int(os.environ.get("WC3_MAX_MAP_MB", "128")) * 1024 * 1024
 # Cuota total de incoming: aunque cada mapa respete el techo, subir sin
 # limite llenaria el disco del VPS (y PvPGN corre en la misma maquina).
 MAX_INCOMING_TOTAL = 512 * 1024 * 1024
@@ -1070,7 +1070,7 @@ def main() -> int:
         return 1
     threading.Thread(target=CHAT.correr, daemon=True).start()
     puerto = int(os.environ.get("WC3_DASH_PORT", "8322"))
-    bind = os.environ.get("WC3_DASH_BIND", "0.0.0.0")
+    bind = os.environ.get("WC3_DASH_BIND", "127.0.0.1")
     servidor = ThreadingHTTPServer((bind, puerto), Handler)
     servidor.daemon_threads = True
     print(f"[dashboard] escuchando en {bind}:{puerto}", flush=True)

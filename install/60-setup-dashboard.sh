@@ -36,7 +36,7 @@ source "${ENV_FILE}"
 set +a
 
 DASH_PORT="${WC3_DASH_PORT:-8322}"
-DASH_BIND="${WC3_DASH_BIND:-0.0.0.0}"
+DASH_BIND="${WC3_DASH_BIND:-127.0.0.1}"
 if [[ -z "${WC3_DASH_PASSWORD:-}" || "${WC3_DASH_PASSWORD}" == "CAMBIAME" ]]; then
     echo "WC3_DASH_PASSWORD falta o sigue en CAMBIAME en .env." >&2
     echo "La contraseña es lo UNICO que separa el dashboard de internet." >&2
@@ -73,7 +73,7 @@ WC3_DASH_CHAT_USER=${CHAT_USER}
 WC3_DASH_CHAT_PASSWORD=${CHAT_PASS}
 WC3_BOT_CHANNEL=${WC3_BOT_CHANNEL:-W3}
 WC3_REALM_NAME=${WC3_REALM_NAME:-WC3}
-WC3_MAX_MAP_MB=${WC3_MAX_MAP_MB:-8}
+WC3_MAX_MAP_MB=${WC3_MAX_MAP_MB:-128}
 DASH_REPO_DIR=${REPO_DIR}
 EOF
 chown root:wc3 /opt/wc3/dashboard.env

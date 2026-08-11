@@ -35,8 +35,8 @@ ProtectKernelModules=true
 ProtectControlGroups=true
 RestrictSUIDSGID=true
 LockPersonality=true
-# Lo unico que escribe son los mapas subidos
-ReadWritePaths=/opt/wc3/incoming
+# Sube mapas y encola pedidos para el companero privilegiado.
+ReadWritePaths=/opt/wc3/incoming /opt/wc3/dashboard/spool /opt/wc3/dashboard/resultados
 ReadOnlyPaths=/opt/wc3/maps /opt/wc3/backups /opt/wc3/hostbot
 
 [Install]

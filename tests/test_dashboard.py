@@ -207,6 +207,22 @@ class TestDashboard(unittest.TestCase):
         self.assertEqual(pedido.read_text().splitlines()[0], "backup")
         pedido.unlink()
 
+    @unittest.skipIf(os.name == "nt" or getattr(os, "geteuid", lambda: 0)() == 0,
+                     "los permisos POSIX requieren Linux sin root")
+    def test_spool_sin_permiso_falla_de_verdad(self):
+        """No se simula write_text: el filesystem debe rechazar la escritura."""
+        with TemporaryDirectory() as temporal:
+            bloqueado = Path(temporal) / "spool-bloqueado"
+            bloqueado.mkdir(mode=0o500)
+            anterior = dashboard.SPOOL_DIR
+            dashboard.SPOOL_DIR = bloqueado
+            try:
+                with self.assertRaises(PermissionError):
+                    dashboard.pedir_accion("backup")
+            finally:
+                dashboard.SPOOL_DIR = anterior
+                bloqueado.chmod(0o700)
+
     def test_reparar_caidos_encola_pedido(self):
         req = urllib.request.Request(
             self._url("/accion/reparar-caidos"), data=b"", method="POST", headers=_auth()

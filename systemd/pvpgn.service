@@ -10,13 +10,15 @@ After=network-online.target mysql.service
 Wants=network-online.target
 # PvPGN necesita MySQL levantado, pero no queremos que un reinicio de MySQL
 # tumbe PvPGN: por eso After= sin Requires= (bnetd reintenta la conexion).
+StartLimitIntervalSec=300
+StartLimitBurst=10
 
 [Service]
 Type=simple
 User=wc3
 Group=wc3
 ExecStart=/opt/wc3/pvpgn/sbin/bnetd -f -c /opt/wc3/pvpgn/etc/pvpgn/bnetd.conf
-Restart=on-failure
+Restart=always
 RestartSec=5
 
 # --- Limites de recursos (VPS de 2 GB) --------------------------------------
