@@ -772,23 +772,42 @@ historial.
 - La unidad fija `KillSignal=SIGQUIT`. No se baja el timeout a ciegas ni se
   acepta un falso fallo operativo en cada reinicio normal.
 
+## 27. Despliegue y recuperación verificados (2026-08-11)
+
+- La integración se desplegó desde un clon limpio y el checkout anterior se
+  conservó completo en `/opt/wc3-repo-old-20260811-d6f970c`. No se recompiló
+  Aura: el binario ya contenía los dos puntos del parche `readycheck`.
+- La instancia 9 calculó `map_crc` y `map_sha1` para FOC 9.6G03 ES, abrió
+  6121/6141 y publicó el lobby. Luego las nueve instancias autenticaron su
+  cuenta y emitieron su propio `Creating public game`, con cero reinicios y
+  sin errores críticos en el ciclo observado.
+- El panel respondió por loopback, su chat conectó como `panel` y la acción
+  real de backup terminó con exit 0. El tar contiene dump SQL, nueve
+  `aura.dbs`, `.env` de recuperación y la configuración de Discord.
+- El backup `wc3-backup-20260811-120545.tar.gz` se descargó a Windows, pasó
+  `tar -tzf` y coincidió con el VPS en SHA-256
+  `e9b5c26d83d3b8e916ca25cb8a87f1230f455030bbd4fe93492b043a35bfda6b`.
+- El kit 1.27b pasó `unzip -t`, incluye 19 mapas y no incluye WFE. El archivo
+  entregado tiene SHA-256
+  `42a6261dd1d3d3ca72e6c2445510ca399855c5687d9f40ea135e88749e7a118f`.
+- En 30 segundos ociosos, MySQL promedió 0,50 % CPU, PvPGN 0,30 %, cada Aura
+  entre 0,03 y 0,10 %, el panel 0,03 % y Discord 0,00 %. La verificación bajo
+  carga real sigue separada porque requiere jugadores.
+
 ---
 
 ## TODO(verificar) — lista completa, ordenada por qué bloquea primero
 
-1. **Instancia 9 / FOC 9.6G03 ES**: comprobar CRC sin errores, lobby público,
+1. **Instancia 9 / FOC 9.6G03 ES**: CRC y lobby público ya pasaron; falta la
    entrada con cliente 1.27b y una partida real. Hasta entonces el nombre
    lleva `PRUEBA` y no se anuncia como mapa estable.
 2. **`!ready` funcional**: probar con dos jugadores que arma/cancela la cuenta
    de 30 segundos y que `!start` sólo acelera cuando todos están listos.
 3. **Desincronización**: jugar desde dos redes distintas al menos diez minutos
    en FOC y en un mapa clásico ya validado.
-4. **Backup fuera del VPS**: ejecutar el descargador de Windows y abrir con
-   `tar -tzf` el archivo recibido. Un backup que vive sólo en el VPS no cierra
-   recuperación ante pérdida completa de la máquina.
-5. **Latencia**: probar `!latency 70` y `!sl 90` durante varias partidas antes
+4. **Latencia**: probar `!latency 70` y `!sl 90` durante varias partidas antes
    de fijar valores nuevos en `aura.cfg.tpl`.
-6. **Catálogo restante**: validar o descartar cada mapa pendiente con versión,
+5. **Catálogo restante**: validar o descartar cada mapa pendiente con versión,
    hash y prueba de juego real; no inferir compatibilidad por fecha.
-7. **Recursos bajo carga**: medir `MemoryCurrent` y CPU de los nueve bots con
+6. **Recursos bajo carga**: medir `MemoryCurrent` y CPU de los nueve bots con
    dos partidas simultáneas antes de bajar `MemoryMax=384M`.
