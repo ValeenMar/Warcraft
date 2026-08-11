@@ -25,12 +25,15 @@ Dos caminos, verificados en foros (ENT Gaming, Hive) el 2026-08-09:
    este servidor es 1.27**a**: migrar es rehacer el versioncheck de PvPGN, el
    loader, y que todos reinstalen. Un proyecto aparte, no lo cubre esto.
 
-2. **WFE → "Unlock Map Size"** — la misma herramienta de las teclas
-   (`docs/presentacion.md`, `TECLAS-LOL.txt` del kit) quita el tope. Su texto:
-   *"removes 4 MB and 8 MB map limit from Online Hosting"*. El perfil
-   `WC3Revival` que arma `scripts/make-wfe-profile.py` ya trae
-   `REMOVEMAPSIZELIMIT = yes`, así que **cualquiera que active WFE ya lo tiene
-   habilitado**. Es el camino de este proyecto.
+2. **WFE → "Unlock Map Size"** — la misma herramienta de las teclas estilo
+   LoL (`docs/presentacion.md`) quita el tope. Su texto: *"removes 4 MB and
+   8 MB map limit from Online Hosting"*. El perfil `WC3Revival` que arma
+   `scripts/make-wfe-profile.py` ya trae `REMOVEMAPSIZELIMIT = yes`, así que
+   **cualquiera que active WFE con ese perfil ya lo tiene habilitado**. Es el
+   camino de este proyecto. OJO: WFE **no viene en el kit** (decisión del
+   2026-08-10: inyecta en el proceso del juego y los antivirus lo marcan, y
+   eso hacía desconfiar de todo el kit) — cada jugador lo baja del sitio
+   oficial (github.com/UnryzeC/WFE-Release) y el admin le pasa el perfil.
 
 ## El costo, sin vueltas
 
@@ -50,7 +53,19 @@ arrastra toda esa cadena.
 
 ## Cómo meter uno, paso a paso
 
-En el servidor, con el techo de subida levantado a propósito:
+**El camino cómodo (dashboard).** Una sola vez, en el `.env` del server:
+`WC3_MAX_MAP_MB=64`, y después `sudo make dashboard` (el techo de subida y de
+instalación quedan levantados a propósito). Desde ahí:
+
+1. Arrastrar el `.w3x` grande a la zona de subida del dashboard.
+2. Tocar **"Instalar ahora"** (con el techo levantado, el instalador acepta
+   los grandes solo).
+3. Si el mapa es nuevo, darle su bot por SSH (igual que cualquier mapa):
+   `./scripts/make-instances.py --maps-dir /opt/wc3/maps`, render, enable.
+4. `make kit` para que el mapa viaje adentro del kit, y repartirlo. Los
+   amigos, además, necesitan WFE activado: `extras\WFE\INSTALAR-WFE.bat`.
+
+**El mismo camino a mano (sin dashboard):**
 
 ```bash
 # 1. recibir el .w3x grande (subi el techo para esta sesion)
@@ -70,8 +85,9 @@ sudo systemctl enable --now wc3-hostbot@N
 make kit
 ```
 
-`--allow-large` es opt-in a propósito: sin él, `brand-map.py` sigue abortando
-a los 8 MiB, así que un mapa grande subido por error no pasa en silencio.
+El techo de 8 MiB es opt-in a propósito: con el `.env` en el default,
+`brand-map.py` y el dashboard siguen abortando a los 8 MiB, así que un mapa
+grande subido por error no pasa en silencio.
 
 ## Antes de bajar una versión
 

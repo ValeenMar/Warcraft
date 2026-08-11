@@ -71,10 +71,12 @@ Gateway Editor"). Datos a cargar:
 
 ### Opción B: registro de Windows a mano
 
-Los gateways viven en
-`HKEY_CURRENT_USER\Software\Blizzard Entertainment\Warcraft III\Gateways`
-(valor multi-string). Se puede exportar un `.reg` de ejemplo y pasárselo a
-los amigos — queda para la fase 4 armar ese `.reg` con la IP definitiva.
+Los gateways viven en el valor multi-string **`Battle.net Gateways`** de
+`HKEY_CURRENT_USER\Software\Blizzard Entertainment\Warcraft III`
+(ojo: el valor se llama así, con espacio; un valor `Gateways` a secas el
+juego lo ignora). Esto ya lo resuelve solo el kit: `INSTALAR.bat` llama a
+`herramientas/gateway.ps1`, que agrega el server a esa lista sin pisar los
+gateways existentes.
 
 ### Opción C: DNS local / hosts (la más rápida para probar)
 
@@ -101,16 +103,18 @@ se queda colgada en "Security Check" al intentar hablar HTTPS con ese dominio.
 El juego clásico no la necesita (se abre directo con `Frozen Throne.exe` o con
 `w3l.exe`), pero si molesta, se revierte quitando la línea.
 
-Ojo: el valor `Gateways` del registro **puede no existir**; en ese caso el
-cliente usa la lista que trae compilada adentro del ejecutable, y editar el
-registro no sirve de nada. Por eso el `hosts` es más confiable para probar.
+Ojo: el valor `Battle.net Gateways` del registro **puede no existir**; en ese
+caso el cliente usa la lista que trae compilada adentro del ejecutable
+(`gateway.ps1` lo crea si falta). Por eso el `hosts` es más confiable para
+una prueba rápida a mano.
 
 ## Flujo del jugador
 
 1. Abrir W3 → Battle.net → elegir el gateway nuevo.
 2. **Crear cuenta**: con `new_accounts = true` (default actual), alcanza con
    poner usuario/contraseña nuevos en la pantalla de login la primera vez.
-3. Entrar al canal (ej. `AoS`) donde está el bot, y usar sus comandos:
+3. Entrar al canal `W3` (`/join W3`), donde viven todos los bots, y usar sus
+   comandos:
    `!games` (qué hay hosteado), o pedir una partida.
 4. Entrar a la partida desde Custom Games; si el mapa es chico (hasta ~2-3 MB)
    lo baja del bot ahí mismo; si es más pesado, la descarga in-lobby es

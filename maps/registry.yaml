@@ -61,7 +61,7 @@ maps:
     teams: null
     min_patch: "1.24"
     return_bug_risk: amarillo
-    status: pendiente
+    status: descargado
     notes: >-
       La variante mantenida es Allstars 1.70b; la descripcion del propio autor
       dice literalmente "Fix to Warcraft III 1.24+". Alternativa: Eclipse 2017
@@ -165,7 +165,7 @@ maps:
     aliases: [Anime Fight Arena, AF]
     category: aos
     target_version: "Anime Fight Arena AI"
-    versions_known: ["Anime Fight Arena AI", "Beta 1.39o9"]
+    versions_known: ["Anime Fight Arena AI", "Beta 1.39o9", "Beta 1.39b"]
     size_mb: 5.96
     slots: 10
     teams: null
@@ -176,7 +176,49 @@ maps:
       El unico del conjunto que es post-1.24 es "Anime Fight Arena AI" de
       PrideTeam. El linaje original (Anime Fight Beta 1.39o9 de Spathis, ene
       2008, 0,41 MiB, epicwar.com/maps/41277) es PRE-1.24 y es riesgo.
+      OJO: "Beta 1.39b" es la que hostea la instancia 2 (maps/lobbies.yaml);
+      es del linaje pre-1.24, o sea que arrastra el mismo riesgo — pasarla
+      por la prueba de carga en 1.27a antes de darla por buena.
     source_url: https://www.epicwar.com/maps/152876/
+
+  - name: Anime Character Fight
+    aliases: [ACF]
+    category: arena
+    target_version: "3.0d"
+    versions_known: ["3.0d"]
+    size_mb: null
+    slots: null
+    teams: 2
+    min_patch: null
+    return_bug_risk: amarillo
+    status: descargado
+    notes: >-
+      Arena de 2 equipos que se disfruta de a dos; entro al catalogo el
+      2026-08-10 reemplazando a DBZ Tribute en la instancia 8 (DBZ pide 8
+      jugadores para tener sentido). El .w3x esta cargado en el server
+      (por eso descargado), pero la fecha de release y el formato de editor
+      no estan verificados: correr make map-scan para completar size/slots
+      y probar carga en 1.27a antes de marcar validado.
+    source_url: null
+
+  - name: X Hero Siege
+    aliases: [X Hero Siege 4.80, XHS]
+    category: arena
+    target_version: "4.80"
+    versions_known: ["3.33", "4.80"]
+    size_mb: 4.55
+    slots: 8
+    teams: null
+    min_patch: "1.24"
+    return_bug_risk: verde
+    status: descargado
+    notes: >-
+      Version 4.80 oficial de Sogat, agosto de 2010: formato 1.24a-1.28c,
+      118k descargas y texto ingles. Se eligio sobre la 3.33 (enero 2009,
+      pre-1.24) para conservar la jugabilidad clasica sin el riesgo del
+      return bug. Archivo verificado: 4.766.066 B, SHA-256
+      DE41A82C38A28A1F039B5AB19A0622A249090FD12D225C3BAE54AFBBF3777886.
+    source_url: https://www.epicwar.com/maps/144663/
 
   - name: Custom Hero Arena
     aliases: [CHA]
@@ -394,7 +436,7 @@ maps:
     teams: null
     min_patch: "1.24"
     return_bug_risk: verde
-    status: pendiente
+    status: descargado
     notes: >-
       NO existe una version "estandar canonica": "Footmen Frenzy" y "Footman
       Frenzy" (sin la e) son linajes separados con decenas de forks cada uno y
@@ -445,3 +487,23 @@ maps:
       "v1.56 [DK]" (2021, 6,87 MiB) que es de 10 slots, y con "v.2008b" que es
       otro linaje distinto.
     source_url: https://www.epicwar.com/maps/134232/
+
+  - name: Pokemon Defense
+    aliases: [Pokemon Defense FINAL, PD FINAL]
+    category: td
+    target_version: "FINAL"
+    versions_known: ["FINAL", "v10 Final"]
+    size_mb: 7.50
+    slots: 10
+    teams: null
+    min_patch: "1.24"
+    return_bug_risk: verde
+    status: descargado
+    notes: >-
+      Release oficial de FeverMore del 5 de noviembre de 2010: formato
+      1.24a-1.28c y mas de un millon de descargas. Es la adicion que mejor
+      une las dos ramas del catalogo actual: anime + tower defense. Entra en
+      el limite nativo de 8 MiB por 522.419 B, aunque conviene repartirla en
+      el kit. Archivo verificado: 7.866.189 B, SHA-256
+      96F431A97A40BDAFA5A8F376BB104EEB27E839C03AABD2280CBF720C0FC8AE5C.
+    source_url: https://www.epicwar.com/maps/153487/

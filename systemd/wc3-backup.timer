@@ -1,0 +1,12 @@
+[Unit]
+Description=Backup diario del servidor WC3
+
+[Timer]
+OnCalendar=*-*-* 04:15:00
+Persistent=true
+RandomizedDelaySec=10m
+Unit=wc3-backup.service
+
+[Install]
+WantedBy=timers.target
+

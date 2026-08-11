@@ -111,11 +111,11 @@ lobbies:
   - id: naruto-ninpou
     match: ["Naruto Ninpou*", "*Ninpou*"]
     display_name: "|cFFFF8800Naruto Ninpou Storm"
-    plain_name: "Naruto Ninpou Storm 0.9"
+    plain_name: "Naruto Ninpou Storm 0.9ZZZ"
     short_name: "Naruto"
     preview:
       title: "Naruto"
-      subtitle: "Ninpou Storm 0.9"
+      subtitle: "Ninpou Storm 0.9ZZZ"
       bg_top: "#4d2a05"
       bg_bottom: "#120802"
       accent: "#ffa726"

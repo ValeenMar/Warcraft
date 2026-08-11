@@ -192,7 +192,9 @@ si está disponible; el bootstrap crea `/opt/wc3/venv` con mpyq+pyyaml.
   comprar una copia usada (el canje de CD keys clásicas cerró el 21/11/2025).
 - PvPGN lo soporta de fábrica: verificado leyendo el `versioncheck.json` que
   instala el propio build (entradas `W3XP_127A` y `WAR3_127A`).
-- Los 21 mapas del catálogo son formato 1.24a-1.28c, así que andan igual.
+- La gran mayoría del catálogo es formato 1.24a-1.28c (los `verde` y
+  `amarillo` del registry), así que andan igual; los `rojo` pre-1.24 hay que
+  probarlos en cualquiera de las dos versiones.
 - 1.27a anda mejor en Windows moderno: agregó soporte oficial de Windows
   7-10 y abandonó Direct3D 8, de donde salen los crashes de 1.26a en
   Windows 11 24H2.
@@ -599,6 +601,26 @@ sin release, el kit sale sin extras y lo dice.
 real. Las claves y el formato salen del ini real del repo, pero la prueba de
 fuego es de 5 minutos con el juego.
 
+**ACTUALIZACIÓN (2026-08-10): el kit volvió a salir SIN WFE** (commit "Kit
+sin WFE"). El motivo original (inyección en el proceso → falsos positivos de
+antivirus → el kit entero parece un virus) pesó más que la comodidad. Lo que
+queda de esta decisión: `make-wfe-profile.py` sigue generando el perfil
+`WC3Revival.ini`, pero se le pasa al jugador que lo pida, y WFE se baja del
+sitio oficial (github.com/UnryzeC/WFE-Release). El `LEEME.txt` del kit lo
+explica así.
+
+**ACTUALIZACIÓN 2 (2026-08-10): el término medio definitivo.** El operador
+necesita los mapas > 8 MiB (decisión 23), y "que cada amigo se lo baje solo"
+no escala. El kit ahora trae `extras/WFE/` con TRES archivos de texto:
+`INSTALAR-WFE.bat` (baja el zip del **release oficial pinneado** v3.1.13.85
+en la máquina del jugador y verifica su SHA-256 con certutil antes de tocar
+nada), el perfil `WC3Revival.ini` (generado en el build contra el
+`WFEConfigBase.ini` pinneado del repo de WFE; si upstream renombra claves,
+`make-wfe-profile.py` aborta y el kit sale sin extras avisando) y
+`TECLAS-LOL.txt` (el paso a paso). El binario sigue SIN viajar en el kit —
+se respeta el motivo de la actualización anterior — pero instalarlo pasó de
+"bajate esto y pedime el perfil" a un doble clic verificado.
+
 ## 23. Mapas de más de 8 MiB: se pueden, con WFE Unlock Map Size (2026-08-09)
 
 **Pregunta**: ¿hay forma de hostear un mapa que pese más de 8 MiB (FOCS pesa
@@ -608,9 +630,12 @@ fuego es de 5 minutos con el juego.
 calcula el tamaño real y hostea sin límite propio; el que rechaza > 8 MiB es
 el `game.dll` de cada jugador. Y ese límite se levanta de dos formas
 (confirmado en ENT Gaming / Hive): el parche 1.27b lo sacó de fábrica, o WFE
-con `REMOVEMAPSIZELIMIT` (su "Unlock Map Size"). Como WFE ya está en el kit,
-el perfil `WC3Revival` pasó a traer `REMOVEMAPSIZELIMIT = yes` — inofensivo
-para los mapas chicos, habilita los grandes.
+con `REMOVEMAPSIZELIMIT` (su "Unlock Map Size"). El perfil `WC3Revival` de
+`make-wfe-profile.py` trae `REMOVEMAPSIZELIMIT = yes` — inofensivo para los
+mapas chicos, habilita los grandes. (El binario de WFE no viaja en el kit,
+pero el kit trae `extras/WFE/INSTALAR-WFE.bat`, que lo baja verificado del
+sitio oficial en la máquina del jugador — ver la actualización 2 de la
+decisión 22.)
 
 **Costo, y por eso queda OPT-IN**: para un mapa grande, WFE deja de ser
 opcional (lo necesita TODO el que lo juegue), el mapa va sí o sí en el kit

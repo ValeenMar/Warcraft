@@ -5,10 +5,12 @@
 #
 #   sudo ./scripts/backup.sh
 #
-# Guarda: dump de la base de PvPGN, etc/pvpgn completo, aura.cfg de cada
-# instancia y el registry de mapas. NO incluye los .w3x (pesan y se
-# reconstruyen desde el map pack) ni los MPQ del juego.
+# Guarda: dump de la base de PvPGN, etc/pvpgn completo, aura.cfg y aura.dbs
+# (los admins/bans que cada bot cargo con !addadmin/!ban) de cada instancia y
+# el registry de mapas. NO incluye los .w3x (pesan y se reconstruyen desde el
+# map pack) ni los MPQ del juego.
 # Retencion: se conservan los ultimos 14 backups.
+# El procedimiento de RESTORE esta en RUNBOOK.md (seccion "Restaurar un backup").
 # ============================================================================
 set -euo pipefail
 
@@ -29,17 +31,30 @@ if [[ ! -f "${ENV_FILE}" ]]; then
     echo "Falta ${ENV_FILE} (necesito las credenciales de la base)." >&2
     exit 1
 fi
+chmod 600 "${ENV_FILE}"
 set -a
 # shellcheck source=/dev/null
 source "${ENV_FILE}"
 set +a
 
+# Guards con mensaje claro: bajo cron, un "unbound variable" de un .env viejo
+# corta los backups en silencio y nadie se entera hasta el dia del desastre.
+: "${WC3_DB_NAME:?falta WC3_DB_NAME en .env}"
+: "${WC3_DB_USER:?falta WC3_DB_USER en .env}"
+: "${WC3_DB_PASS:?falta WC3_DB_PASS en .env}"
+: "${WC3_DB_HOST:?falta WC3_DB_HOST en .env}"
+
 install -d "${WORK}/dump" "${WORK}/configs"
 
 log "dump de MySQL (${WC3_DB_NAME})"
-mysqldump --user="${WC3_DB_USER}" --password="${WC3_DB_PASS}" \
-    --host="${WC3_DB_HOST}" --single-transaction --routines \
+# MYSQL_PWD y no --password=: lo segundo queda visible en ps/proc mientras corre
+MYSQL_PWD="${WC3_DB_PASS}" mysqldump --user="${WC3_DB_USER}" \
+    --host="${WC3_DB_HOST}" --single-transaction --routines --no-tablespaces \
     "${WC3_DB_NAME}" > "${WORK}/dump/${WC3_DB_NAME}.sql"
+if [[ ! -s "${WORK}/dump/${WC3_DB_NAME}.sql" ]]; then
+    echo "El dump de MySQL quedo vacio; no creo un backup falso." >&2
+    exit 1
+fi
 
 log "copiando configs"
 cp -a /opt/wc3/pvpgn/etc/pvpgn "${WORK}/configs/pvpgn"
@@ -47,6 +62,12 @@ if compgen -G '/opt/wc3/hostbot/instances/*/aura.cfg' >/dev/null; then
     for cfg in /opt/wc3/hostbot/instances/*/aura.cfg; do
         n="$(basename "$(dirname "${cfg}")")"
         install -D "${cfg}" "${WORK}/configs/hostbot/instance-${n}/aura.cfg"
+        # aura.dbs es el sqlite del bot: ahi viven los admins y bans que se
+        # cargaron con !addadmin/!ban. Sin esto, un restore los pierde todos.
+        dbs="$(dirname "${cfg}")/aura.dbs"
+        if [[ -f "${dbs}" ]]; then
+            install -D "${dbs}" "${WORK}/configs/hostbot/instance-${n}/aura.dbs"
+        fi
     done
 fi
 cp -a "${REPO_DIR}/maps/registry.yaml" "${WORK}/configs/registry.yaml"
@@ -55,6 +76,7 @@ install -d "${BACKUP_ROOT}"
 TARBALL="${BACKUP_ROOT}/wc3-backup-${STAMP}.tar.gz"
 tar -czf "${TARBALL}" -C "${WORK}" dump configs
 chmod 600 "${TARBALL}"
+tar -tzf "${TARBALL}" >/dev/null
 log "backup escrito: ${TARBALL} ($(du -h "${TARBALL}" | cut -f1))"
 
 # --- Retencion: dejar los 14 mas nuevos --------------------------------------

@@ -49,11 +49,15 @@ if defined WC3DIR if exist "!WC3DIR!\war3.exe" (
 set DL=%TEMP%\wc3-revival-instaladores
 if not exist "%DL%" mkdir "%DL%"
 
+:: Se baja a un .part y recien al terminar se renombra: si la descarga se
+:: corta a la mitad, el proximo intento NO va a encontrar un .exe truncado
+:: y decir "ya estaba bajado" (eso daba instaladores rotos indescifrables).
 echo.
 echo   [1/4] Bajando el instalador de Reign of Chaos...
 if not exist "%DL%\roc-instalador.exe" (
-    curl.exe -L -o "%DL%\roc-instalador.exe" "https://us.battle.net/download/getLegacy?product=WAR3&locale=esES&os=WIN"
+    curl.exe -L -o "%DL%\roc-instalador.exe.part" "https://us.battle.net/download/getLegacy?product=WAR3&locale=esES&os=WIN"
     if errorlevel 1 goto :fallo_descarga
+    move /Y "%DL%\roc-instalador.exe.part" "%DL%\roc-instalador.exe" >nul
 ) else (
     echo         ya estaba bajado, sigo
 )
@@ -61,8 +65,9 @@ if not exist "%DL%\roc-instalador.exe" (
 echo.
 echo   [2/4] Bajando el instalador de The Frozen Throne...
 if not exist "%DL%\tft-instalador.exe" (
-    curl.exe -L -o "%DL%\tft-instalador.exe" "https://us.battle.net/download/getLegacy?product=W3XP&locale=esES&os=WIN"
+    curl.exe -L -o "%DL%\tft-instalador.exe.part" "https://us.battle.net/download/getLegacy?product=W3XP&locale=esES&os=WIN"
     if errorlevel 1 goto :fallo_descarga
+    move /Y "%DL%\tft-instalador.exe.part" "%DL%\tft-instalador.exe" >nul
 ) else (
     echo         ya estaba bajado, sigo
 )

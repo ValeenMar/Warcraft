@@ -1,0 +1,18 @@
+[Unit]
+Description=Backup verificado de PvPGN y hostbots WC3
+After=mysql.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/wc3-repo/scripts/backup.sh
+User=root
+Group=root
+UMask=0077
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/opt/wc3/backups /opt/wc3-repo/.env

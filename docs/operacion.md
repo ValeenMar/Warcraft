@@ -4,12 +4,15 @@
 
 ```bash
 systemctl status pvpgn                  # el emulador de Battle.net
-systemctl status wc3-hostbot@1          # bot instancia 1 (AoS)
-systemctl status wc3-hostbot@2          # bot instancia 2 (arena)
+systemctl status 'wc3-hostbot@*'        # todos los bots (hay uno por mapa, 1-8)
+systemctl status wc3-hostbot@1          # un bot puntual
 
 sudo systemctl restart pvpgn            # tras cambiar configs de PvPGN
 sudo systemctl restart wc3-hostbot@1    # tras cambiar la instancia 1
 ```
+
+Qué mapa hostea cada instancia: está en el comentario de la primera línea de
+cada `config/hostbot/instance-N.env` (los genera `scripts/make-instances.py`).
 
 ## Logs
 
@@ -34,11 +37,15 @@ Nunca editar los archivos finales a mano (el próximo render los pisa):
 
 ## Agregar un bot (instancia nueva)
 
-1. Crear `config/hostbot/instance-3.env` copiando el 2, con **puertos únicos**
-   (hostport y reconnectport dentro de `WC3_BOT_PORT_RANGE`) y su canal/mapa.
-2. `make render-config`
-3. `sudo systemctl enable --now wc3-hostbot@3`
-4. `./scripts/validate.sh` avisa si hay puertos en colisión.
+Las instancias las genera `scripts/make-instances.py` (una por mapa, con
+numeración estable: los bots existentes no cambian de número ni de puerto).
+No crear los `instance-N.env` a mano copiando otro: es fácil pisar uno
+existente o duplicar puertos.
+
+1. Poner el `.w3x` nuevo en `/opt/wc3/maps` (ver "Agregar un mapa").
+2. `./scripts/make-instances.py --maps-dir /opt/wc3/maps` — imprime qué
+   número le tocó y los pasos que faltan (cuenta del bot, render, enable).
+3. `./scripts/validate.sh` avisa si hay puertos en colisión.
 
 ## Agregar un mapa
 
@@ -114,7 +121,7 @@ con `passwd`, entrá por SSH, y desde ahí cargá la clave pública.
 ```bash
 systemctl --failed                      # nada deberia listar
 free -h && df -h /                      # memoria y disco
-ss -ltnp | grep -E '6112|611[3-9]'      # puertos escuchando
+ss -ltnp | grep -E ':6(112|1[1-4][0-9])'  # 6112 + bots 6113-6120 + reconnect 6133-6140
 sudo ufw status                         # firewall arriba
 ```
 
@@ -124,7 +131,7 @@ Lo mínimo para operar sin releer todo lo de arriba.
 
 ### Hostear una partida (ciclo típico)
 
-En el canal del bot (`AoS`), como admin:
+En el canal de los bots (`W3`), como admin:
 
 ```
 !map dota          <- elegir el mapa (busca por nombre parcial en /opt/wc3/maps)
@@ -164,15 +171,23 @@ de 30 s y arranca solo, sin que haga falta un admin. Con todos listos, un
 de estar listo (`!notready`) o sigue bajando el mapa. No pisa el `!start` de
 admin de siempre, que arranca aunque no estén todos listos.
 
+Las cuentas bot se conectan con `bnet_countryabbrev = USA` para que PvPGN
+devuelva `/whois` en inglés, formato que Aura reconoce. Normalmente el bot
+hace el spoofcheck automáticamente pocos segundos después de que el jugador
+entra y el admin puede escribir `!start` directamente en el lobby. El susurro
+`/w hostbotN sc` queda como respaldo si la verificación automática falla.
+
 ### Diagnóstico de un join que no anda
 
 ```bash
-sudo ./scripts/diagnose-join.sh        # 90 segundos de captura
-sudo ./scripts/diagnose-join.sh 180    # o los segundos que hagan falta
+sudo ./scripts/diagnose-join.sh        # instancia 1, 90 segundos de captura
+sudo ./scripts/diagnose-join.sh 4      # instancia 4 (puerto 6116)
+sudo ./scripts/diagnose-join.sh 4 180  # instancia 4, 180 segundos
 ```
 
-Graba en paralelo el tcpdump de 6112-6114 y los dos logs mientras alguien
-intenta entrar, y al final resume cuántos SYN llegaron al puerto del bot:
+Graba en paralelo el tcpdump de 6112 + todo el rango de bots (6113-6140) y
+los dos logs mientras alguien intenta entrar, y al final resume cuántos SYN
+llegaron al puerto del bot elegido:
 si son 0, el cliente ni intentó conectarse (el problema está en el anuncio
 de la partida, no en la red ni el firewall).
 

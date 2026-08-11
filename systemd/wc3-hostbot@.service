@@ -26,6 +26,11 @@ RestartSec=10
 # --- Limites de recursos (VPS de 2 GB, varias instancias) --------------------
 MemoryMax=384M
 TasksMax=64
+# Aura puede quedar atrapado en un bucle de userspace al reciclar un lobby.
+# El uso normal medido es <0.1% por bot; este techo deja margen amplio para
+# carga/mapas y evita que una instancia defectuosa queme el vCPU compartido.
+CPUAccounting=yes
+CPUQuota=15%
 
 # --- Hardening ---------------------------------------------------------------
 NoNewPrivileges=true
@@ -39,18 +44,18 @@ ProtectControlGroups=true
 RestrictSUIDSGID=true
 LockPersonality=true
 # La instancia escribe su sqlite (aura.dbs) y los mapcfgs compartidos.
+ReadWritePaths=/opt/wc3/hostbot/instances/%i /opt/wc3/hostbot/mapcfgs
+# Mapas y MPQ del juego: SOLO lectura. El bot parsea trafico de red hostil;
+# si lo comprometen, que no pueda tocar los .w3x que despues bajan todos los
+# jugadores del lobby.
 #
-# /opt/wc3/maps aparece aca aunque el bot solo LEE los mapas. Motivo: Aura
-# llama a SFileOpenArchive sin MPQ_OPEN_READ_ONLY, asi que StormLib abre cada
-# .w3x en lectura-escritura. Con ProtectSystem=strict el montaje es de solo
-# lectura y la apertura falla, dejando el mapa sin map_crc ("invalid map_crc
-# detected"). Descubierto en el servidor real el 2026-08-09.
-#
-# install/20-build-hostbot.sh parchea Aura para pasar el flag correcto; una vez
-# recompilado con ese parche, /opt/wc3/maps puede volver a ReadOnlyPaths.
-ReadWritePaths=/opt/wc3/hostbot/instances/%i /opt/wc3/hostbot/mapcfgs /opt/wc3/maps
-# MPQ del juego: solo lectura (el parche de arriba hace que alcance)
-ReadOnlyPaths=/opt/wc3/mpq
+# Historia: /opt/wc3/maps estuvo en ReadWritePaths porque Aura abria cada .w3x
+# en lectura-escritura (SFileOpenArchive sin MPQ_OPEN_READ_ONLY) y con el
+# montaje read-only fallaba el map_crc (visto en el server el 2026-08-09).
+# install/20-build-hostbot.sh parchea eso en cada build desde entonces, asi
+# que la escritura ya no hace falta. Si un mapa vuelve a dar "invalid map_crc
+# detected", el bot corre un binario viejo: recompilar con make build.
+ReadOnlyPaths=/opt/wc3/maps /opt/wc3/mpq
 
 [Install]
 WantedBy=multi-user.target

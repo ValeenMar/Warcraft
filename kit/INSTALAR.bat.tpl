@@ -122,6 +122,12 @@ if exist "%~dp0mapas\*.w3x" (
     echo         OK: mapas en !WC3DIR!\Maps\Download
 )
 
+:: La guia es externa al mapa a proposito: traducir/reguardar un mapa
+:: protegido puede romper sus triggers. Queda disponible aun sin internet.
+if exist "%~dp0guias\GUIA-FOC-9.6B03.html" (
+    copy /Y "%~dp0guias\GUIA-FOC-9.6B03.html" "!WC3DIR!\GUIA-FOC-9.6B03.html" >nul
+)
+
 :: ---------------------------------------------------------------
 :: Acceso directo en el escritorio
 :: ---------------------------------------------------------------
@@ -131,6 +137,10 @@ powershell -NoProfile -Command ^
   "$s=(New-Object -ComObject WScript.Shell).CreateShortcut([Environment]::GetFolderPath('Desktop')+'\${WC3_REALM_NAME}.lnk');" ^
   "$s.TargetPath='!WC3DIR!\w3l.exe'; $s.WorkingDirectory='!WC3DIR!';" ^
   "$s.Description='Entrar al servidor ${WC3_REALM_NAME}'; $s.Save()" >nul 2>&1
+if exist "!WC3DIR!\GUIA-FOC-9.6B03.html" powershell -NoProfile -Command ^
+  "$s=(New-Object -ComObject WScript.Shell).CreateShortcut([Environment]::GetFolderPath('Desktop')+'\Guia FOC - ${WC3_REALM_NAME}.lnk');" ^
+  "$s.TargetPath=$env:WINDIR+'\explorer.exe'; $s.Arguments='^"!WC3DIR!\GUIA-FOC-9.6B03.html^"';" ^
+  "$s.Description='Objetos, builds y habilidades de Fight of Characters'; $s.Save()" >nul 2>&1
 
 echo.
 echo   ================================================

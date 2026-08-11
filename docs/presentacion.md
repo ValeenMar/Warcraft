@@ -231,27 +231,38 @@ extensión `.png` al tag MNG que el cliente entiende, y 468×60 es la medida del
 que PvPGN instala de fábrica (el logo de pvpgn.pro, que es lo que se ve hasta
 que lo pisamos). Al hacerle clic, el cliente abre la URL declarada.
 
-`scripts/make-banner.py` dibuja el nuestro y `40-render-configs.sh` lo instala
-junto con nuestro `ad.json` en cada render. Ojo: **el cliente cachea el
-banner**, así que después de cambiarlo puede hacer falta reconectarse para
-verlo.
+`scripts/make-banner.py` dibuja los nuestros y `40-render-configs.sh` instala
+`banner.png` como `ad000001.png` y `banner-alt.png` como `ad000002.png`.
+Warcraft III siempre informa `prev_ad_id=0`, así que PvPGN elige uno de los
+dos al azar en cada pedido: la rotación se nota al reconectar o cuando el
+cliente vuelve a pedir publicidad. Ambos llevan al hacer clic a
+`WC3_SERVER_URL` (en producción, la invitación de Discord). Ojo: **el cliente
+cachea los banners**, así que después de cambiarlos puede hacer falta cerrar el
+juego y borrar/respaldar `bncache.dat` para verlos de inmediato.
 
-**Para poner un diseño propio**: dejar el archivo en `config/pvpgn/banner.png`
-y el render lo usa en lugar de dibujar. Especificaciones completas en
+**Para poner diseños propios**: dejar los archivos en
+`config/pvpgn/banner.png` y `config/pvpgn/banner-alt.png`; el render los usa en
+lugar de dibujar. Especificaciones completas en
 `config/pvpgn/LEEME-banner.txt`; el resumen es **468×60, PNG, RGB sin
 transparencia**. Si viene en otra medida, `make-banner.py --from-image` lo
 recorta al centro hasta esa proporción en vez de deformarlo — pero conviene
 dibujarlo directo en 468×60, porque es una franja muy apaisada (7,8 : 1) y un
 logo cuadrado pierde la mitad de arriba y de abajo.
 
-**El mensaje de bienvenida** (`w3motd.txt`) es el texto que aparece en el chat
-al loguearse. Dos datos útiles que salen del sample de PvPGN: tiene un límite
-de **11 líneas**, y —a diferencia de la lista de partidas— acá los códigos de
-color **sí se renderizan** (el sample de fábrica viene pintado). Además acepta
-variables: `%s` (nombre del server), `%u`/`%g` (jugadores/partidas ahora),
-`%U` (usuarios totales).
+**El mensaje de bienvenida** (`w3motd.txt`) es el texto que aparece en el panel
+derecho al loguearse. Warcraft antepone `Rank:` a cada evento informativo, así
+que lo mantenemos en **una sola línea larga**: el cliente la envuelve según el
+ancho de la pantalla y el prefijo aparece una sola vez. Los códigos de color sí
+se renderizan. También acepta variables: `%s` (nombre del server), `%u`/`%g`
+(jugadores/partidas ahora), `%U` (usuarios totales).
 
 El template es `config/pvpgn/w3motd.txt.tpl`. El render pisa el archivo base
 **y todas las variantes de idioma** de `i18n/` — eso es lo que mata el saludo
 en alemán: PvPGN elige el archivo según el locale del cliente, y con todos los
 idiomas pisados con el mismo texto, da igual con qué locale entre cada uno.
+
+La columna grande de la izquierda sale de `news.txt`. Nuestro template es
+`config/pvpgn/news.txt.tpl` y el render también pisa todas las variantes de
+idioma, eliminando las noticias de fábrica de PvPGN. Cada bloque empieza con
+`{MM/DD/YYYY}`; usar una fecha nueva fuerza a los clientes a recibir la entrada
+nueva aunque conserven noticias viejas en `bncache.dat`.

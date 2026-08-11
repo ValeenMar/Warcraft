@@ -83,4 +83,17 @@ log "config validada con sshd -t"
 
 systemctl reload ssh
 log "sshd recargado."
+
+# sshd -t valida la SINTAXIS, no el valor efectivo. La vez que este server
+# quedo inaccesible (2026-08-08) fue exactamente por esto: otro .conf ganaba
+# la precedencia y el endurecimiento "exitoso" no se habia aplicado. sshd -T
+# muestra la config EFECTIVA, la que de verdad quedo.
+efectivo="$(sshd -T 2>/dev/null | grep -i '^passwordauthentication' || true)"
+if [[ "${efectivo,,}" != "passwordauthentication no" ]]; then
+    log "ATENCION: la config efectiva dice '${efectivo:-nada}', no 'passwordauthentication no'."
+    log "  Otro archivo de sshd_config.d le esta ganando la precedencia a ${CONF}."
+    log "  Revisar: ls /etc/ssh/sshd_config.d/ y grep -i include /etc/ssh/sshd_config"
+    exit 1
+fi
+log "verificado con sshd -T: el login por contraseña quedo deshabilitado de verdad."
 log "NO cierres esta sesion hasta confirmar en otra terminal que seguis entrando."

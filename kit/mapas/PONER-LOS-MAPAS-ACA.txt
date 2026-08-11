@@ -1,7 +1,11 @@
 Los archivos .w3x van en esta carpeta.
 
-El instalador los copia solo a:
-    Documentos\Warcraft III\Maps\Download
+El instalador los copia solo a la carpeta del JUEGO:
+    <tu carpeta de Warcraft III>\Maps\Download
+(por ejemplo C:\Program Files (x86)\Warcraft III\Maps\Download)
+
+OJO: NO van en Documentos. La version 1.27a del juego no mira
+la carpeta de Documentos; si los pones ahi, el juego no los ve.
 
 Tienen que ser los mismos que usa el servidor. Si bajas un mapa
 por tu cuenta de internet, aunque se llame igual, lo mas probable

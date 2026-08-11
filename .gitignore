@@ -1,5 +1,8 @@
 # --- Secretos ---------------------------------------------------------------
-.env
+# .env* y no solo .env: un "cp .env .env.bak" antes de un cambio + "git add ."
+# commitearia todas las contraseñas. La unica excepcion es el example.
+.env*
+!.env.example
 *.env.local
 
 # --- Material con copyright: NUNCA entra al repo -----------------------------

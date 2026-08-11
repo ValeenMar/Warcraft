@@ -289,12 +289,52 @@ def normalize(s: str) -> str:
     return "".join(c for c in s.lower() if c.isalnum())
 
 
+def _patch_entry_text(texto: str, indice: int, cambios: dict) -> str:
+    """Aplica cambios a UN entry del registry editando el texto, no el YAML.
+
+    Antes esto se hacia con yaml.safe_dump del documento entero, que
+    funcionaba... y de paso borraba todas las lineas de comentario del archivo
+    (el header con los criterios de return_bug_risk, los separadores de
+    seccion). Como los cambios son siempre "reemplazar el valor de una clave
+    escalar de un entry", editar las lineas afectadas preserva todo lo demas
+    byte por byte.
+
+    Los entries arrancan con "  - " (item de lista a indent 2); `indice` es la
+    posicion del entry dentro de maps, en el mismo orden que yaml.safe_load.
+    """
+    lineas = texto.splitlines(keepends=True)
+    inicios = [i for i, ln in enumerate(lineas) if ln.startswith("  - ")]
+    if indice >= len(inicios):
+        raise InspectError("el registry cambio mientras se editaba (entry no encontrado)")
+    desde = inicios[indice]
+    hasta = inicios[indice + 1] if indice + 1 < len(inicios) else len(lineas)
+
+    pendientes = dict(cambios)
+    for i in range(desde, hasta):
+        m = re.match(r"^(\s{4})([A-Za-z_]+):", lineas[i])
+        if m and m.group(2) in pendientes:
+            clave = m.group(2)
+            lineas[i] = f"{m.group(1)}{clave}: {pendientes.pop(clave)}\n"
+    # Claves que el entry no tenia: se insertan al final del bloque (antes de
+    # lineas en blanco o comentarios de separacion que cuelguen del final).
+    if pendientes:
+        fin = hasta
+        while fin > desde and lineas[fin - 1].strip().startswith("#") or \
+                fin > desde and not lineas[fin - 1].strip():
+            fin -= 1
+        nuevas = [f"    {k}: {v}\n" for k, v in pendientes.items()]
+        lineas[fin:fin] = nuevas
+    return "".join(lineas)
+
+
 def update_registry(registry_path: Path, meta: dict) -> str:
     """Mergea la metadata en registry.yaml sin pisar campos editados a mano.
 
     Regla de merge: solo se escriben campos cuyo valor actual es null o no
     existe. Excepcion documentada: status pasa de "pendiente" a "descargado".
     El match es por nombre o alias, normalizado (sin mayusculas ni simbolos).
+    Los comentarios y el formato del archivo se preservan (se editan solo las
+    lineas de los valores que cambian).
     """
     try:
         import yaml
@@ -304,16 +344,25 @@ def update_registry(registry_path: Path, meta: dict) -> str:
             "Instalar con: /opt/wc3/venv/bin/pip install pyyaml"
         ) from exc
 
-    doc = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
+    texto = registry_path.read_text(encoding="utf-8")
+    doc = yaml.safe_load(texto)
+    if not isinstance(doc, dict) or not isinstance(doc.get("maps"), list):
+        raise InspectError(
+            f"{registry_path} esta vacio o no tiene la lista 'maps'; "
+            "no parece un registry valido."
+        )
     candidates = {normalize(meta.get("name") or ""), normalize(meta["header_name"]),
                   normalize(Path(meta["file"]).stem)}
     candidates.discard("")
 
-    target = None
-    for entry in doc["maps"]:
-        names = {normalize(entry["name"])} | {normalize(a) for a in entry.get("aliases") or []}
+    target, target_idx = None, -1
+    for idx, entry in enumerate(doc["maps"]):
+        nombre = entry.get("name")
+        if not nombre:
+            continue
+        names = {normalize(nombre)} | {normalize(a) for a in entry.get("aliases") or []}
         if names & candidates:
-            target = entry
+            target, target_idx = entry, idx
             break
     if target is None:
         raise InspectError(
@@ -326,20 +375,30 @@ def update_registry(registry_path: Path, meta: dict) -> str:
         "slots": meta.get("slots"),
         "teams": meta.get("teams"),
     }
-    changed = []
+    changed, cambios_texto = [], {}
     for key, value in updates.items():
         if value is not None and target.get(key) is None:
             target[key] = value
             changed.append(key)
+            cambios_texto[key] = value
     if target.get("status") == "pendiente":
         target["status"] = "descargado"
         changed.append("status")
+        cambios_texto["status"] = "descargado"
 
     if changed:
-        registry_path.write_text(
-            yaml.safe_dump(doc, allow_unicode=True, sort_keys=False, width=100),
-            encoding="utf-8",
-        )
+        nuevo = _patch_entry_text(texto, target_idx, cambios_texto)
+        # Verificacion antes de escribir: el archivo parseado de nuevo tiene
+        # que reflejar exactamente los cambios. Si no, mejor no tocar nada.
+        verif = yaml.safe_load(nuevo)
+        entry_verif = verif["maps"][target_idx]
+        for key in changed:
+            if entry_verif.get(key) != target[key]:
+                raise InspectError(
+                    f"no pude editar '{key}' del entry '{target['name']}' sin "
+                    "romper el archivo; actualizalo a mano en el registry."
+                )
+        registry_path.write_text(nuevo, encoding="utf-8")
     return f"registry: entrada '{target['name']}' -> campos actualizados: {changed or 'ninguno'}"
 
 
