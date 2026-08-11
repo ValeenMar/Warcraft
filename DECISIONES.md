@@ -789,7 +789,7 @@ historial.
   `e9b5c26d83d3b8e916ca25cb8a87f1230f455030bbd4fe93492b043a35bfda6b`.
 - El kit 1.27b pasó `unzip -t`, incluye 19 mapas y no incluye WFE. El archivo
   entregado tiene SHA-256
-  `42a6261dd1d3d3ca72e6c2445510ca399855c5687d9f40ea135e88749e7a118f`.
+  `91b24048195155b52a081d40501370b01087f4bd62fba0fa6da49dd03cad3db8`.
 - En 30 segundos ociosos, MySQL promedió 0,50 % CPU, PvPGN 0,30 %, cada Aura
   entre 0,03 y 0,10 %, el panel 0,03 % y Discord 0,00 %. La verificación bajo
   carga real sigue separada porque requiere jugadores.
