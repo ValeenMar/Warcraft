@@ -213,6 +213,12 @@ def post_message(channel_key: str, content: str) -> None:
         stamp_path.write_text(str(time.time()), encoding="ascii")
 
 
+def canonical_channel_name(value: object) -> str:
+    """Devuelve el nombre logico aunque Discord use un prefijo decorativo."""
+    name = str(value).casefold().strip()
+    return name.rsplit("┃", 1)[-1].strip().lstrip("#").strip()
+
+
 def discover() -> None:
     config = require_config("DISCORD_BOT_TOKEN")
     token = config["DISCORD_BOT_TOKEN"]
@@ -230,7 +236,8 @@ def discover() -> None:
     def channel_id(name: str) -> str:
         found = [
             c for c in channels
-            if str(c.get("name", "")).casefold() == name and int(c.get("type", -1)) == 0
+            if canonical_channel_name(c.get("name", "")) == name
+            and int(c.get("type", -1)) == 0
         ]
         if len(found) != 1:
             raise RuntimeError(f"falta un unico canal de texto #{name} en {guild['name']}")

@@ -51,6 +51,11 @@ class TestJournalParser(unittest.TestCase):
 
 
 class TestConfig(unittest.TestCase):
+    def test_nombres_de_canales_decorados(self):
+        self.assertEqual(avisos.canonical_channel_name("🤖┃lobbies"), "lobbies")
+        self.assertEqual(avisos.canonical_channel_name("📊┃Estado"), "estado")
+        self.assertEqual(avisos.canonical_channel_name("lobbies"), "lobbies")
+
     def test_update_env_preserva_token(self):
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "avisos.env"
