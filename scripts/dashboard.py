@@ -759,7 +759,7 @@ async function accion(nombre, arg, boton) {{
     'instalar-mapas': 'instalar los mapas subidos',
     'backup': 'hacer un backup ahora',
     'reparar-caidos': 'levantar solamente los servicios que estan caidos',
-    'reiniciar-pvpgn': 'REINICIAR PvPGN (corta el chat a todos unos segundos)',
+    'reiniciar-pvpgn': 'REINICIAR PvPGN y reconstruir los 9 lobbies (corta toda partida activa)',
     'reiniciar-bot': 'reiniciar el bot ' + arg + ' (si hay partida en curso, se cae)',
   }};
   if (!confirm('¿Seguro que queres ' + (etiquetas[nombre] || nombre) + '?')) return;

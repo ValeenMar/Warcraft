@@ -808,6 +808,11 @@ historial.
 - PvPGN queda limitado al 50 % de un vCPU, el panel al 10 %, Aura al 15 % por
   instancia y Discord al 10 %. PvPGN, panel, Aura y Discord tienen además una
   ráfaga máxima de diez arranques cada cinco minutos.
+- Otra prueba en vivo mostró que Aura no vuelve a autenticar ni republica el
+  lobby después de perder PvPGN: queda `active` pero invisible. El botón de
+  reinicio de PvPGN ahora recicla también las nueve instancias, y el monitor
+  sólo acepta un `Creating public game` posterior al último arranque tanto de
+  PvPGN como del bot; un evento viejo de 30 minutos ya no da un falso verde.
 
 ---
 

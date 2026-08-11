@@ -36,6 +36,18 @@ ejecutar() { # ejecutar <accion> <arg> -> salida por stdout, exit code real
         reiniciar-pvpgn)
             systemctl restart pvpgn || return 1
             echo "pvpgn reiniciado: $(systemctl is-active pvpgn)"
+            # Aura no vuelve a autenticar ni republica el lobby despues de
+            # perder PvPGN: queda active pero invisible. Reconstruir todos los
+            # bots es parte inseparable de esta accion.
+            local d n
+            shopt -s nullglob
+            for d in /opt/wc3/hostbot/instances/*; do
+                [[ -d "${d}" ]] || continue
+                n="$(basename "${d}")"
+                [[ "${n}" =~ ^[0-9]{1,2}$ ]] || continue
+                systemctl restart "wc3-hostbot@${n}" || return 1
+                echo "wc3-hostbot@${n}: lobby reconstruido"
+            done
             ;;
         reiniciar-bot)
             [[ "${arg}" =~ ^[0-9]{1,2}$ ]] || { echo "numero de bot invalido"; return 1; }

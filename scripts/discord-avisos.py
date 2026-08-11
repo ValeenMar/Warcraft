@@ -494,18 +494,47 @@ def failure(unit: str) -> None:
     )
 
 
-def recent_lobby(unit: str, minutes: int = 30) -> bool:
-    since = (datetime.now().astimezone() - timedelta(minutes=minutes)).strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
+def active_enter_monotonic(unit: str) -> int:
     result = subprocess.run(
-        ["journalctl", "-u", unit, "--since", since, "--no-pager", "-o", "cat"],
+        ["systemctl", "show", unit, "-p", "ActiveEnterTimestampMonotonic", "--value"],
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
         check=False,
     )
-    return "creating public game" in result.stdout.casefold()
+    try:
+        return int(result.stdout.strip())
+    except ValueError:
+        return 0
+
+
+def recent_lobby(unit: str, minutes: int = 30) -> bool:
+    # Un lobby anterior al ultimo arranque de PvPGN ya no existe en la lista
+    # del servidor aunque Aura siga active. Exigimos un Creating posterior al
+    # arranque mas nuevo entre PvPGN y el propio bot.
+    threshold = max(active_enter_monotonic("pvpgn.service"),
+                    active_enter_monotonic(unit))
+    since = (datetime.now().astimezone() - timedelta(minutes=minutes)).strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
+    result = subprocess.run(
+        ["journalctl", "-b", "-u", unit, "--since", since,
+         "--no-pager", "-o", "json"],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    for line in result.stdout.splitlines():
+        try:
+            record = json.loads(line)
+            message = str(record.get("MESSAGE", ""))
+            monotonic = int(record.get("__MONOTONIC_TIMESTAMP", "0"))
+        except (json.JSONDecodeError, TypeError, ValueError):
+            continue
+        if monotonic >= threshold and "creating public game" in message.casefold():
+            return True
+    return False
 
 
 def record_health(unit: str, healthy: bool) -> bool | None:

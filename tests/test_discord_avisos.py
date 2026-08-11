@@ -6,6 +6,7 @@ import tempfile
 import time
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -106,6 +107,24 @@ class TestLobbyState(unittest.TestCase):
         local[3] = 12
         stamp = time.mktime(tuple(local))
         self.assertFalse(avisos.quiet_hours({}, stamp))
+
+
+class TestLobbyHealth(unittest.TestCase):
+    @staticmethod
+    def result(stdout):
+        return avisos.subprocess.CompletedProcess([], 0, stdout=stdout)
+
+    def test_rechaza_lobby_anterior_al_reinicio_de_pvpgn(self):
+        event = '{"MESSAGE":"Creating public game [FOC]","__MONOTONIC_TIMESTAMP":"150"}\n'
+        results = [self.result("200\n"), self.result("100\n"), self.result(event)]
+        with mock.patch.object(avisos.subprocess, "run", side_effect=results):
+            self.assertFalse(avisos.recent_lobby("wc3-hostbot@9.service"))
+
+    def test_acepta_lobby_posterior_a_pvpgn_y_al_bot(self):
+        event = '{"MESSAGE":"Creating public game [FOC]","__MONOTONIC_TIMESTAMP":"201"}\n'
+        results = [self.result("200\n"), self.result("100\n"), self.result(event)]
+        with mock.patch.object(avisos.subprocess, "run", side_effect=results):
+            self.assertTrue(avisos.recent_lobby("wc3-hostbot@9.service"))
 
 
 if __name__ == "__main__":
