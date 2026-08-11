@@ -14,8 +14,8 @@ Esta pensado para estar prendido un rato y apagarse solo:
     un escaneo de puertos no encuentra nada util
   - se apaga solo a los N minutos (--minutes, 30 por defecto)
   - solo acepta .w3x y .w3m (y, si se pasa --banner-dest, un .png para el
-    banner del cliente), y solo hasta 8 MiB por archivo, que es el techo que
-    soportan los clientes 1.24-1.28 igual
+    banner del cliente), y solo hasta 128 MiB por archivo, que es el techo del
+    cliente objetivo 1.27b
   - ademas del nombre se chequea el contenido: HM3W para los mapas, la firma
     PNG para el banner. Una extension renombrada no entra
   - nunca escribe fuera del directorio de destino: del nombre que manda el
@@ -33,7 +33,6 @@ en ufw y lo vuelve a cerrar):
 import argparse
 import html
 import os
-import pwd
 import re
 import secrets
 import shutil
@@ -43,10 +42,13 @@ import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-# Techo por defecto: el del cliente 1.24-1.28. Se puede subir con --max-map-mb
-# para mapas grandes (FOCS y cia.), que solo cargan con WFE Unlock Map Size en
-# TODOS los clientes (ver docs/mapas-grandes.md).
-MAX_BYTES = 8 * 1024 * 1024
+try:
+    import pwd
+except ImportError:  # Windows: los tests no necesitan cambiar propietario
+    pwd = None
+
+# Techo por defecto: el del cliente objetivo 1.27b.
+MAX_BYTES = 128 * 1024 * 1024
 ALLOWED_SUFFIXES = {".w3x", ".w3m"}
 # El banner del cliente tambien se sube por aca: es la unica forma comoda de
 # llevar un archivo de Windows al servidor. Se guarda aparte de los mapas.
@@ -134,7 +136,7 @@ function uno(file) {{
   // Se chequea acá antes de mandar nada: si el servidor corta a mitad de una
   // subida de 20 MB, el navegador muestra "falló la conexión" y no se entiende
   // por qué. Avisando de entrada, el motivo queda claro y no se gasta la subida.
-  const esPng = /\.png$/i.test(file.name);
+  const esPng = /\\.png$/i.test(file.name);
   const TECHO = esPng ? 4 * 1024 * 1024 : {max_map_bytes};
   if (file.size > TECHO) {{
     li.className = 'mal';
@@ -420,8 +422,8 @@ def main(argv=None) -> int:
     ap.add_argument("--chown", default="wc3",
                     help="usuario dueno de los archivos subidos ('' para no cambiarlo)")
     ap.add_argument("--token", default=None, help="fijar el token en vez de sortearlo")
-    ap.add_argument("--max-map-mb", type=int, default=8,
-                    help="techo por mapa en MiB (subir solo para mapas grandes con WFE)")
+    ap.add_argument("--max-map-mb", type=int, default=128,
+                    help="techo por mapa en MiB (128 para Warcraft III 1.27b)")
     ap.add_argument("--banner-dest", type=Path, default=None,
                     help="si se pasa, la pagina acepta un .png y lo guarda aca")
     ap.add_argument("--offer", type=Path, default=None,
@@ -439,12 +441,15 @@ def main(argv=None) -> int:
     Handler.offer = args.offer
     Handler.banner_dest = args.banner_dest
     Handler.max_map_bytes = args.max_map_mb * 1024 * 1024
-    if args.chown:
+    if args.chown and pwd is not None:
         try:
             Handler.owner = pwd.getpwnam(args.chown)
         except KeyError:
             print(f"aviso: no existe el usuario {args.chown}, dejo los archivos como root",
                   file=sys.stderr)
+    elif args.chown:
+        print("aviso: esta plataforma no permite resolver usuarios Unix; no hago chown",
+              file=sys.stderr)
 
     args.dest.mkdir(parents=True, exist_ok=True)
     if shutil.disk_usage(args.dest).free < 200 * 1024 * 1024:

@@ -9,4 +9,4 @@ Escribi |c00FFCC00/watchall|r una vez para recibir avisos cuando alguien entre a
 
 Ahora mismo: %u jugador(es) en %g partida(s), %U usuario(s) conectados.
 
-|c00999999Servidor privado - The Frozen Throne 1.27a|r
+|c00999999Servidor privado - The Frozen Throne 1.27b|r

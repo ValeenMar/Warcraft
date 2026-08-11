@@ -1,61 +1,68 @@
 @echo off
 setlocal EnableDelayedExpansion
-title ${WC3_REALM_NAME} - Instalar el juego desde cero
+title ${WC3_REALM_NAME} - Instalar Warcraft III 1.27b
 color 0B
+
+set DL=%TEMP%\wc3-revival-instaladores
+set PATCH=%DL%\War3TFT_127b_Castellano.exe
+set PATCH_URL=http://ftp.blizzard.com/pub/war3x/patches/pc/War3TFT_127b_Castellano.exe
 
 echo.
 echo   ================================================
-echo      ${WC3_REALM_NAME} - Instalar Warcraft III
+echo      ${WC3_REALM_NAME} - Warcraft III 1.27b
 echo   ================================================
 echo.
-echo   Esto es para el que NO tiene el juego instalado.
-echo   Si ya lo tenes, cerra esto y usa INSTALAR.bat.
+echo   Sirve tanto para una instalacion nueva como para
+echo   actualizar un Warcraft III 1.27a existente.
 echo.
-echo   Que va a pasar:
-echo     1) Se bajan los DOS instaladores oficiales de
-echo        Blizzard (Reign of Chaos y Frozen Throne),
-echo        que instalan directo la version 1.27a.
-echo     2) Se abre el de Reign of Chaos. Te va a pedir
-echo        TU CD key de 26 digitos. Eso lo tenes que
-echo        escribir vos: es tu clave, no viene aca.
-echo     3) Despues el de Frozen Throne, con su key.
-echo     4) Al final corre solo INSTALAR.bat, que deja
-echo        el juego apuntando al servidor.
+echo   Instalacion nueva:
+echo     1) Baja los instaladores oficiales Legacy de Blizzard.
+echo     2) Te pide TUS CD keys de Reign of Chaos y Frozen Throne.
+echo     3) Aplica el parche oficial 1.27b de Blizzard.
+echo     4) Instala el loader, el gateway y los mapas del kit.
 echo.
-echo   La descarga es desde los servidores de Blizzard
-echo   y puede tardar un buen rato.
+echo   Si ya tenes 1.27a, salta directo al paso 3.
+echo   No necesitas una cuenta oficial de Battle.net.
 echo.
 pause
 
-:: ---------------------------------------------------------------
-:: 0. Si el juego ya esta, no hay nada que instalar
-:: ---------------------------------------------------------------
-set WC3DIR=
-for /f "tokens=2*" %%a in ('reg query "HKCU\Software\Blizzard Entertainment\Warcraft III" /v InstallPath 2^>nul') do set WC3DIR=%%b
-if defined WC3DIR if exist "!WC3DIR!\war3.exe" (
+call :buscar_juego
+if not defined WC3DIR goto :instalar_base
+if not exist "!WC3DIR!\war3.exe" goto :instalar_base
+
+for %%f in ("!WC3DIR!\war3.exe") do set WC3SIZE=%%~zf
+if "!WC3SIZE!"=="515048" (
     echo.
-    echo   Ya tenes Warcraft III en: !WC3DIR!
-    echo   No hace falta reinstalar. Corre INSTALAR.bat.
+    echo   Ya tenes Warcraft III 1.27b en: !WC3DIR!
+    goto :configurar_servidor
+)
+if "!WC3SIZE!"=="514536" (
     echo.
-    pause
-    exit /b 0
+    echo   Encontre Warcraft III 1.27a en: !WC3DIR!
+    echo   Lo voy a actualizar a 1.27b.
+    goto :elegir_idioma
 )
 
-:: ---------------------------------------------------------------
-:: 1. Bajar los instaladores oficiales
-::    Las URLs son de Blizzard (battle.net); la descarga es anonima,
-::    la key se pide recien al instalar. curl viene con Windows 10+.
-:: ---------------------------------------------------------------
-set DL=%TEMP%\wc3-revival-instaladores
+echo.
+echo   ERROR: encontre Warcraft III, pero war3.exe pesa
+echo   !WC3SIZE! bytes. No es 1.27a ni 1.27b.
+echo.
+echo   No voy a parchearlo a ciegas. Usa una instalacion limpia
+echo   o consulta LEEME.txt.
+echo.
+pause
+exit /b 1
+
+:instalar_base
 if not exist "%DL%" mkdir "%DL%"
 
 :: Se baja a un .part y recien al terminar se renombra: si la descarga se
 :: corta a la mitad, el proximo intento NO va a encontrar un .exe truncado
 :: y decir "ya estaba bajado" (eso daba instaladores rotos indescifrables).
 echo.
-echo   [1/4] Bajando el instalador de Reign of Chaos...
+echo   [1/5] Bajando Reign of Chaos oficial...
 if not exist "%DL%\roc-instalador.exe" (
-    curl.exe -L -o "%DL%\roc-instalador.exe.part" "https://us.battle.net/download/getLegacy?product=WAR3&locale=esES&os=WIN"
+    curl.exe -fL --retry 3 -o "%DL%\roc-instalador.exe.part" "https://us.battle.net/download/getLegacy?product=WAR3&locale=esES&os=WIN"
     if errorlevel 1 goto :fallo_descarga
     move /Y "%DL%\roc-instalador.exe.part" "%DL%\roc-instalador.exe" >nul
 ) else (
@@ -63,58 +70,132 @@ if not exist "%DL%\roc-instalador.exe" (
 )
 
 echo.
-echo   [2/4] Bajando el instalador de The Frozen Throne...
+echo   [2/5] Bajando The Frozen Throne oficial...
 if not exist "%DL%\tft-instalador.exe" (
-    curl.exe -L -o "%DL%\tft-instalador.exe.part" "https://us.battle.net/download/getLegacy?product=W3XP&locale=esES&os=WIN"
+    curl.exe -fL --retry 3 -o "%DL%\tft-instalador.exe.part" "https://us.battle.net/download/getLegacy?product=W3XP&locale=esES&os=WIN"
     if errorlevel 1 goto :fallo_descarga
     move /Y "%DL%\tft-instalador.exe.part" "%DL%\tft-instalador.exe" >nul
 ) else (
     echo         ya estaba bajado, sigo
 )
 
-:: ---------------------------------------------------------------
-:: 2. Instalar, en orden: TFT es expansion y no instala sin RoC
-:: ---------------------------------------------------------------
 echo.
-echo   [3/4] Instalando Reign of Chaos.
-echo         Segui el instalador; cuando pida la CD key,
-echo         escribi la TUYA de Reign of Chaos.
+echo   [3/5] Instalando Reign of Chaos.
+echo         Escribi TU CD key cuando la pida.
 echo.
 start "" /wait "%DL%\roc-instalador.exe"
 
 echo.
-echo   [4/4] Instalando The Frozen Throne.
-echo         Ahora la key de Frozen Throne.
+echo   [4/5] Instalando The Frozen Throne.
+echo         Escribi TU CD key de la expansion.
 echo.
 start "" /wait "%DL%\tft-instalador.exe"
 
-:: ---------------------------------------------------------------
-:: 3. Encadenar con el instalador del servidor
-:: ---------------------------------------------------------------
+call :buscar_juego
+if not defined WC3DIR goto :fallo_instalacion
+if not exist "!WC3DIR!\war3.exe" goto :fallo_instalacion
+for %%f in ("!WC3DIR!\war3.exe") do set WC3SIZE=%%~zf
+if not "!WC3SIZE!"=="514536" (
+    echo.
+    echo   ERROR: la base instalada no es la 1.27a esperada.
+    echo   war3.exe pesa !WC3SIZE! bytes, no 514536.
+    echo.
+    pause
+    exit /b 1
+)
+goto :parchear_127b
+
+:elegir_idioma
+echo.
+echo   El parche tiene que coincidir con el idioma del juego:
+echo     1) Castellano
+echo     2) English
+echo.
+set /p "PATCH_LANG=  Elegi 1 o 2 [1]: "
+if "!PATCH_LANG!"=="2" (
+    set PATCH=%DL%\War3TFT_127b_English.exe
+    set PATCH_URL=http://ftp.blizzard.com/pub/war3x/patches/pc/War3TFT_127b_English.exe
+)
+goto :parchear_127b
+
+:parchear_127b
+if not exist "%DL%" mkdir "%DL%"
+echo.
+echo   [5/5] Bajando el parche oficial 1.27b...
+if not exist "%PATCH%" (
+    curl.exe -fL --retry 3 -o "%PATCH%.part" "%PATCH_URL%"
+    if errorlevel 1 goto :fallo_descarga
+    move /Y "%PATCH%.part" "%PATCH%" >nul
+) else (
+    echo         ya estaba bajado, sigo
+)
+
+echo   Verificando la firma digital de Blizzard...
+powershell -NoProfile -Command "$s=Get-AuthenticodeSignature -LiteralPath '%PATCH%'; if($s.Status -ne 'Valid' -or $s.SignerCertificate.Subject -notlike '*Blizzard Entertainment*'){exit 1}"
+if errorlevel 1 goto :fallo_firma
+
+echo   Aplicando 1.27b. Espera a que Blizzard Updater termine...
+start "" /wait "%PATCH%"
+
+call :buscar_juego
+if not defined WC3DIR goto :fallo_parche
+if not exist "!WC3DIR!\war3.exe" goto :fallo_parche
+for %%f in ("!WC3DIR!\war3.exe") do set WC3SIZE=%%~zf
+if not "!WC3SIZE!"=="515048" goto :fallo_parche
+echo         OK: Warcraft III 1.27b confirmado
+
+:configurar_servidor
 if exist "%~dp0INSTALAR.bat" (
     echo.
-    echo   Juego instalado. Ahora lo apunto al servidor...
+    echo   Ahora instalo el acceso a ${WC3_REALM_NAME}...
     echo.
     call "%~dp0INSTALAR.bat"
 ) else (
     echo.
-    echo   Juego instalado. Ahora corre INSTALAR.bat para
-    echo   apuntarlo al servidor.
+    echo   Juego 1.27b listo. Ahora ejecuta INSTALAR.bat para
+    echo   agregar el servidor, el loader y los mapas.
     echo.
     pause
 )
 exit /b 0
 
+:buscar_juego
+set WC3DIR=
+for /f "tokens=2*" %%a in ('reg query "HKCU\Software\Blizzard Entertainment\Warcraft III" /v InstallPath 2^>nul') do set WC3DIR=%%b
+if not defined WC3DIR for /f "tokens=2*" %%a in ('reg query "HKLM\SOFTWARE\WOW6432Node\Blizzard Entertainment\Warcraft III" /v InstallPath 2^>nul') do set WC3DIR=%%b
+exit /b 0
+
 :fallo_descarga
+del /Q "%PATCH%.part" "%DL%\roc-instalador.exe.part" "%DL%\tft-instalador.exe.part" 2>nul
 echo.
-echo   ERROR: no se pudo bajar el instalador.
+echo   ERROR: no se pudo completar una descarga oficial.
+echo   Revisa la conexion y vuelve a ejecutar este archivo.
 echo.
-echo   Puede ser tu conexion, o que Blizzard haya movido el
-echo   enlace. Proba bajarlo a mano desde tu navegador:
-echo     https://us.battle.net/download/getLegacy?product=WAR3^&locale=esES^&os=WIN
-echo     https://us.battle.net/download/getLegacy?product=W3XP^&locale=esES^&os=WIN
-echo   Instala primero Reign of Chaos, despues Frozen Throne,
-echo   y al final corre INSTALAR.bat.
+pause
+exit /b 1
+
+:fallo_firma
+echo.
+echo   ERROR: el parche descargado no tiene una firma valida de
+echo   Blizzard Entertainment. No se va a ejecutar.
+echo   Borra "%PATCH%" y vuelve a intentarlo.
+echo.
+pause
+exit /b 1
+
+:fallo_instalacion
+echo.
+echo   ERROR: los instaladores no dejaron una instalacion detectable.
+echo   Revisa si alguno fue cancelado y vuelve a intentarlo.
+echo.
+pause
+exit /b 1
+
+:fallo_parche
+echo.
+echo   ERROR: el parche no dejo war3.exe 1.27b de 515048 bytes.
+echo   La causa mas comun es que el idioma del parche no coincida
+echo   o que la instalacion haya sido modificada.
 echo.
 pause
 exit /b 1

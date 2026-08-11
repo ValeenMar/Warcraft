@@ -17,9 +17,8 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MINUTES="${1:-30}"
 PORT="${WC3_UPLOAD_PORT:-8099}"
 DEST="${WC3_INCOMING_DIR:-/opt/wc3/incoming}"
-# Techo por mapa. 8 = el del cliente. Subilo (WC3_MAX_MAP_MB=64) solo para
-# mapas grandes que se jueguen con WFE Unlock Map Size (docs/mapas-grandes.md).
-MAX_MAP_MB="${WC3_MAX_MAP_MB:-8}"
+# Techo por mapa del cliente objetivo 1.27b.
+MAX_MAP_MB="${WC3_MAX_MAP_MB:-128}"
 
 log() { printf '[recibir] %s\n' "$*"; }
 

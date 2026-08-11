@@ -42,16 +42,14 @@ REPO_DIR = Path(__file__).resolve().parent.parent
 LOBBIES_YAML = REPO_DIR / "maps" / "lobbies.yaml"
 ENV_DIR = REPO_DIR / "config" / "hostbot"
 
-# Rango de puertos: tiene que caer dentro de WC3_BOT_PORT_RANGE (6113:6140),
+# Rango de puertos: tiene que caer dentro de WC3_BOT_PORT_RANGE (6113:6141),
 # que es lo que abre ufw en install/00-bootstrap-vps.sh.
 PUERTO_HOST_BASE = 6113
 PUERTO_RECONNECT_BASE = 6133
-# El limite real lo pone el rango del firewall: la instancia N usa el hostport
-# 6113+(N-1) y el reconnect 6133+(N-1), y el reconnect de la 9 (6141) ya cae
-# AFUERA de 6113:6140 — quedaria filtrado por ufw y las reconexiones GProxy
-# fallarian en silencio. Para mas de 8 instancias hay que agrandar
-# WC3_BOT_PORT_RANGE en .env, re-correr el bootstrap (ufw) y subir esto.
-MAX_INSTANCIAS = 8
+# La instancia 9 usa host 6121 y reconnect 6141. Ambos deben quedar dentro
+# de WC3_BOT_PORT_RANGE; para una décima instancia hay que ampliar primero
+# el firewall y este límite, para no romper GProxy en silencio.
+MAX_INSTANCIAS = 9  # host 6113-6121; reconnect 6133-6141
 
 LIMITE_NOMBRE = 31  # aura.cpp:879
 LIMITE_VIRTUALHOST = 15

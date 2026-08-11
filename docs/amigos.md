@@ -9,14 +9,14 @@ Los datos que se usan en toda la guía:
 | Qué | Valor |
 |---|---|
 | IP del servidor | `64.176.24.103` |
-| Versión del juego | **The Frozen Throne 1.27a** — todos la misma, sin excepción |
+| Versión del juego | **The Frozen Throne 1.27b** — todos la misma, sin excepción |
 | Gateway en el cliente | **Northrend (Europe)** |
 | Canal de encuentro | el que diga `WC3_BOT_CHANNEL` en el `.env` del servidor (por defecto `W3`) |
 
-## 1. Conseguir el juego (TFT 1.27a, limpio)
+## 1. Conseguir el juego (TFT 1.27b, limpio)
 
 Hace falta **Warcraft III completo: Reign of Chaos + The Frozen Throne** en
-la versión **1.27a** exacta. TFT es una expansión y no instala sin RoC.
+la versión **1.27b** exacta. TFT es una expansión y no instala sin RoC.
 Versiones distintas no juegan entre sí: ni 1.26, ni 1.28, ni Reforged sirven
 para este servidor.
 
@@ -24,7 +24,8 @@ El camino corto:
 
 1. **Si tenés una CD key de 26 dígitos** (de la caja, o registrada en tu
    cuenta de Battle.net): bajá los instaladores oficiales "Legacy" de
-   Blizzard, que te dejan directo en 1.27a sin parchear nada:
+   Blizzard, que dejan una base 1.27a. Después ejecutá el parche oficial
+   1.27b; `INSTALAR-JUEGO.bat` hace toda la cadena automáticamente:
 
    ```
    https://us.battle.net/download/getLegacy?product=WAR3&locale=esES&os=WIN   (Reign of Chaos)
@@ -32,7 +33,7 @@ El camino corto:
    ```
 
    La descarga es anónima, pero el instalador pide la key. Instalá primero
-   RoC, después TFT.
+   RoC, después TFT y finalmente el parche 1.27b de tu idioma.
 2. **Si no tenés nada**: comprar una copia física usada de RoC + TFT con las
    keys impresas y legibles — se consiguen baratas en el mercado de segunda
    mano por ser un juego de más de 20 años. Con la key de la caja podés usar
@@ -46,15 +47,15 @@ todas las rutas y los errores típicos al instalar o parchear, está en
 
 **Verificación de que quedó bien**: `war3.exe`, en la carpeta del juego
 (típicamente `C:\Program Files (x86)\Warcraft III\`), tiene que pesar
-**exactamente 514.536 bytes**, con fecha 05/08/2016. Si pesa otra cosa, no
-es un 1.27a genuino y no vas a poder entrar.
+**exactamente 515.048 bytes**, con fecha 09/12/2016. Si pesa otra cosa, no
+es un 1.27b genuino y no vas a poder entrar.
 
 ## 2. Apuntar el juego a nuestro servidor
 
 ### El camino corto: el kit
 
 Hay un kit (`WC3-Revival-Kit.zip`) que hace los pasos 2 y 3 de un doble
-clic: `INSTALAR.bat` busca la instalación del juego, verifica que sea 1.27a,
+clic: `INSTALAR.bat` busca la instalación del juego, verifica que sea 1.27b,
 copia el loader y **agrega el servidor a la lista de gateways del juego**,
 sin tocar ningún archivo del juego y sin romper nada más. Pedíselo al admin.
 
@@ -110,7 +111,7 @@ Si usaste el kit del paso 2, esto ya está hecho y podés saltear la sección.
 A mano:
 
 1. Bajá el **Warcraft 3 Loader (w3l)** de https://pvpgn.pro/w3l.html — el
-   paquete cubre de 1.22a a 1.28f, así que 1.27a entra.
+   paquete cubre de 1.22a a 1.28f, así que 1.27b entra.
 2. El zip tiene contraseña: **`pvpgn`**.
 3. Copiá **`w3l.exe`**, **`w3lh.dll`** y **`wl27.dll`** (la DLL de la
    versión 1.27) a la carpeta del juego, al lado de `Frozen Throne.exe`.
@@ -183,7 +184,7 @@ va o alguien deja de estar listo, la cuenta se cancela.
   **`<carpeta del juego>\Maps\Download`** — típicamente
   `C:\Program Files (x86)\Warcraft III\Maps\Download`. **No** es la carpeta
   Documentos: Warcraft III empezó a usar Documentos recién en el parche 1.28,
-  y este servidor es 1.27a. El `INSTALAR.bat` del kit los pone donde va.
+  y este servidor es 1.27b. El `INSTALAR.bat` del kit los pone donde va.
 
 ## Si algo no anda
 

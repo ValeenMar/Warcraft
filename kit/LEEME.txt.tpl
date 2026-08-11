@@ -11,21 +11,21 @@ custom. Ping desde Argentina: entre 20 y 30 ms.
 ---------------------------------------------------------------
 
 Warcraft III completo (Reign of Chaos + The Frozen Throne) en la
-version 1.27a, ya instalado.
+version 1.27b, ya instalado.
 
 Como saber si tenes la version correcta:
   - Entra a la carpeta del juego (normalmente
     C:\Program Files (x86)\Warcraft III)
   - Clic derecho en war3.exe -> Propiedades
-  - Tiene que pesar EXACTAMENTE 514.536 bytes
+  - Tiene que pesar EXACTAMENTE 515.048 bytes
 
 Si te da otro numero, no vas a poder entrar. Ni 1.26, ni 1.28,
 ni Reforged sirven: todos tenemos que tener la misma version.
 
 NO TENES EL JUEGO? Usa INSTALAR-JUEGO.bat en vez de INSTALAR.bat:
-baja los DOS instaladores oficiales de Blizzard (que instalan
-directo la 1.27a), los corre en orden, y al final te deja el
-juego ya apuntado al servidor. Lo unico que tenes que hacer vos
+baja los DOS instaladores oficiales de Blizzard (base 1.27a), aplica
+el parche oficial 1.27b y al final deja el juego apuntado al servidor.
+Lo unico que tenes que hacer vos
 es escribir TU CD key de 26 digitos cuando cada instalador la
 pida — la key es tuya, no viene en el kit. Si no tenes keys, una
 copia fisica usada de RoC + TFT con las keys legibles se consigue
@@ -47,7 +47,7 @@ Clic en "Mas informacion" -> "Ejecutar de todas formas".
 
 Que hace, exactamente:
   1. Busca donde tenes instalado Warcraft III.
-  2. Chequea que sea 1.27a y avisa si no.
+  2. Exige que sea 1.27b y se detiene si no coincide.
   3. Copia el loader (w3l.exe y dos DLLs) a la carpeta del juego.
      No pisa ni modifica ningun archivo del juego.
   4. Agrega el servidor a tu lista de Battle.net, sin borrar los
@@ -141,7 +141,7 @@ carpeta del juego:
 
 Ojo si buscas a mano: NO es la carpeta Documentos. Warcraft III
 empezo a usar Documentos recien en el parche 1.28, y este
-servidor es 1.27a.
+servidor es 1.27b.
 
 Los que no tengas te los manda el bot solo cuando entras al
 lobby (se ve una barra de descarga). Con los mapas grandes eso
@@ -177,7 +177,7 @@ OJO: si el server publica un mapa de mas de 8 MB, este paso deja
 de ser opcional — lo necesitan TODOS los que quieran jugarlo.
 
 Aclaracion sobre W3Champions, por si lo estabas pensando: no
-sirve aca. Necesita Reforged / 1.32, y este servidor es 1.27a.
+sirve aca. Necesita Reforged / 1.32, y este servidor es 1.27b.
 
 
 ---------------------------------------------------------------

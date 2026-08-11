@@ -14,7 +14,7 @@ echo   ================================================
 echo.
 echo   Esto configura tu Warcraft III para entrar al
 echo   servidor. No instala el juego: tenes que tenerlo
-echo   ya instalado, en la version 1.27a.
+echo   ya instalado, en la version 1.27b.
 echo.
 echo   No modifica ningun archivo del juego. Solo copia
 echo   el loader y agrega el servidor a tu lista.
@@ -53,24 +53,27 @@ if not exist "!WC3DIR!\war3.exe" (
 echo         OK: !WC3DIR!
 
 :: ---------------------------------------------------------------
-:: 2. Verificar la version (1.27a = war3.exe de 514.536 bytes)
+:: 2. Verificar la version (1.27b = war3.exe de 515.048 bytes)
 :: ---------------------------------------------------------------
 echo.
 echo   [2/4] Verificando la version del juego...
 
 for %%f in ("!WC3DIR!\war3.exe") do set WC3SIZE=%%~zf
-if "!WC3SIZE!"=="514536" (
-    echo         OK: 1.27a confirmado
+if "!WC3SIZE!"=="515048" (
+    echo         OK: 1.27b confirmado
 ) else (
     echo.
     echo   AVISO: tu war3.exe pesa !WC3SIZE! bytes.
-    echo   El de la version 1.27a pesa 514536.
+    echo   El de la version 1.27b pesa 515048.
     echo.
-    echo   El servidor usa 1.27a. Con otra version es muy
-    echo   probable que no puedas entrar a las partidas.
-    echo   Si segui adelante y no funciona, ya sabes por que.
+    echo   El servidor usa 1.27b. Con otra version no vas a
+    echo   poder entrar a las partidas.
+    echo.
+    echo   Ejecuta INSTALAR-JUEGO.bat para instalar o actualizar
+    echo   el juego con tus propias CD keys.
     echo.
     pause
+    exit /b 1
 )
 
 :: ---------------------------------------------------------------
@@ -110,7 +113,7 @@ if errorlevel 1 (
 :: Mapas
 :: ---------------------------------------------------------------
 :: OJO con la ruta: recien desde el parche 1.28 Warcraft III lee los mapas de
-:: Documentos. En 1.27a, que es la version de este servidor, los busca adentro
+:: Documentos. En 1.27b, que es la version de este servidor, los busca adentro
 :: de la carpeta de instalacion. Copiarlos a Documentos no rompe nada, pero el
 :: juego no los ve nunca.
 set MAPDIR=!WC3DIR!\Maps\Download

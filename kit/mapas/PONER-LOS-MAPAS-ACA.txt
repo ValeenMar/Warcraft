@@ -4,7 +4,7 @@ El instalador los copia solo a la carpeta del JUEGO:
     <tu carpeta de Warcraft III>\Maps\Download
 (por ejemplo C:\Program Files (x86)\Warcraft III\Maps\Download)
 
-OJO: NO van en Documentos. La version 1.27a del juego no mira
+OJO: NO van en Documentos. La version 1.27b del juego no mira
 la carpeta de Documentos; si los pones ahi, el juego no los ve.
 
 Tienen que ser los mismos que usa el servidor. Si bajas un mapa

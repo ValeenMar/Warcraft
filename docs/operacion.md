@@ -157,6 +157,12 @@ chat del lobby. Alternativa directa para admins: mandar el comando por
 susurro, `/w hostbot !start`. Los comandos en el CANAL o por susurro no
 necesitan nada de esto: ahí la identidad ya viene autenticada por el login.
 
+Las cuentas bot se conectan con `bnet_countryabbrev = USA` para que PvPGN
+devuelva `/whois` en inglés, formato que Aura reconoce. Normalmente el bot
+hace el spoofcheck automáticamente pocos segundos después de que el jugador
+entra y el admin puede escribir `!start` directamente en el lobby. El susurro
+`/w hostbotN sc` queda como respaldo si la verificación automática falla.
+
 Los comandos que puede usar CUALQUIER jugador (no piden spoofcheck) incluyen
 `!ready` / `!notready` / `!start` del arranque automático, más `!checkme`,
 `!stats`, `!votekick`/`!yes`.

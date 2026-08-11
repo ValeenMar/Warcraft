@@ -148,15 +148,19 @@ class TestServidor(unittest.TestCase):
         self.assertFalse((self.dest.parent / "afuera.w3x").exists())
         self.assertTrue((self.dest / "afuera.w3x").exists())
 
-    def test_rechaza_lo_que_pasa_el_techo_de_8_mib(self):
-        grande = MAPA + b"\x00" * upload.MAX_BYTES
+    def test_rechaza_lo_que_pasa_el_techo_configurado(self):
+        anterior = upload.Handler.max_map_bytes
+        upload.Handler.max_map_bytes = len(MAPA) + 1024
+        grande = MAPA + b"\x00" * 2048
         try:
-            code = self.put("gigante.w3x", grande)
-        except urllib.error.URLError:
-            # El servidor contesta 413 y cierra sin leer el cuerpo, asi que el
-            # cliente puede llegar a ver la conexion cortada en vez del codigo.
-            # Por eso la pagina ademas chequea el tamano antes de mandar nada.
-            code = 413
+            try:
+                code = self.put("gigante.w3x", grande)
+            except urllib.error.URLError:
+                # El servidor contesta 413 y cierra sin leer el cuerpo, asi que
+                # el cliente puede ver la conexion cortada en vez del codigo.
+                code = 413
+        finally:
+            upload.Handler.max_map_bytes = anterior
         self.assertEqual(code, 413)
         self.assertFalse((self.dest / "gigante.w3x").exists())
 

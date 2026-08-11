@@ -161,11 +161,12 @@ de rebrandear hay que recargar el mapa en el bot:
 /w <nombre-del-bot> !map <nombre>
 ```
 
-**2. Hay un techo de 8 MiB** (8.388.608 bytes) en los clientes 1.24-1.28. La
+**2. Hay un techo de 128 MiB** (134.217.728 bytes) en el cliente objetivo
+1.27b. La
 preview agrega alrededor de **23 KB** al archivo (medido: TGA de 128×128 pesa
 49.196 B sin comprimir y queda en ~22,8 KB comprimido con zlib dentro del
-MPQ). DotA 6.83d viene con apenas ~170 KB de margen, así que entra, pero por
-poco. El script aborta y deja el original intacto si el resultado se pasa —
+MPQ). DotA 6.83d quedaba al borde en 1.27a, pero tiene margen de sobra en
+1.27b. El script aborta y deja el original intacto si el resultado se pasa —
 hay un test que lo verifica.
 
 **3. Los mapas protegidos rechazan la escritura — confirmado.** Muchos mapas
@@ -206,7 +207,7 @@ Contra un `.w3x` sintético (header HM3W de 512 bytes + MPQ v1), en Ubuntu
 - StormLib abre y **escribe** dentro de un `.w3x` a pesar de los 512 bytes de
   header HM3W que preceden al MPQ, y el header queda intacto.
 - `war3mapPreview.tga` aparece en el listado del MPQ después de inyectarlo.
-- El corte por el techo de 8 MiB dispara y limpia la salida.
+- El corte por el techo de 128 MiB dispara y limpia la salida.
 
 **Verificado el 2026-08-09 contra el cliente real**: se hosteó Pudge Wars con
 la preview inyectada y la imagen aparece en el panel de la derecha de la lista
