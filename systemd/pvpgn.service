@@ -18,6 +18,11 @@ Type=simple
 User=wc3
 Group=wc3
 ExecStart=/opt/wc3/pvpgn/sbin/bnetd -f -c /opt/wc3/pvpgn/etc/pvpgn/bnetd.conf
+# bnetd bloquea SIGINT/SIGTERM en su bucle principal y puede tardar 90 s en
+# salir. Su propio codigo define SIGQUIT como "immediate shutdown"; en la
+# version 1.99.7.2.1-PRO instalada se verifico que termina limpio con esta
+# senal y systemd informa "Deactivated successfully".
+KillSignal=SIGQUIT
 Restart=always
 RestartSec=5
 

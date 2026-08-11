@@ -761,6 +761,17 @@ historial.
   `invalid map_crc`. La corrección es devolver esa ruta a `ReadWritePaths`,
   no parchear Aura a ciegas.
 
+## 26. Cierre inmediato y limpio de PvPGN (2026-08-11)
+
+- En producción, `systemctl restart pvpgn` demostró que bnetd 1.99.7.2.1-PRO
+  ignora SIGTERM durante 90 segundos; systemd acababa enviando SIGKILL y
+  marcaba el reinicio como fallo.
+- El código fuente instalado registra SIGQUIT como `immediate shutdown`. La
+  prueba en vivo cerró el proceso en el acto con `Deactivated successfully` y
+  el servicio volvió por `Restart=always`.
+- La unidad fija `KillSignal=SIGQUIT`. No se baja el timeout a ciegas ni se
+  acepta un falso fallo operativo en cada reinicio normal.
+
 ---
 
 ## TODO(verificar) — lista completa, ordenada por qué bloquea primero
