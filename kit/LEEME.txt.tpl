@@ -22,10 +22,10 @@ Como saber si tenes la version correcta:
 Si te da otro numero, no vas a poder entrar. Ni 1.26, ni 1.28,
 ni Reforged sirven: todos tenemos que tener la misma version.
 
-NO TENES EL JUEGO? Usa INSTALAR-JUEGO.bat en vez de INSTALAR.bat:
-baja los DOS instaladores oficiales de Blizzard (base 1.27a), aplica
-el parche oficial 1.27b y al final deja el juego apuntado al servidor.
-Lo unico que tenes que hacer vos
+NO TENES EL JUEGO, O TENES 1.27a? Usa igualmente INSTALAR.bat:
+el mismo archivo llama al asistente que baja los DOS instaladores
+oficiales de Blizzard (base 1.27a), descarga y aplica el parche oficial
+1.27b y al final deja el juego apuntado al servidor. Lo unico que haces vos
 es escribir TU CD key de 26 digitos cuando cada instalador la
 pida — la key es tuya, no viene en el kit. Si no tenes keys, una
 copia fisica usada de RoC + TFT con las keys legibles se consigue
@@ -47,7 +47,9 @@ Clic en "Mas informacion" -> "Ejecutar de todas formas".
 
 Que hace, exactamente:
   1. Busca donde tenes instalado Warcraft III.
-  2. Exige que sea 1.27b y se detiene si no coincide.
+  2. Si falta, instala la base oficial; si es 1.27a, descarga y
+     aplica el actualizador oficial 1.27b. Las versiones desconocidas
+     se rechazan para no parchearlas a ciegas.
   3. Copia el loader (w3l.exe y dos DLLs) a la carpeta del juego.
      No pisa ni modifica ningun archivo del juego.
   4. Agrega el servidor a tu lista de Battle.net, sin borrar los
@@ -163,8 +165,8 @@ inyectores ni herramientas que los antivirus marquen como HackTool.
   QUE HAY ADENTRO DEL KIT
 ---------------------------------------------------------------
 
-  INSTALAR.bat            el instalador (si ya tenes el juego)
-  INSTALAR-JUEGO.bat      baja e instala el juego oficial + lo anterior
+  INSTALAR.bat            la unica entrada: instala, actualiza y configura
+  INSTALAR-JUEGO.bat      asistente interno que el anterior llama solo
   LEEME.txt               esto
   loader\                 w3l 1.5.1.1, bajado de pvpgn.pro
   herramientas\           el script que agrega el servidor a la

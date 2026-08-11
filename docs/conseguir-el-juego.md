@@ -66,9 +66,10 @@ https://us.battle.net/download/getLegacy?product=W3XP&locale=esES&os=WIN   (Froz
 ```
 
 La descarga es anónima pero **el instalador pide la CD key de 26 dígitos**.
-Deja una base **1.27a v2**. Después ejecutá el parche TFT 1.27b del mismo
-idioma. `kit/INSTALAR-JUEGO.bat.tpl` automatiza la descarga, verifica la firma
-digital de Blizzard y comprueba el tamaño final de `war3.exe`.
+Deja una base **1.27a v2**. Después hace falta el parche TFT 1.27b del mismo
+idioma. El `INSTALAR.bat` del kit llama automáticamente a
+`INSTALAR-JUEGO.bat`: descarga ambos instaladores y el actualizador, verifica
+la firma digital de Blizzard y comprueba el tamaño final de `war3.exe`.
 
 ## Ruta C: no tenés ni los CDs ni licencia en Battle.net
 

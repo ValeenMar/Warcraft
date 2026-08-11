@@ -24,8 +24,8 @@ El camino corto:
 
 1. **Si tenés una CD key de 26 dígitos** (de la caja, o registrada en tu
    cuenta de Battle.net): bajá los instaladores oficiales "Legacy" de
-   Blizzard, que dejan una base 1.27a. Después ejecutá el parche oficial
-   1.27b; `INSTALAR-JUEGO.bat` hace toda la cadena automáticamente:
+   Blizzard, que dejan una base 1.27a. Después hace falta el parche oficial
+   1.27b; el `INSTALAR.bat` del kit hace toda la cadena automáticamente:
 
    ```
    https://us.battle.net/download/getLegacy?product=WAR3&locale=esES&os=WIN   (Reign of Chaos)
@@ -34,6 +34,8 @@ El camino corto:
 
    La descarga es anónima, pero el instalador pide la key. Instalá primero
    RoC, después TFT y finalmente el parche 1.27b de tu idioma.
+   En el kit alcanza con abrir `INSTALAR.bat`: si falta el juego o detecta
+   1.27a, llama automáticamente al asistente `INSTALAR-JUEGO.bat`.
 2. **Si no tenés nada**: comprar una copia física usada de RoC + TFT con las
    keys impresas y legibles — se consiguen baratas en el mercado de segunda
    mano por ser un juego de más de 20 años. Con la key de la caja podés usar
@@ -54,8 +56,8 @@ es un 1.27b genuino y no vas a poder entrar.
 
 ### El camino corto: el kit
 
-Hay un kit (`WC3-Revival-Kit.zip`) que hace los pasos 2 y 3 de un doble
-clic: `INSTALAR.bat` busca la instalación del juego, verifica que sea 1.27b,
+Hay un kit (`WC3-Revival-Kit.zip`) que hace todo desde un único doble clic:
+`INSTALAR.bat` instala la base si falta, actualiza 1.27a a 1.27b si hace falta,
 copia el loader y **agrega el servidor a la lista de gateways del juego**,
 sin tocar ningún archivo del juego y sin romper nada más. Pedíselo al admin.
 

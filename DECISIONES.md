@@ -814,6 +814,19 @@ historial.
   sólo acepta un `Creating public game` posterior al último arranque tanto de
   PvPGN como del bot; un evento viejo de 30 minutos ya no da un falso verde.
 
+## 29. Un solo BAT para instalar, actualizar y configurar (2026-08-11)
+
+- Los dos instaladores oficiales `getLegacy` que usa el kit dejan la base
+  Legacy 1.27a; para este camino hay que aplicar después el parche oficial
+  1.27b del mismo idioma.
+- `INSTALAR.bat` pasa a ser la única entrada visible. Si no encuentra el juego,
+  llama al asistente que descarga e instala RoC y TFT; si reconoce 1.27a por el
+  tamaño exacto de `war3.exe`, descarga y aplica el actualizador; si ya es
+  1.27b, sólo instala loader, gateway y mapas.
+- Las versiones desconocidas siguen fallando cerrado. El parche descargado se
+  ejecuta únicamente si Windows valida la firma de Blizzard Entertainment, y
+  el resultado final debe ser `war3.exe` de 515.048 bytes.
+
 ---
 
 ## TODO(verificar) — lista completa, ordenada por qué bloquea primero
