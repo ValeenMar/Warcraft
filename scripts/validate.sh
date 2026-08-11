@@ -38,7 +38,8 @@ if command -v systemd-analyze >/dev/null; then
     # stubbeamos SOLO en la copia temporal, para seguir verificando sintaxis
     # y opciones de las unidades reales.
     tmpunits="$(mktemp -d)"
-    cp "${REPO_DIR}"/systemd/*.service "${REPO_DIR}"/systemd/*.path "${tmpunits}/"
+    cp "${REPO_DIR}"/systemd/*.service "${REPO_DIR}"/systemd/*.path \
+        "${REPO_DIR}"/systemd/*.timer "${tmpunits}/"
     if [[ ! -x /opt/wc3/hostbot/aura++ ]]; then
         sed -i 's|^ExecStart=/opt/wc3/hostbot/aura++|ExecStart=/bin/true|' \
             "${tmpunits}/wc3-hostbot@.service"
@@ -57,9 +58,13 @@ if command -v systemd-analyze >/dev/null; then
         sed -i 's|^ExecStart=/opt/wc3/dashboard/acciones.sh|ExecStart=/bin/true|' \
             "${tmpunits}/wc3-dashboard-acciones.service"
     fi
-    # la unidad instanciada se verifica con una instancia concreta
-    for unit in pvpgn.service wc3-hostbot@1.service wc3-dashboard.service \
-                wc3-dashboard-acciones.service wc3-dashboard-acciones.path; do
+    # Las plantillas se verifican con una instancia concreta; el resto se
+    # descubre solo para que una unidad nueva nunca quede fuera del chequeo.
+    for path in "${tmpunits}"/*.service "${tmpunits}"/*.path "${tmpunits}"/*.timer; do
+        unit="$(basename "${path}")"
+        [[ "${unit}" == "wc3-hostbot@.service" ]] && unit=wc3-hostbot@1.service
+        [[ "${unit}" == "wc3-discord-fallo@.service" ]] && \
+            unit=wc3-discord-fallo@prueba.service
         check "systemd-analyze verify ${unit}" \
             systemd-analyze verify --recursive-errors=no "${tmpunits}/${unit}"
     done
