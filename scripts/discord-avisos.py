@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import select
 import shlex
 import shutil
 import subprocess
@@ -25,6 +26,7 @@ import time
 import urllib.error
 import urllib.request
 from contextlib import contextmanager
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Callable, Iterator
 
@@ -40,8 +42,11 @@ REPO_DIR = Path(os.environ.get("WC3_REPO_DIR", "/opt/wc3-repo"))
 DISCORD_API = "https://discord.com/api/v10"
 INSTANCE_COUNT = 9
 NOTICE_COOLDOWN = 600
+GLOBAL_NOTICE_COOLDOWN = 120
 FAILURE_COOLDOWN = 600
 POST_INTERVAL = 3.0
+FIRST_NOTICE_DELAY = 30
+CROWD_THRESHOLD = 3
 
 JOIN_RE = re.compile(
     r"\[GAME: (?P<game>.+?)\] player \[(?P<player>[^|\]]+)(?:\|[^\]]*)?\] joined the game"
@@ -316,8 +321,73 @@ def cooldown_allows(key: str, seconds: int) -> bool:
         return True
 
 
+def cooldowns_allow(requirements: dict[str, int]) -> bool:
+    """Consume varios cooldowns de forma atomica solo si todos permiten."""
+    now = time.time()
+    with file_lock("state.lock"):
+        state = read_state()
+        cooldowns = state.setdefault("cooldowns", {})
+        if any(now - float(cooldowns.get(key, 0)) < seconds
+               for key, seconds in requirements.items()):
+            return False
+        for key in requirements:
+            cooldowns[key] = now
+        write_state(state)
+        return True
+
+
+def quiet_hours(config: dict[str, str], when: float | None = None) -> bool:
+    """True durante la ventana sin avisos sociales (default 01:00-09:00)."""
+    start = int(config.get("DISCORD_QUIET_START", "1")) % 24
+    end = int(config.get("DISCORD_QUIET_END", "9")) % 24
+    hour = time.localtime(time.time() if when is None else when).tm_hour
+    if start == end:
+        return False
+    return start <= hour < end if start < end else hour >= start or hour < end
+
+
+def apply_lobby_event(
+    players: dict[str, set[str]],
+    pending: dict[str, float],
+    unit: str,
+    kind: str,
+    data: dict[str, Any],
+    now: float,
+) -> bool:
+    """Actualiza estado y devuelve True al cruzar de menos de 3 a 3 humanos."""
+    if kind == "join":
+        before = len(players[unit])
+        players[unit].add(str(data["player"]).casefold())
+        after = len(players[unit])
+        if before == 0 and after == 1:
+            pending[unit] = now + FIRST_NOTICE_DELAY
+        if before < CROWD_THRESHOLD <= after:
+            pending.pop(unit, None)
+            return True
+    elif kind == "delete":
+        players[unit].discard(str(data["player"]).casefold())
+        if not players[unit]:
+            pending.pop(unit, None)
+    elif kind in ("start", "expired"):
+        players[unit].clear()
+        pending.pop(unit, None)
+    return False
+
+
+def due_first_notices(
+    players: dict[str, set[str]], pending: dict[str, float], now: float
+) -> list[str]:
+    due: list[str] = []
+    for unit, deadline in list(pending.items()):
+        if deadline <= now:
+            pending.pop(unit, None)
+            if 0 < len(players[unit]) < CROWD_THRESHOLD:
+                due.append(unit)
+    return due
+
+
 def follow() -> None:
-    require_config(
+    config = require_config(
         "DISCORD_BOT_TOKEN",
         "DISCORD_LOBBIES_CHANNEL_ID",
         "DISCORD_ESTADO_CHANNEL_ID",
@@ -326,6 +396,7 @@ def follow() -> None:
     maps = {unit: parse_instance_env(index + 1) for index, unit in enumerate(units)}
     capacities = {unit: discover_capacity(unit) for unit in units}
     players: dict[str, set[str]] = {unit: set() for unit in units}
+    pending: dict[str, float] = {}
     command = ["journalctl", "--follow", "--no-tail", "--output=json", "--no-pager"]
     for unit in units:
         command.extend(["--unit", unit])
@@ -339,7 +410,51 @@ def follow() -> None:
         bufsize=1,
     )
     assert process.stdout is not None
-    for raw in process.stdout:
+    def send_first(unit: str) -> None:
+        if quiet_hours(config):
+            log(f"aviso social de {unit} omitido por horario silencioso")
+            return
+        if not cooldowns_allow({
+            f"lobby:{unit}": NOTICE_COOLDOWN,
+            "lobby:global": GLOBAL_NOTICE_COOLDOWN,
+        }):
+            return
+        count = len(players[unit])
+        remaining = max(capacities[unit] - count, 0)
+        post_message(
+            "DISCORD_LOBBIES_CHANNEL_ID",
+            f"🎮 Hay {count} jugador{'es' if count != 1 else ''} esperando en "
+            f"**{maps[unit]}** (quedan {remaining} lugares). ¡Sumate!",
+        )
+
+    def send_crowd(unit: str) -> None:
+        if quiet_hours(config):
+            log(f"aviso social de {unit} omitido por horario silencioso")
+            return
+        if not cooldowns_allow({
+            f"crowd:{unit}": NOTICE_COOLDOWN,
+            "lobby:global": GLOBAL_NOTICE_COOLDOWN,
+        }):
+            return
+        count = len(players[unit])
+        post_message(
+            "DISCORD_LOBBIES_CHANNEL_ID",
+            f"@here 🔥 **{maps[unit]}** ya tiene {count} jugadores. ¡Se arma!",
+        )
+
+    while process.poll() is None:
+        readable, _, _ = select.select([process.stdout], [], [], 1.0)
+        now = time.time()
+        for unit in due_first_notices(players, pending, now):
+            try:
+                send_first(unit)
+            except RuntimeError as error:
+                log(f"no pude avisar entrada: {error}")
+        if not readable:
+            continue
+        raw = process.stdout.readline()
+        if not raw:
+            continue
         try:
             record = json.loads(raw)
         except json.JSONDecodeError:
@@ -351,34 +466,12 @@ def follow() -> None:
         if event is None:
             continue
         kind, data = event
-        if kind == "join":
-            was_empty = not players[unit]
-            player = str(data["player"])
-            players[unit].add(player.casefold())
-            if was_empty and cooldown_allows(f"lobby:{unit}", NOTICE_COOLDOWN):
-                remaining = max(capacities[unit] - len(players[unit]), 0)
-                try:
-                    post_message(
-                        "DISCORD_LOBBIES_CHANNEL_ID",
-                        f"🎮 **{player}** entró al lobby de **{maps[unit]}** "
-                        f"(quedan {remaining} lugares). ¡Sumate!",
-                    )
-                except RuntimeError as error:
-                    log(f"no pude avisar entrada: {error}")
-        elif kind == "delete":
-            players[unit].discard(str(data["player"]).casefold())
-        elif kind == "start":
-            count = int(data["count"])
-            players[unit].clear()
+        crowded = apply_lobby_event(players, pending, unit, kind, data, now)
+        if crowded:
             try:
-                post_message(
-                    "DISCORD_LOBBIES_CHANNEL_ID",
-                    f"⚔️ Arrancó **{maps[unit]}** con {count} jugador{'es' if count != 1 else ''}.",
-                )
+                send_crowd(unit)
             except RuntimeError as error:
-                log(f"no pude avisar arranque: {error}")
-        elif kind == "expired":
-            players[unit].clear()
+                log(f"no pude avisar lobby con gente: {error}")
 
     return_code = process.wait()
     raise RuntimeError(f"journalctl termino inesperadamente con codigo {return_code}")
@@ -399,6 +492,55 @@ def failure(unit: str) -> None:
         "DISCORD_ESTADO_CHANNEL_ID",
         f"🚨 El servicio **{unit}** pasó a estado failed. Revisar el VPS.",
     )
+
+
+def recent_lobby(unit: str, minutes: int = 30) -> bool:
+    since = (datetime.now().astimezone() - timedelta(minutes=minutes)).strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
+    result = subprocess.run(
+        ["journalctl", "-u", unit, "--since", since, "--no-pager", "-o", "cat"],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    return "creating public game" in result.stdout.casefold()
+
+
+def record_health(unit: str, healthy: bool) -> bool | None:
+    with file_lock("state.lock"):
+        state = read_state()
+        health = state.setdefault("health", {})
+        previous = health.get(unit)
+        health[unit] = healthy
+        write_state(state)
+    return bool(previous) if previous is not None else None
+
+
+def lobby_health() -> None:
+    require_config("DISCORD_BOT_TOKEN", "DISCORD_ESTADO_CHANNEL_ID")
+    for number in range(1, INSTANCE_COUNT + 1):
+        unit = f"wc3-hostbot@{number}.service"
+        active = subprocess.run(
+            ["systemctl", "is-active", "--quiet", unit], check=False
+        ).returncode == 0
+        healthy = active and recent_lobby(unit)
+        previous = record_health(unit, healthy)
+        if not healthy:
+            allowed = cooldown_allows(f"health:{unit}", 3600)
+            if previous is not False or allowed:
+                reason = "no está active" if not active else "no publicó lobby en 30 minutos"
+                post_message(
+                    "DISCORD_ESTADO_CHANNEL_ID",
+                    f"🚨 **{unit}** está vivo pero no hostea correctamente: {reason}.",
+                )
+        elif previous is False:
+            post_message(
+                "DISCORD_ESTADO_CHANNEL_ID",
+                f"✅ **{unit}** volvió a publicar su lobby.",
+            )
+    log("healthcheck de lobbies terminado")
 
 
 def disk_check(threshold: int | None = None) -> None:
@@ -440,6 +582,8 @@ def main(argv: list[str]) -> int:
         disk_check(int(argv[2]) if len(argv) == 3 else None)
     elif mode == "backup-ok":
         backup_ok()
+    elif mode == "lobby-health":
+        lobby_health()
     elif mode == "test-lobbies":
         post_message("DISCORD_LOBBIES_CHANNEL_ID", "🧪 Prueba de avisos de WC3 Revival: #lobbies conectado.")
     elif mode == "test-estado":

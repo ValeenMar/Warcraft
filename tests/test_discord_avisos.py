@@ -3,6 +3,7 @@
 import importlib.util
 import os
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -66,6 +67,45 @@ class TestConfig(unittest.TestCase):
             self.assertEqual(values["DISCORD_GUILD_ID"], "123")
             if os.name != "nt":
                 self.assertEqual(path.stat().st_mode & 0o777, 0o640)
+
+
+class TestLobbyState(unittest.TestCase):
+    def setUp(self):
+        self.unit = "wc3-hostbot@1.service"
+        self.players = {self.unit: set()}
+        self.pending = {}
+
+    def apply(self, kind, player="jugador", now=100.0):
+        return avisos.apply_lobby_event(
+            self.players, self.pending, self.unit, kind, {"player": player}, now
+        )
+
+    def test_primer_humano_espera_30_segundos(self):
+        self.assertFalse(self.apply("join"))
+        self.assertEqual(self.pending[self.unit], 130.0)
+        self.assertEqual(avisos.due_first_notices(self.players, self.pending, 129.9), [])
+        self.assertEqual(avisos.due_first_notices(self.players, self.pending, 130.0), [self.unit])
+
+    def test_si_se_va_antes_se_cancela(self):
+        self.apply("join")
+        self.apply("delete")
+        self.assertNotIn(self.unit, self.pending)
+
+    def test_al_cruzar_tres_dispara_y_cancela_el_primero(self):
+        self.apply("join", "uno")
+        self.assertFalse(self.apply("join", "dos", 101.0))
+        self.assertTrue(self.apply("join", "tres", 102.0))
+        self.assertNotIn(self.unit, self.pending)
+
+    def test_horario_silencioso(self):
+        local = list(time.localtime())
+        local[3] = 3
+        local[4] = local[5] = 0
+        stamp = time.mktime(tuple(local))
+        self.assertTrue(avisos.quiet_hours({}, stamp))
+        local[3] = 12
+        stamp = time.mktime(tuple(local))
+        self.assertFalse(avisos.quiet_hours({}, stamp))
 
 
 if __name__ == "__main__":

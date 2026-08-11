@@ -16,6 +16,7 @@ fi
 if [[ "${1:-}" == "--disable" ]]; then
     log "apagando avisos y quitando enlaces automáticos"
     systemctl disable --now wc3-discord-avisos.service wc3-discord-disco.timer \
+        wc3-discord-lobby-health.timer \
         2>/dev/null || true
     rm -f -- /etc/systemd/system/wc3-hostbot@.service.d/discord.conf \
         /etc/systemd/system/pvpgn.service.d/discord.conf \
@@ -38,7 +39,8 @@ chmod 640 "${ENV_FILE}"
 
 for unit in wc3-discord-avisos.service wc3-discord-fallo@.service \
             wc3-discord-disco.service wc3-discord-disco.timer \
-            wc3-discord-backup-ok.service; do
+            wc3-discord-backup-ok.service wc3-discord-lobby-health.service \
+            wc3-discord-lobby-health.timer; do
     install -m 644 "${REPO_DIR}/systemd/${unit}" "/etc/systemd/system/${unit}"
 done
 
@@ -64,7 +66,8 @@ fi
 systemctl daemon-reload
 
 if [[ "${configured}" -eq 1 ]]; then
-    systemctl enable --now wc3-discord-avisos.service wc3-discord-disco.timer
+    systemctl enable --now wc3-discord-avisos.service wc3-discord-disco.timer \
+        wc3-discord-lobby-health.timer
     systemctl try-restart wc3-discord-avisos.service
     log "OK: avisos activos"
 else
