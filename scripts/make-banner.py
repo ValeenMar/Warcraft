@@ -151,17 +151,15 @@ def rotular(img, title: str, subtitle: str, accent: str):
     grande = img.resize((w, h), Image.LANCZOS).convert("RGBA")
     d = ImageDraw.Draw(grande, "RGBA")
 
-    # Placa central suave: conserva el arte de los extremos y le da contraste
-    # al título sin convertir el banner en un rectángulo opaco.
+    # Placa central translúcida: conserva el arte y evita el rectángulo negro
+    # macizo que se notaba demasiado al escalar el banner dentro del cliente.
     cx = w // 2
     placa_w = int(w * .49)
-    for i in range(32, 0, -1):
-        alpha = round(2.8 * (33 - i))
-        d.rounded_rectangle(
-            [cx - placa_w // 2 - i, h * .08 - i // 3,
-             cx + placa_w // 2 + i, h * .91 + i // 3],
-            radius=h // 7, fill=(2, 5, 11, min(alpha, 72)),
-        )
+    d.rounded_rectangle(
+        [cx - placa_w // 2, h * .08, cx + placa_w // 2, h * .91],
+        radius=h // 7, fill=(2, 5, 11, 158),
+        outline=(*acc, 92), width=max(2, h // 90),
+    )
 
     titulo = title.upper()
     font_t = prev.fit_font(d, titulo, int(w * .43), int(h * .45))

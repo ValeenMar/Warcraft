@@ -1,9 +1,9 @@
-Banner del cliente: dejá tu diseño acá como "banner.png"
-=========================================================
+Banner del cliente: "banner.png" + "banner-alt.png"
+=====================================================
 
-Si en este directorio existe un archivo llamado exactamente banner.png,
-install/40-render-configs.sh lo usa en vez de dibujar uno. Si no existe,
-genera uno automático con el nombre del realm.
+Los dos archivos se publican en rotación aleatoria. banner.png es además el
+que reemplaza la página de subida; banner-alt.png conserva la segunda variante.
+Si falta alguno, install/40-render-configs.sh genera uno automático.
 
 ESPECIFICACIONES
 ----------------
@@ -45,4 +45,5 @@ Para probar cómo queda sin tocar el servidor:
   python3 scripts/make-banner.py --from-image tu-logo.png \
       --out /tmp/banner.png --preview /tmp/banner-x3.png
 
-El clic sobre el banner abre la URL de WC3_SERVER_URL (.env).
+El clic sobre cualquiera de los dos abre WC3_SERVER_URL (.env). Para llevar al
+Discord, usar ahí la invitación completa https://discord.gg/...

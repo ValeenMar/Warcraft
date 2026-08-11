@@ -231,13 +231,18 @@ extensión `.png` al tag MNG que el cliente entiende, y 468×60 es la medida del
 que PvPGN instala de fábrica (el logo de pvpgn.pro, que es lo que se ve hasta
 que lo pisamos). Al hacerle clic, el cliente abre la URL declarada.
 
-`scripts/make-banner.py` dibuja el nuestro y `40-render-configs.sh` lo instala
-junto con nuestro `ad.json` en cada render. Ojo: **el cliente cachea el
-banner**, así que después de cambiarlo puede hacer falta reconectarse para
-verlo.
+`scripts/make-banner.py` dibuja los nuestros y `40-render-configs.sh` instala
+`banner.png` como `ad000001.png` y `banner-alt.png` como `ad000002.png`.
+Warcraft III siempre informa `prev_ad_id=0`, así que PvPGN elige uno de los
+dos al azar en cada pedido: la rotación se nota al reconectar o cuando el
+cliente vuelve a pedir publicidad. Ambos llevan al hacer clic a
+`WC3_SERVER_URL` (en producción, la invitación de Discord). Ojo: **el cliente
+cachea los banners**, así que después de cambiarlos puede hacer falta cerrar el
+juego y borrar/respaldar `bncache.dat` para verlos de inmediato.
 
-**Para poner un diseño propio**: dejar el archivo en `config/pvpgn/banner.png`
-y el render lo usa en lugar de dibujar. Especificaciones completas en
+**Para poner diseños propios**: dejar los archivos en
+`config/pvpgn/banner.png` y `config/pvpgn/banner-alt.png`; el render los usa en
+lugar de dibujar. Especificaciones completas en
 `config/pvpgn/LEEME-banner.txt`; el resumen es **468×60, PNG, RGB sin
 transparencia**. Si viene en otra medida, `make-banner.py --from-image` lo
 recorta al centro hasta esa proporción en vez de deformarlo — pero conviene

@@ -1,0 +1,41 @@
+[Unit]
+Description=Avisos de WC3 Revival hacia Discord
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=wc3
+Group=wc3
+SupplementaryGroups=systemd-journal
+EnvironmentFile=/opt/wc3/discord-avisos.env
+Environment=WC3_DISCORD_STATE=/var/lib/wc3-discord
+Environment=WC3_REPO_DIR=/opt/wc3-repo
+ExecStart=/usr/bin/python3 /opt/wc3/discord-avisos/avisos.py follow
+Restart=on-failure
+RestartSec=10
+
+# VPS compartido de 1 vCPU / 2 GB: el lector queda bloqueado en journalctl.
+CPUAccounting=yes
+CPUQuota=10%
+MemoryMax=64M
+TasksMax=32
+StateDirectory=wc3-discord
+StateDirectoryMode=0750
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target

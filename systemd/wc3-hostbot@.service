@@ -26,6 +26,11 @@ RestartSec=10
 # --- Limites de recursos (VPS de 2 GB, varias instancias) --------------------
 MemoryMax=384M
 TasksMax=64
+# Aura puede quedar atrapado en un bucle de userspace al reciclar un lobby.
+# El uso normal medido es <0.1% por bot; este techo deja margen amplio para
+# carga/mapas y evita que una instancia defectuosa queme el vCPU compartido.
+CPUAccounting=yes
+CPUQuota=15%
 
 # --- Hardening ---------------------------------------------------------------
 NoNewPrivileges=true

@@ -659,9 +659,9 @@ def pagina() -> str:
   <div class="guia">
     <strong>Para mandar una partida</strong>
     <ol>
-      <li>Entrá al lobby desde Warcraft y esperá unos 5 segundos.</li>
-      <li>Escribí <code>!start</code> en el lobby, o tocá <b>iniciar</b> en el bot de abajo.</li>
-      <li>Si el comando del juego no responde: <code>/w hostbotN sc</code> y después <code>!start</code>.</li>
+      <li>Entrá al lobby desde Warcraft y esperá unos 5 segundos mientras el bot verifica tu cuenta.</li>
+      <li>Escribí <code>!start</code>; si lo escribiste demasiado rápido, repetilo una vez.</li>
+      <li>Como respaldo, podés tocar <b>iniciar</b> en el bot de abajo.</li>
     </ol>
     <p><a href="/guia/foc" target="_blank" rel="noopener"><strong>Abrir guía FOC en español:</strong>
       objetos, builds y habilidades</a></p>

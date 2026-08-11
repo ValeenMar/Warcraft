@@ -140,27 +140,31 @@ for news in /opt/wc3/pvpgn/etc/pvpgn/i18n/news.txt \
     render "${REPO_DIR}/config/pvpgn/news.txt.tpl" "${news}"
 done
 
-# El banner en si: lo dibuja make-banner.py (necesita Pillow, que vive en el
-# venv). Si falta, no es fatal: queda el banner default de PvPGN.
-# Si dejaste tu propio diseno en config/pvpgn/banner.png, gana ese; si no, se
-# dibuja uno con el nombre del realm. En los dos casos pasa por make-banner.py,
-# que lo lleva a 468x60 RGB sin alfa, que es lo que el cliente espera.
+# Los dos banners: Warcraft III siempre manda prev_ad_id=0 y PvPGN elige al
+# azar entre los PNG compatibles del ad.json. banner.png sigue siendo el que
+# reemplaza el uploader; banner-alt.png aporta la segunda variante.
 BANNER_PY=/opt/wc3/venv/bin/python
-BANNER_PROPIO="${REPO_DIR}/config/pvpgn/banner.png"
 if [[ -x "${BANNER_PY}" ]] && "${BANNER_PY}" -c 'import PIL' 2>/dev/null; then
-    banner_args=(--out /opt/wc3/pvpgn/var/pvpgn/files/ad000001.png)
-    if [[ -f "${BANNER_PROPIO}" ]]; then
-        log "usando el banner propio: config/pvpgn/banner.png"
-        banner_args+=(--from-image "${BANNER_PROPIO}")
-    else
-        banner_args+=(--title "${WC3_REALM_NAME}"
-                      --subtitle "${WC3_BANNER_SUBTITLE:-${WC3_SERVER_DESCRIPTION}}")
-    fi
-    "${BANNER_PY}" "${REPO_DIR}/scripts/make-banner.py" "${banner_args[@]}"
-    chown wc3:wc3 /opt/wc3/pvpgn/var/pvpgn/files/ad000001.png
-    log "banner instalado (el cliente lo cachea: puede tardar una reconexion en verse)"
+    banner_num=0
+    for banner_name in banner.png banner-alt.png; do
+        banner_num=$((banner_num + 1))
+        printf -v banner_file 'ad%06d.png' "${banner_num}"
+        banner_source="${REPO_DIR}/config/pvpgn/${banner_name}"
+        banner_dest="/opt/wc3/pvpgn/var/pvpgn/files/${banner_file}"
+        banner_args=(--out "${banner_dest}")
+        if [[ -f "${banner_source}" ]]; then
+            log "usando banner propio: config/pvpgn/${banner_name}"
+            banner_args+=(--from-image "${banner_source}")
+        else
+            banner_args+=(--title "${WC3_REALM_NAME}"
+                          --subtitle "${WC3_BANNER_SUBTITLE:-${WC3_SERVER_DESCRIPTION}}")
+        fi
+        "${BANNER_PY}" "${REPO_DIR}/scripts/make-banner.py" "${banner_args[@]}"
+        chown wc3:wc3 "${banner_dest}"
+    done
+    log "2 banners instalados en rotacion (el cliente los cachea: puede requerir reconexion)"
 else
-    log "Pillow no disponible en /opt/wc3/venv: dejo el banner que este"
+    log "Pillow no disponible en /opt/wc3/venv: dejo los banners que esten"
 fi
 
 # --- Hostbots: una instancia por config/hostbot/instance-N.env ---------------

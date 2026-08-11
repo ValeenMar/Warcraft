@@ -29,13 +29,21 @@ class TestPresentation(unittest.TestCase):
         self.assertIn("WC3 REVIVAL", news)
         self.assertNotIn("pvpgn.berlios", news.lower())
 
-    def test_banner_es_png_rgb_468x60(self):
-        data = (ROOT / "config/pvpgn/banner.png").read_bytes()
-        self.assertEqual(data[:8], b"\x89PNG\r\n\x1a\n")
-        ancho, alto, profundidad, tipo = struct.unpack(">IIBB", data[16:26])
-        self.assertEqual((ancho, alto), (468, 60))
-        self.assertEqual(profundidad, 8)
-        self.assertEqual(tipo, 2)  # PNG truecolor RGB, sin alfa
+    def test_banners_son_png_rgb_468x60(self):
+        for nombre in ("banner.png", "banner-alt.png"):
+            with self.subTest(nombre=nombre):
+                data = (ROOT / "config/pvpgn" / nombre).read_bytes()
+                self.assertEqual(data[:8], b"\x89PNG\r\n\x1a\n")
+                ancho, alto, profundidad, tipo = struct.unpack(">IIBB", data[16:26])
+                self.assertEqual((ancho, alto), (468, 60))
+                self.assertEqual(profundidad, 8)
+                self.assertEqual(tipo, 2)  # PNG truecolor RGB, sin alfa
+
+    def test_ad_json_alterna_dos_banners_con_url_configurable(self):
+        ads = (ROOT / "config/pvpgn/ad.json.tpl").read_text(encoding="utf-8")
+        self.assertIn('"ad000001.png"', ads)
+        self.assertIn('"ad000002.png"', ads)
+        self.assertEqual(ads.count('"url": "${WC3_SERVER_URL}"'), 2)
 
 
 if __name__ == "__main__":
