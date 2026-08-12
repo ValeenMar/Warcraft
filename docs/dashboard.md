@@ -65,7 +65,7 @@ debe figurar en `WC3_BOT_ROOTADMINS`, por ejemplo:
 - **Reparar caídos**: levanta PvPGN o bots detenidos sin reiniciar los que ya
   están sanos, por lo que no corta partidas activas.
 - **Reiniciar PvPGN**: en el recuadro "PvPGN" de los números de arriba.
-  También reinicia los nueve bots porque Aura no republica un lobby después
+  También reinicia los bots activos porque Aura no republica un lobby después
   de perder la conexión al servidor. La confirmación avisa que cae cualquier
   partida activa.
 - **Reiniciar un bot**: al final de su fila en la tabla de bots.

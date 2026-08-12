@@ -46,7 +46,7 @@ Mensaje directo, sin esperar eventos reales:
 /usr/bin/python3 /opt/wc3/discord-avisos/avisos.py test-estado
 ```
 
-Prueba real de lobby: entrar a cualquiera de las nueve salas vacías. El aviso
+Prueba real de lobby: entrar a cualquiera de las salas activas vacías. El aviso
 debe llegar en menos de 15 segundos. Para el fallo de servicio, usar el bot 9
 vacío; systemd lo vuelve a levantar por `Restart=on-failure`:
 

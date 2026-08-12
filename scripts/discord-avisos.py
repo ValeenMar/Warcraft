@@ -64,6 +64,36 @@ LOBBY_EXPIRED_RE = re.compile(r"\[GAME: .+?\] is over \(lobby time limit hit\)")
 UNIT_RE = re.compile(r"wc3-hostbot@(?P<number>\d+)\.service")
 
 
+def instance_numbers() -> list[int]:
+    """Instancias configuradas actualmente, aun cuando haya huecos numericos.
+
+    Los servidores viejos usaban siempre 1..9.  Después de archivar un mapa
+    puede quedar, por ejemplo, 3..7 y 9; descubrir los directorios evita que
+    Discord denuncie como caidos bots que fueron retirados a proposito.
+    """
+    configured = os.environ.get("WC3_HOSTBOT_INSTANCE_NUMBERS", "").strip()
+    if configured:
+        numbers: set[int] = set()
+        for raw in configured.split(","):
+            value = raw.strip()
+            if not value.isdigit() or int(value) <= 0:
+                raise RuntimeError(
+                    "WC3_HOSTBOT_INSTANCE_NUMBERS debe ser una lista como 1,2,5"
+                )
+            numbers.add(int(value))
+        return sorted(numbers)
+
+    try:
+        discovered = sorted(
+            int(path.name)
+            for path in HOSTBOT_INSTANCES_DIR.iterdir()
+            if path.is_dir() and path.name.isdigit()
+        )
+    except OSError:
+        discovered = []
+    return discovered or list(range(1, INSTANCE_COUNT + 1))
+
+
 def log(message: str) -> None:
     print(f"[discord-avisos] {message}", flush=True)
 
@@ -395,8 +425,9 @@ def follow() -> None:
         "DISCORD_LOBBIES_CHANNEL_ID",
         "DISCORD_ESTADO_CHANNEL_ID",
     )
-    units = [f"wc3-hostbot@{number}.service" for number in range(1, INSTANCE_COUNT + 1)]
-    maps = {unit: parse_instance_env(index + 1) for index, unit in enumerate(units)}
+    numbers = instance_numbers()
+    units = [f"wc3-hostbot@{number}.service" for number in numbers]
+    maps = {unit: parse_instance_env(number) for number, unit in zip(numbers, units)}
     capacities = {unit: discover_capacity(unit) for unit in units}
     players: dict[str, set[str]] = {unit: set() for unit in units}
     pending: dict[str, float] = {}
@@ -404,7 +435,7 @@ def follow() -> None:
     for unit in units:
         command.extend(["--unit", unit])
 
-    log("escuchando journals de 9 hostbots (event-driven, sin polling)")
+    log(f"escuchando journals de {len(units)} hostbots (event-driven, sin polling)")
     process = subprocess.Popen(
         command,
         stdout=subprocess.PIPE,
@@ -640,7 +671,7 @@ def record_health(unit: str, healthy: bool) -> bool | None:
 
 def lobby_health() -> None:
     require_config("DISCORD_BOT_TOKEN", "DISCORD_ESTADO_CHANNEL_ID")
-    for number in range(1, INSTANCE_COUNT + 1):
+    for number in instance_numbers():
         unit = f"wc3-hostbot@{number}.service"
         active = subprocess.run(
             ["systemctl", "is-active", "--quiet", unit], check=False

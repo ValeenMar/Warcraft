@@ -69,6 +69,22 @@ class TestConfig(unittest.TestCase):
             if os.name != "nt":
                 self.assertEqual(path.stat().st_mode & 0o777, 0o640)
 
+    def test_descubre_instancias_aunque_haya_huecos(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            for number in (3, 4, 7, 9):
+                (root / str(number)).mkdir()
+            with mock.patch.object(avisos, "HOSTBOT_INSTANCES_DIR", root), \
+                    mock.patch.dict(os.environ, {}, clear=False):
+                os.environ.pop("WC3_HOSTBOT_INSTANCE_NUMBERS", None)
+                self.assertEqual(avisos.instance_numbers(), [3, 4, 7, 9])
+
+    def test_instancias_pueden_declararse_por_env(self):
+        with mock.patch.dict(
+            os.environ, {"WC3_HOSTBOT_INSTANCE_NUMBERS": "9, 3,7"}
+        ):
+            self.assertEqual(avisos.instance_numbers(), [3, 7, 9])
+
 
 class TestLobbyState(unittest.TestCase):
     def setUp(self):

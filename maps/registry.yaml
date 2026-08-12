@@ -171,7 +171,7 @@ maps:
     teams: null
     min_patch: "1.24"
     return_bug_risk: verde
-    status: hosteado
+    status: archivado
     notes: >-
       El unico del conjunto que es post-1.24 es "Anime Fight Arena AI" de
       PrideTeam. El linaje original (Anime Fight Beta 1.39o9 de Spathis, ene
@@ -180,7 +180,9 @@ maps:
       es del linaje pre-1.24, o sea que arrastra el mismo riesgo — pasarla
       por la prueba de carga en 1.27a antes de darla por buena.
       "Anime Fight Arena AI" dejo el autohost el 2026-08-12 por ser la entrada
-      menos popular y redundante del conjunto; Beta 1.39b permanece publicada.
+      menos popular y redundante del conjunto. Beta 1.39b tambien fue retirada
+      del autohost el 2026-08-12 por decision
+      del administrador. Ambas versiones quedan archivadas y recuperables.
     source_url: https://www.epicwar.com/maps/152876/
 
   - name: Anime Character Fight
@@ -211,7 +213,7 @@ maps:
     teams: null
     min_patch: "1.24"
     return_bug_risk: verde
-    status: hosteado
+    status: archivado
     notes: >-
       Version 4.80 oficial de Sogat, agosto de 2010: formato 1.24a-1.28c,
       118k descargas y texto ingles. Se eligio sobre la 3.33 (enero 2009,
@@ -219,7 +221,8 @@ maps:
       return bug. Archivo verificado: 4.766.066 B, SHA-256
       DE41A82C38A28A1F039B5AB19A0622A249090FD12D225C3BAE54AFBBF3777886.
       Publicado por hostbot8 el 2026-08-12; Aura calculo CRC/SHA1 y abrio el
-      lobby sin reinicios.
+      lobby sin reinicios. Retirado del autohost ese mismo dia por decision del
+      administrador; el archivo queda en el backup de mapas.
     source_url: https://www.epicwar.com/maps/144663/
 
   - name: Custom Hero Arena
@@ -483,6 +486,12 @@ maps:
       esta protegido y el inspector no puede descifrarlo. Lobby publicado sin
       error como "FOC 9.6G03 [ESPANOL]" el 2026-08-12. Falta entrada y partida
       con dos clientes 1.27b para cerrar la validacion jugable.
+      Auditoria directa del script el 2026-08-12: contiene "JSO Cheat Set
+      v3.8" y comandos de oro, atributos, invulnerabilidad y cooldown. En esta
+      copia Getting_SpecialList siempre retorna false y no se encontro un
+      usuario privilegiado habilitado por defecto, pero no debe considerarse
+      una edicion competitiva limpia. wc3maps tambien marca la 9.6G03 como
+      mapa con cheats embebidos.
     source_url: https://www.epicwar.com/maps/332392/
 
   # ------------------------------------------------------------------- TD ---
@@ -521,7 +530,7 @@ maps:
     teams: null
     min_patch: "1.24"
     return_bug_risk: verde
-    status: hosteado
+    status: archivado
     notes: >-
       Release oficial de FeverMore del 5 de noviembre de 2010: formato
       1.24a-1.28c y mas de un millon de descargas. Es la adicion que mejor
@@ -530,5 +539,6 @@ maps:
       el kit. Archivo verificado: 7.866.189 B, SHA-256
       96F431A97A40BDAFA5A8F376BB104EEB27E839C03AABD2280CBF720C0FC8AE5C.
       Publicado por hostbot1 el 2026-08-12; Aura calculo CRC/SHA1 y abrio el
-      lobby sin reinicios.
+      lobby sin reinicios. Retirado del autohost ese mismo dia por decision del
+      administrador; el archivo queda en el backup de mapas.
     source_url: https://www.epicwar.com/maps/153487/
