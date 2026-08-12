@@ -189,7 +189,7 @@ de anunciarse como estable.
 - Cada mapa pasa por el protocolo de docs/mapas.md; los que pasen de
   ~2-3 MB quedan marcados "solo map pack" (el techo duro de 1.27b son
   128 MiB, pero la transferencia del lobby sigue siendo lenta).
-- Armar `wc3revival-maps-v01.zip` con todos los `validado` (docs/mapas.md,
+- Armar `gryzwc3-maps-v01.zip` con todos los `validado` (docs/mapas.md,
   sección map pack) y publicarlo donde el grupo lo baje.
 - Segunda instancia de bot arriba (`wc3-hostbot@2`, arena) con su canal.
 

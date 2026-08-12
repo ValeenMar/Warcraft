@@ -58,7 +58,7 @@ pendiente -> descargado -> validado
 
 Los mapas pesados (y por comodidad, todos) se distribuyen como pack:
 
-- Nombre: `wc3revival-maps-vNN.zip` (NN incremental; el contenido de un NN
+- Nombre: `gryzwc3-maps-vNN.zip` (NN incremental; el contenido de un NN
   publicado no se cambia jamás, se publica NN+1).
 - Contenido: los .w3x con `status: validado`, con los nombres de archivo
   EXACTOS que usa el bot (el hash tiene que coincidir).

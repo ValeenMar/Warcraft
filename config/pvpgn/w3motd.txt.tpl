@@ -1,1 +1,1 @@
-|c0033CCFFWC3 REVIVAL|r |c007FC8FF-|r salas 24/7: Custom Game + doble clic |c007FC8FF-|r todos usan |c00FFCC00!ready|r |c007FC8FF-|r escribi |c00FFCC00/watchall|r una vez |c007FC8FF-|r %u jugando en %g partidas, %U conectados |c008B929E-|r TFT 1.27b
+|c0033CCFFGRYZ WC3|r |c007FC8FF-|r salas 24/7: Custom Game + doble clic |c007FC8FF-|r todos usan |c00FFCC00!ready|r |c007FC8FF-|r escribi |c00FFCC00/watchall|r una vez |c007FC8FF-|r %u jugando en %g partidas, %U conectados |c008B929E-|r TFT 1.27b

@@ -1,4 +1,4 @@
-# Discord de WC3 Revival
+# Discord de Gryz WC3
 
 La integración publica avisos en `#lobbies` y `#estado` mediante la API REST
 de Discord. No modifica Aura, no usa gateway/websocket, no consulta MySQL y no

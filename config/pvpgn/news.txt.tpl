@@ -1,6 +1,6 @@
 {11/08/2026}
 
-WC3 REVIVAL // CLASSIC ONLINE
+GRYZ WC3 // CLASSIC ONLINE
 Warcraft III: The Frozen Throne 1.27b - servidor privado LATAM
 
 COMO ENTRAR
@@ -16,4 +16,4 @@ Comandos utiles: /watchall una vez | !ready en el lobby
 Por susurro a un bot: !getgames | !gp 0 | !stats | !status
 
 Buena partida.
-El equipo de WC3 Revival
+El equipo de Gryz WC3

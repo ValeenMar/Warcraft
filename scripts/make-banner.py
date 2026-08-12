@@ -20,10 +20,10 @@ Este script dibuja un banner de 468x60 con el estilo del resto del proyecto
 trabajo de install/40-render-configs.sh.
 
 Uso:
-    make-banner.py --title "WC3 Revival" --subtitle "8 mapas - 22 ms" --out ad000001.png
-    make-banner.py --from-image mi-logo.png --title "WC3 Revival" \
+    make-banner.py --title "Gryz WC3" --subtitle "6 mapas - 22 ms" --out ad000001.png
+    make-banner.py --from-image mi-logo.png --title "Gryz WC3" \
         --subtitle "CLASICOS - ANIME - 24/7" --out ad000001.png
-    make-banner.py --title "WC3 Revival" --out banner.png --preview banner-grande.png
+    make-banner.py --title "Gryz WC3" --out banner.png --preview banner-grande.png
 
 Si preferis dibujarlo vos: PNG de 468x60, RGB, sin transparencia. El script
 lo adapta igual si se lo pasas en otra medida (recorta al centro).

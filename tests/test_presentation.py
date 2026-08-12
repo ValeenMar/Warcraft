@@ -19,14 +19,14 @@ class TestPresentation(unittest.TestCase):
             encoding="utf-8"
         ).splitlines()
         self.assertEqual(len(lineas), 1)
-        self.assertIn("WC3 REVIVAL", lineas[0])
+        self.assertIn("GRYZ WC3", lineas[0])
         self.assertIn("%u", lineas[0])
         self.assertIn("%g", lineas[0])
 
     def test_news_es_propio_y_tiene_fecha_valida(self):
         news = (ROOT / "config/pvpgn/news.txt.tpl").read_text(encoding="utf-8")
         self.assertRegex(news, r"^\{\d{2}/\d{2}/\d{4}\}")
-        self.assertIn("WC3 REVIVAL", news)
+        self.assertIn("GRYZ WC3", news)
         self.assertNotIn("pvpgn.berlios", news.lower())
 
     def test_banners_son_png_rgb_468x60(self):

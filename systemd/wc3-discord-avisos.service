@@ -1,5 +1,5 @@
 [Unit]
-Description=Avisos de WC3 Revival hacia Discord
+Description=Avisos de Gryz WC3 hacia Discord
 After=network-online.target
 Wants=network-online.target
 StartLimitIntervalSec=300

@@ -102,14 +102,14 @@ class TestGaleria(unittest.TestCase):
                 self.assertEqual(self.get(intento), 404)
 
     def test_ofrece_el_kit_para_descargar(self):
-        kit = Path(self.tmp.name) / "WC3-Revival-Kit.zip"
+        kit = Path(self.tmp.name) / "Gryz-WC3-Kit.zip"
         kit.write_bytes(b"PK\x03\x04" + b"contenido del kit")
         upload.Handler.offer = kit
         try:
             with urllib.request.urlopen(self.base, timeout=10) as r:
-                self.assertIn("Descargar WC3-Revival-Kit.zip", r.read().decode("utf-8"))
+                self.assertIn("Descargar Gryz-WC3-Kit.zip", r.read().decode("utf-8"))
             with urllib.request.urlopen(
-                self.base + "/bajar/WC3-Revival-Kit.zip", timeout=10
+                self.base + "/bajar/Gryz-WC3-Kit.zip", timeout=10
             ) as r:
                 self.assertEqual(r.read(), kit.read_bytes())
             # Solo se sirve ESE archivo, no cualquiera que se pida
@@ -119,7 +119,7 @@ class TestGaleria(unittest.TestCase):
             upload.Handler.offer = None
 
     def test_sin_kit_no_hay_boton_ni_ruta(self):
-        self.assertEqual(self.get("/bajar/WC3-Revival-Kit.zip"), 404)
+        self.assertEqual(self.get("/bajar/Gryz-WC3-Kit.zip"), 404)
         with urllib.request.urlopen(self.base, timeout=10) as r:
             self.assertNotIn("Descargar", r.read().decode("utf-8"))
 

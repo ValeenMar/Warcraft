@@ -206,7 +206,7 @@ def resolve_image(spec: "str | None", tmp_dir: Path) -> "Path | None":
 
     destino = tmp_dir / "subject_descargado"
     pedido = urllib.request.Request(
-        str(spec), headers={"User-Agent": "wc3-revival/brand-map"}
+        str(spec), headers={"User-Agent": "gryz-wc3/brand-map"}
     )
     limite = 16 * 1024 * 1024
     try:

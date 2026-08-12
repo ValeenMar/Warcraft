@@ -583,7 +583,7 @@ construir torres en un TD no se ve afectado).
 
 **Cambio de postura**: la decisión anterior era no incluir WFE (antivirus,
 VC++, soporte). Se revierte a medias: se incluye pero PRECONFIGURADO y
-opcional — el kit trae `extras/WFE` con el perfil `WC3Revival.ini` ya armado
+opcional — el kit trae `extras/WFE` con el perfil `GryzWC3.ini` ya armado
 (QWER en la fila de abajo, DF en los dos botones derechos de la fila del
 medio — se evita la izquierda porque ahí vive Patrol —, ítems en ZXCVBN para
 no pisar los grupos de control) y `TECLAS-LOL.txt` con los 5 pasos de
@@ -605,7 +605,7 @@ fuego es de 5 minutos con el juego.
 sin WFE"). El motivo original (inyección en el proceso → falsos positivos de
 antivirus → el kit entero parece un virus) pesó más que la comodidad. Lo que
 queda de esta decisión: `make-wfe-profile.py` sigue generando el perfil
-`WC3Revival.ini`, pero se le pasa al jugador que lo pida, y WFE se baja del
+`GryzWC3.ini`, pero se le pasa al jugador que lo pida, y WFE se baja del
 sitio oficial (github.com/UnryzeC/WFE-Release). El `LEEME.txt` del kit lo
 explica así.
 
@@ -614,7 +614,7 @@ necesita los mapas > 8 MiB (decisión 23), y "que cada amigo se lo baje solo"
 no escala. El kit ahora trae `extras/WFE/` con TRES archivos de texto:
 `INSTALAR-WFE.bat` (baja el zip del **release oficial pinneado** v3.1.13.85
 en la máquina del jugador y verifica su SHA-256 con certutil antes de tocar
-nada), el perfil `WC3Revival.ini` (generado en el build contra el
+nada), el perfil `GryzWC3.ini` (generado en el build contra el
 `WFEConfigBase.ini` pinneado del repo de WFE; si upstream renombra claves,
 `make-wfe-profile.py` aborta y el kit sale sin extras avisando) y
 `TECLAS-LOL.txt` (el paso a paso). El binario sigue SIN viajar en el kit —
@@ -630,7 +630,7 @@ se respeta el motivo de la actualización anterior — pero instalarlo pasó de
 calcula el tamaño real y hostea sin límite propio; el que rechaza > 8 MiB es
 el `game.dll` de cada jugador. Y ese límite se levanta de dos formas
 (confirmado en ENT Gaming / Hive): el parche 1.27b lo sacó de fábrica, o WFE
-con `REMOVEMAPSIZELIMIT` (su "Unlock Map Size"). El perfil `WC3Revival` de
+con `REMOVEMAPSIZELIMIT` (su "Unlock Map Size"). El perfil `GryzWC3` de
 `make-wfe-profile.py` trae `REMOVEMAPSIZELIMIT = yes` — inofensivo para los
 mapas chicos, habilita los grandes. (El binario de WFE no viaja en el kit,
 pero el kit trae `extras/WFE/INSTALAR-WFE.bat`, que lo baja verificado del

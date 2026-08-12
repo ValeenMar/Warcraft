@@ -64,7 +64,7 @@ Dos herramientas libres, verificadas vigentes en 2026:
 También sirven los editores de gateway clásicos ("BNGatewayEditor", "W3
 Gateway Editor"). Datos a cargar:
 
-- **Nombre**: WC3 Revival (o el `WC3_REALM_NAME` que quede en el .env)
+- **Nombre**: Gryz WC3 (o el `WC3_REALM_NAME` que quede en el .env)
 - **Dirección**: la IP pública del VPS
 - **Puerto**: 6112
 - **Timezone**: -3 (Argentina) — solo afecta cómo se muestra la hora

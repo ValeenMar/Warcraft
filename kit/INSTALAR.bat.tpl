@@ -9,7 +9,7 @@ set SERVER_TZ=${WC3_KIT_GATEWAY_TZ}
 
 echo.
 echo   ================================================
-echo      WC3 REVIVAL - Instalador del cliente
+echo      GRYZ WC3 - Instalador del cliente
 echo   ================================================
 echo.
 echo   Este es el unico instalador que necesitas:

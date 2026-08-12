@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Avisos livianos de WC3 Revival hacia Discord usando solo stdlib.
+"""Avisos livianos de Gryz WC3 hacia Discord usando solo stdlib.
 
 Modos:
   follow                 sigue los journals de Aura y avisa lobbies/arranques
@@ -167,7 +167,7 @@ def discord_request(
         headers={
             "Authorization": f"Bot {token}",
             "Content-Type": "application/json",
-            "User-Agent": "WC3-Revival-Discord/1.0",
+            "User-Agent": "Gryz-WC3-Discord/1.0",
         },
     )
     for attempt in range(5):
@@ -721,7 +721,7 @@ def backup_ok() -> None:
     if cooldown_allows("backup-ok", 7 * 24 * 3600):
         post_message(
             "DISCORD_ESTADO_CHANNEL_ID",
-            "✅ Resumen semanal: el backup diario de WC3 Revival está funcionando.",
+            "✅ Resumen semanal: el backup diario de Gryz WC3 está funcionando.",
         )
     else:
         log("backup OK semanal ya informado; no envio otro")
@@ -744,9 +744,9 @@ def main(argv: list[str]) -> int:
     elif mode == "lobby-health":
         lobby_health()
     elif mode == "test-lobbies":
-        post_message("DISCORD_LOBBIES_CHANNEL_ID", "🧪 Prueba de avisos de WC3 Revival: #lobbies conectado.")
+        post_message("DISCORD_LOBBIES_CHANNEL_ID", "🧪 Prueba de avisos de Gryz WC3: #lobbies conectado.")
     elif mode == "test-estado":
-        post_message("DISCORD_ESTADO_CHANNEL_ID", "🧪 Prueba de avisos de WC3 Revival: #estado conectado.")
+        post_message("DISCORD_ESTADO_CHANNEL_ID", "🧪 Prueba de avisos de Gryz WC3: #estado conectado.")
     else:
         raise RuntimeError(f"modo o argumentos invalidos: {' '.join(argv[1:])}")
     return 0

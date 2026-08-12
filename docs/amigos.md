@@ -56,7 +56,7 @@ es un 1.27b genuino y no vas a poder entrar.
 
 ### El camino corto: el kit
 
-Hay un kit (`WC3-Revival-Kit.zip`) que hace todo desde un único doble clic:
+Hay un kit (`Gryz-WC3-Kit.zip`) que hace todo desde un único doble clic:
 `INSTALAR.bat` instala la base si falta, actualiza 1.27a a 1.27b si hace falta,
 copia el loader y **agrega el servidor a la lista de gateways del juego**,
 sin tocar ningún archivo del juego y sin romper nada más. Pedíselo al admin.
@@ -192,7 +192,7 @@ va o alguien deja de estar listo, la cuenta se cancela.
 
 | Síntoma | Causa y solución |
 |---|---|
-| `Unable to connect to Battle.net...` | O el juego se abrió sin el loader (usá `w3l.exe`, paso 3), o el gateway elegido no es el nuestro. Con el kit: que arriba diga **WC3 Revival**. A mano: que diga **Northrend (Europe)** y que la línea del `hosts` esté puesta (paso 2). |
+| `Unable to connect to Battle.net...` | O el juego se abrió sin el loader (usá `w3l.exe`, paso 3), o el gateway elegido no es el nuestro. Con el kit: que arriba diga **Gryz WC3**. A mano: que diga **Northrend (Europe)** y que la línea del `hosts` esté puesta (paso 2). |
 | Veo la partida en la lista pero no puedo entrar | Versión distinta del juego (los 515.048 bytes del paso 1) o versión distinta del mapa. Los mapas del servidor llevan una preview propia inyectada, así que el archivo tiene que ser exactamente el nuestro: borrá el que tengas y dejá que te lo mande el bot. |
 | Al entrar a una partida, `...could not be found` o vuelve a la lista | Ese lobby ya no existe (la partida arrancó, o venció por tiempo). Esperá su recreación automática y verificá por susurro con `!getgames`. |
 | El juego crashea (típico en Windows 11 24H2) | [DDrawCompat](https://github.com/narzoul/DDrawCompat/releases): copiar su `ddraw.dll` a la carpeta del juego, junto al ejecutable. No hay que configurar nada. |
