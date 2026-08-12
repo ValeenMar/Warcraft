@@ -19,6 +19,9 @@ install -m 644 "${REPO_DIR}/config/journald/60-wc3-limit.conf" \
 log "instalando rotacion de bnetd.log"
 install -m 644 "${REPO_DIR}/config/logrotate/wc3-pvpgn" \
     /etc/logrotate.d/wc3-pvpgn
+# El repo puede haberse empaquetado desde Windows. logrotate, a diferencia de
+# bash, rechaza los CRLF como parte del nombre de archivo/las directivas.
+sed -i 's/\r$//' /etc/logrotate.d/wc3-pvpgn
 logrotate --debug /etc/logrotate.d/wc3-pvpgn >/dev/null
 
 systemctl restart systemd-journald
