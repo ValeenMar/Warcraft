@@ -2,7 +2,8 @@ param([switch]$NoAbrir)
 
 $ErrorActionPreference = 'Stop'
 
-$Servidor = 'root@64.176.24.103'
+$Servidor = 'root@149.50.150.64'
+$PuertoSsh = 5246
 $PuertoLocal = 18322
 $PuertoRemoto = 8322
 $Url = "http://127.0.0.1:$PuertoLocal/"
@@ -46,6 +47,7 @@ if (-not (Test-Path -LiteralPath $Ssh)) {
 if (-not (Test-PuertoLocal)) {
     $argumentos = @(
         '-N', '-T',
+        '-p', $PuertoSsh,
         '-o', 'BatchMode=yes',
         '-o', 'StrictHostKeyChecking=yes',
         '-o', 'ExitOnForwardFailure=yes',
@@ -66,7 +68,7 @@ if (-not (Test-PuertoLocal)) {
 
 if (-not (Test-Panel)) {
     Write-Host 'El panel no respondio; intento recuperarlo...' -ForegroundColor Yellow
-    & $Ssh -o BatchMode=yes -o StrictHostKeyChecking=yes $Servidor `
+    & $Ssh -p $PuertoSsh -o BatchMode=yes -o StrictHostKeyChecking=yes $Servidor `
         'systemctl restart wc3-dashboard'
     if ($LASTEXITCODE -ne 0) {
         throw 'No pude reiniciar wc3-dashboard por SSH.'

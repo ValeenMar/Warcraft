@@ -118,13 +118,37 @@ class TestLobbyHealth(unittest.TestCase):
         event = '{"MESSAGE":"Creating public game [FOC]","__MONOTONIC_TIMESTAMP":"150"}\n'
         results = [self.result("200\n"), self.result("100\n"), self.result(event)]
         with mock.patch.object(avisos.subprocess, "run", side_effect=results):
-            self.assertFalse(avisos.recent_lobby("wc3-hostbot@9.service"))
+            self.assertFalse(avisos.lobby_published_since_start("wc3-hostbot@9.service"))
 
-    def test_acepta_lobby_posterior_a_pvpgn_y_al_bot(self):
+    def test_acepta_lobby_antiguo_posterior_a_pvpgn_y_al_bot(self):
         event = '{"MESSAGE":"Creating public game [FOC]","__MONOTONIC_TIMESTAMP":"201"}\n'
         results = [self.result("200\n"), self.result("100\n"), self.result(event)]
-        with mock.patch.object(avisos.subprocess, "run", side_effect=results):
-            self.assertTrue(avisos.recent_lobby("wc3-hostbot@9.service"))
+        with mock.patch.object(avisos.subprocess, "run", side_effect=results) as run:
+            self.assertTrue(avisos.lobby_published_since_start("wc3-hostbot@9.service"))
+        self.assertNotIn("--since", run.call_args_list[-1].args[0])
+
+    def test_red_sana_exige_dos_listeners_y_conexion_pvpgn(self):
+        sockets = {
+            ("0A", 6113, 0),
+            ("0A", 6133, 0),
+            ("01", 50000, 6112),
+        }
+        with mock.patch.object(avisos, "unit_main_pid", return_value=123), \
+                mock.patch.object(avisos, "bot_ports", return_value=(6113, 6133)), \
+                mock.patch.object(avisos, "tcp_sockets_for_pid", return_value=sockets):
+            self.assertEqual(
+                avisos.bot_network_health("wc3-hostbot@1.service", 1),
+                (True, ""),
+            )
+
+    def test_red_rechaza_bot_sin_conexion_pvpgn(self):
+        sockets = {("0A", 6113, 0), ("0A", 6133, 0)}
+        with mock.patch.object(avisos, "unit_main_pid", return_value=123), \
+                mock.patch.object(avisos, "bot_ports", return_value=(6113, 6133)), \
+                mock.patch.object(avisos, "tcp_sockets_for_pid", return_value=sockets):
+            healthy, reason = avisos.bot_network_health("wc3-hostbot@1.service", 1)
+        self.assertFalse(healthy)
+        self.assertIn("PvPGN", reason)
 
 
 if __name__ == "__main__":

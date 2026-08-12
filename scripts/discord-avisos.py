@@ -26,7 +26,6 @@ import time
 import urllib.error
 import urllib.request
 from contextlib import contextmanager
-from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Callable, Iterator
 
@@ -41,6 +40,10 @@ STATE_DIR = Path(os.environ.get("WC3_DISCORD_STATE", "/var/lib/wc3-discord"))
 REPO_DIR = Path(os.environ.get("WC3_REPO_DIR", "/opt/wc3-repo"))
 DISCORD_API = "https://discord.com/api/v10"
 INSTANCE_COUNT = 9
+PVPGN_PORT = int(os.environ.get("WC3_PVPGN_PORT", "6112"))
+HOSTBOT_INSTANCES_DIR = Path(
+    os.environ.get("WC3_HOSTBOT_INSTANCES_DIR", "/opt/wc3/hostbot/instances")
+)
 NOTICE_COOLDOWN = 600
 GLOBAL_NOTICE_COOLDOWN = 120
 FAILURE_COOLDOWN = 600
@@ -508,18 +511,15 @@ def active_enter_monotonic(unit: str) -> int:
         return 0
 
 
-def recent_lobby(unit: str, minutes: int = 30) -> bool:
+def lobby_published_since_start(unit: str) -> bool:
     # Un lobby anterior al ultimo arranque de PvPGN ya no existe en la lista
     # del servidor aunque Aura siga active. Exigimos un Creating posterior al
-    # arranque mas nuevo entre PvPGN y el propio bot.
+    # arranque mas nuevo entre PvPGN y el propio bot. No usamos una ventana de
+    # tiempo: un lobby sano puede permanecer abierto mucho mas de 30 minutos.
     threshold = max(active_enter_monotonic("pvpgn.service"),
                     active_enter_monotonic(unit))
-    since = (datetime.now().astimezone() - timedelta(minutes=minutes)).strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
     result = subprocess.run(
-        ["journalctl", "-b", "-u", unit, "--since", since,
-         "--no-pager", "-o", "json"],
+        ["journalctl", "-b", "-u", unit, "--no-pager", "-o", "json"],
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
@@ -535,6 +535,97 @@ def recent_lobby(unit: str, minutes: int = 30) -> bool:
         if monotonic >= threshold and "creating public game" in message.casefold():
             return True
     return False
+
+
+def unit_main_pid(unit: str) -> int:
+    result = subprocess.run(
+        ["systemctl", "show", unit, "--property=MainPID", "--value"],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    try:
+        return int(result.stdout.strip())
+    except ValueError:
+        return 0
+
+
+def bot_ports(number: int) -> tuple[int, int]:
+    """Devuelve los puertos host/reconnect sin leer ni devolver credenciales."""
+    values: dict[str, str] = {}
+    path = HOSTBOT_INSTANCES_DIR / str(number) / "aura.cfg"
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return 0, 0
+    for raw in lines:
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = (part.strip() for part in line.split("=", 1))
+        if key in {"bot_hostport", "bot_reconnectport"}:
+            values[key] = value
+    try:
+        return int(values.get("bot_hostport", "0")), int(
+            values.get("bot_reconnectport", "0")
+        )
+    except ValueError:
+        return 0, 0
+
+
+def tcp_sockets_for_pid(pid: int) -> set[tuple[str, int, int]]:
+    """Retorna (estado, puerto local, puerto remoto) de un proceso Linux."""
+    inodes: set[str] = set()
+    try:
+        descriptors = (Path("/proc") / str(pid) / "fd").iterdir()
+        for descriptor in descriptors:
+            try:
+                target = os.readlink(descriptor)
+            except OSError:
+                continue
+            match = re.fullmatch(r"socket:\[(\d+)\]", target)
+            if match:
+                inodes.add(match.group(1))
+    except OSError:
+        return set()
+
+    sockets: set[tuple[str, int, int]] = set()
+    for table in (Path("/proc/net/tcp"), Path("/proc/net/tcp6")):
+        try:
+            rows = table.read_text(encoding="ascii", errors="replace").splitlines()[1:]
+        except OSError:
+            continue
+        for row in rows:
+            fields = row.split()
+            if len(fields) < 10 or fields[9] not in inodes:
+                continue
+            try:
+                local_port = int(fields[1].rsplit(":", 1)[1], 16)
+                remote_port = int(fields[2].rsplit(":", 1)[1], 16)
+            except (IndexError, ValueError):
+                continue
+            sockets.add((fields[3], local_port, remote_port))
+    return sockets
+
+
+def bot_network_health(unit: str, number: int) -> tuple[bool, str]:
+    """Comprueba proceso, ambos listeners y sesion BNCS de una instancia."""
+    pid = unit_main_pid(unit)
+    if pid <= 0:
+        return False, "no tiene proceso principal"
+    host_port, reconnect_port = bot_ports(number)
+    if not host_port or not reconnect_port:
+        return False, "no pude leer sus puertos configurados"
+    sockets = tcp_sockets_for_pid(pid)
+    if ("0A", host_port, 0) not in sockets:
+        return False, f"el puerto de partida {host_port} no está escuchando"
+    if ("0A", reconnect_port, 0) not in sockets:
+        return False, f"el puerto de reconexión {reconnect_port} no está escuchando"
+    if not any(state == "01" and remote == PVPGN_PORT
+               for state, _local, remote in sockets):
+        return False, "no está conectado a PvPGN"
+    return True, ""
 
 
 def record_health(unit: str, healthy: bool) -> bool | None:
@@ -554,15 +645,23 @@ def lobby_health() -> None:
         active = subprocess.run(
             ["systemctl", "is-active", "--quiet", unit], check=False
         ).returncode == 0
-        healthy = active and recent_lobby(unit)
+        if not active:
+            healthy = False
+            reason = "el servicio no está active"
+        else:
+            network_ok, network_reason = bot_network_health(unit, number)
+            published = lobby_published_since_start(unit)
+            healthy = network_ok and published
+            reason = network_reason if not network_ok else (
+                "no publicó un lobby después del último arranque"
+            )
         previous = record_health(unit, healthy)
         if not healthy:
             allowed = cooldown_allows(f"health:{unit}", 3600)
             if previous is not False or allowed:
-                reason = "no está active" if not active else "no publicó lobby en 30 minutos"
                 post_message(
                     "DISCORD_ESTADO_CHANNEL_ID",
-                    f"🚨 **{unit}** está vivo pero no hostea correctamente: {reason}.",
+                    f"🚨 **{unit}** no hostea correctamente: {reason}.",
                 )
         elif previous is False:
             post_message(
