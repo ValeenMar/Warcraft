@@ -1,7 +1,7 @@
 # wc3-classic-revival
 
 Infraestructura completa para un **servidor privado de Warcraft III: The
-Frozen Throne 1.27a** orientado a mapas custom clásicos (2004-2010):
+Frozen Throne 1.27b** orientado a mapas custom clásicos (2004-2010):
 [PvPGN](https://github.com/pvpgn/pvpgn-server) como emulador de Battle.net +
 [Aura](https://github.com/Josko/aura-bot) como hostbot de partidas.
 **Instalación nativa sobre Ubuntu 24.04 con systemd, sin Docker** (el porqué:
@@ -24,7 +24,7 @@ cp .env.example .env && nano .env              # IP publica, passwords
 make build                                     # compila PvPGN + Aura
 sudo ./install/30-setup-mysql.sh               # base de datos
 make render-config                             # templates + .env -> configs
-# copiar war3.exe/Storm.dll/Game.dll/War3Patch.mpq (1.27a) a /opt/wc3/mpq/
+# copiar war3.exe/Storm.dll/Game.dll/War3Patch.mpq (1.27b) a /opt/wc3/mpq/
 sudo systemctl enable --now pvpgn wc3-hostbot@1
 ```
 
@@ -54,7 +54,8 @@ El paso a paso real, con criterios de "listo" por fase, está en
 | `scripts/validate.sh` | valida TODO en seco; tiene que estar en verde |
 | `docs/conseguir-el-juego.md` | cómo llegar a una instalación limpia del juego, y errores típicos al parchear |
 | `docs/presentacion.md` | nombres de lobby con color y previews propias de los mapas |
-| `docs/mapas-grandes.md` | cómo jugar mapas > 8 MiB (FOCS) con WFE Unlock Map Size |
+| `docs/mapas-grandes.md` | cómo distribuir y probar mapas de hasta 128 MiB en 1.27b |
+| `docs/migracion-1.27b.md` | corte, verificación y rollback desde el servidor 1.27a |
 | `docs/` | versión del juego y return bug, mapas, clientes, VPS, operación, Docker futuro |
 
 ## Layout en el servidor
@@ -70,5 +71,6 @@ Todo bajo `/opt/wc3/`, dueño el usuario de sistema `wc3` (sin shell):
   (arranca y lee config). 
 - **Validado en seco**: scripts (shellcheck), unidades (systemd-analyze),
   registry (schema), templates (render completo), inspect-map (6 tests).
-- **Pendiente de juego real**: login del bot 1.27a, MySQL en runtime,
-  validación de mapas — lista priorizada al final de `DECISIONES.md`.
+- **Verificado en producción (2026-08-10)**: PvPGN y ocho hostbots Aura
+  autenticaron y recrearon sus lobbies usando los archivos oficiales 1.27b.
+  La novena instancia, Fight of Characters, queda lista al crear `hostbot9`.

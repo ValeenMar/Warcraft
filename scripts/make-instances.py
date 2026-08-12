@@ -42,11 +42,11 @@ REPO_DIR = Path(__file__).resolve().parent.parent
 LOBBIES_YAML = REPO_DIR / "maps" / "lobbies.yaml"
 ENV_DIR = REPO_DIR / "config" / "hostbot"
 
-# Rango de puertos: tiene que caer dentro de WC3_BOT_PORT_RANGE (6113:6140),
+# Rango de puertos: tiene que caer dentro de WC3_BOT_PORT_RANGE (6113:6141),
 # que es lo que abre ufw en install/00-bootstrap-vps.sh.
 PUERTO_HOST_BASE = 6113
 PUERTO_RECONNECT_BASE = 6133
-MAX_INSTANCIAS = 20  # 6113+20 = 6133, que es donde arrancan los de reconnect
+MAX_INSTANCIAS = 9  # host 6113-6121; reconnect 6133-6141
 
 LIMITE_NOMBRE = 31  # aura.cpp:879
 LIMITE_VIRTUALHOST = 15

@@ -50,7 +50,7 @@ bot_virtualhostname = ${WC3_BOT_VIRTUALHOST}
 bot_autolock = 0
 
 # 1 = los jugadores pueden bajar el mapa desde el bot (clave para mapas
-# custom; el techo duro de 1.26a son 8 MiB y arriba de ~2-3 MB la
+# custom; el techo duro de 1.27b son 128 MiB y arriba de ~2-3 MB la
 # transferencia es impracticable, ver docs/version-juego.md).
 bot_allowdownloads = 1
 bot_maxdownloaders = 3
@@ -95,7 +95,7 @@ bot_gameoverplayernumber = 1
 
 # Version de W3 para el broadcast LAN. 27 = 1.27x.
 # TODO(verificar): el sample del upstream trae 29 (1.29); confirmar con el
-# juego real que este build de Aura acepta clientes 1.27a con este valor.
+# juego real que este build de Aura acepta clientes 1.27b con este valor.
 lan_war3version = ${WC3_WAR3_VERSION}
 
 udp_broadcasttarget =
@@ -140,10 +140,14 @@ bnet_serveralias = ${WC3_REALM_NAME}
 bnet_cdkeyroc = FFFFFFFFFFFFFFFFFFFFFFFFFF
 bnet_cdkeytft = FFFFFFFFFFFFFFFFFFFFFFFFFF
 
-# NO usar "system": en Linux Aura cae al valor 1031 (aleman) y el servidor le
-# contesta todo en ese idioma, lo que ensucia el log del bot. Verificado en el
-# servidor real el 2026-08-08. 1033 = en-US. Para es-AR seria 11274.
+# NO usar "system": en Linux Aura cae al valor 1031 (aleman). Ademas Aura
+# usa DEU como countryabbrev por defecto y PvPGN prioriza ese dato para elegir
+# el idioma. El spoofcheck automatico de Aura reconoce el /whois en ingles, por
+# eso fijamos USA/United States junto con 1033. Para es-AR el locale seria
+# 11274, pero no debe usarse en las cuentas bot sin ampliar primero el parser.
 bnet_locale = ${WC3_BOT_LOCALE}
+bnet_countryabbrev = USA
+bnet_country = United States
 
 # Cuenta del bot en el PvPGN. Crearla antes con el cliente o via bnetd
 # (new_accounts = true) — ver RUNBOOK fase 1.
@@ -159,10 +163,10 @@ bnet_commandtrigger = !
 
 # --- Seccion PvPGN custom (obligatoria contra un PvPGN, no Blizzard) -------
 # TODO(verificar): estos cuatro valores dependen del par cliente/servidor real
-# y solo se pueden confirmar conectando el bot a un PvPGN con clientes 1.27a.
+# y solo se pueden confirmar conectando el bot a un PvPGN con clientes 1.27b.
 # war3version 27 = 1.27x. exeversion/exeversionhash: si se dejan vacios, Aura
 # intenta calcularlos con bncsutil a partir de los archivos de bot_war3path
-# (war3.exe/storm.dll/game.dll de 1.27a). passwordhashtype pvpgn es lo
+# (war3.exe/storm.dll/game.dll de 1.27b). passwordhashtype pvpgn es lo
 # documentado para servidores PvPGN en el propio sample.
 bnet_custom_war3version = ${WC3_WAR3_VERSION}
 bnet_custom_exeversion =
