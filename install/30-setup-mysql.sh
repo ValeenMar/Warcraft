@@ -45,7 +45,20 @@ if [[ "${WC3_DB_PASS}" == *"'"* || "${WC3_DB_PASS}" == *"\\"* ]]; then
     exit 1
 fi
 
+low_memory_mysql=0
+mem_kb="$(awk '/MemTotal/ {print $2}' /proc/meminfo)"
+if [[ "${mem_kb}" -lt 1500000 ]]; then
+    log "menos de 1.5 GB de RAM: aplicando perfil MySQL de bajo consumo"
+    install -o root -g root -m 0644 \
+        "${REPO_DIR}/config/mysql/90-wc3-low-memory.cnf" \
+        /etc/mysql/mysql.conf.d/90-wc3-low-memory.cnf
+    low_memory_mysql=1
+fi
+
 systemctl enable --now mysql
+if [[ "${low_memory_mysql}" -eq 1 ]]; then
+    systemctl restart mysql
+fi
 
 log "creando base ${WC3_DB_NAME} y usuario ${WC3_DB_USER} (si no existen)"
 mysql --user=root <<SQL
