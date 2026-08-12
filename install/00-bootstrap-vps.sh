@@ -15,6 +15,9 @@ ADMIN_USER="${1:-wc3admin}"
 TIMEZONE="${WC3_TIMEZONE:-America/Argentina/Buenos_Aires}"
 # Rango de puertos de los hostbots; mantener en sintonia con WC3_BOT_PORT_RANGE
 BOT_PORT_RANGE="${WC3_BOT_PORT_RANGE:-6113:6141}"
+# Algunos proveedores exponen un segundo puerto SSH dentro de la VM. Se pasa
+# al bootstrap para que UFW no corte la sesion al activarse.
+SSH_PORT="${WC3_SSH_PORT:-22}"
 
 log() { printf '[bootstrap] %s\n' "$*"; }
 
@@ -97,10 +100,13 @@ if [[ ! -s "/home/${ADMIN_USER}/.ssh/authorized_keys" ]]; then
 fi
 
 # --- Firewall ----------------------------------------------------------------
-log "configurando ufw (SSH, 6112/tcp, bots ${BOT_PORT_RANGE}/tcp)"
+log "configurando ufw (SSH 22/${SSH_PORT}, 6112/tcp, bots ${BOT_PORT_RANGE}/tcp)"
 ufw default deny incoming
 ufw default allow outgoing
 ufw allow OpenSSH
+if [[ "${SSH_PORT}" != "22" ]]; then
+    ufw allow "${SSH_PORT}/tcp" comment 'SSH alternativo'
+fi
 ufw allow 6112/tcp comment 'PvPGN bnetd'
 # 6200/tcp: w3route de PvPGN. address_translation.conf lo anuncia a los
 # clientes para las partidas PG/AT; anunciarlo con el puerto cerrado hace
