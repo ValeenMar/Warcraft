@@ -169,10 +169,24 @@ lobbies:
       shadow: "#160722"
       motif: swords
 
+  - id: x-hero-siege
+    match: ["X Hero Siege*", "X_Hero_Siege*"]
+    display_name: "|cFFFFCC00X Hero Siege 4.80"
+    plain_name: "X Hero Siege 4.80"
+    short_name: "XHero"
+    preview:
+      title: "X Hero Siege"
+      subtitle: "v4.80 - cooperativo"
+      bg_top: "#27320b"
+      bg_bottom: "#080b02"
+      accent: "#d8ef58"
+      shadow: "#151b05"
+      motif: swords
+
   - id: foc-96g03-es
     match: ["FOCS3*9.6G03*", "FOC*9.6G03*", "*Fight Of Characters*9.6G03*"]
     display_name: "|cFFFF8844Fight of Characters"
-    plain_name: "FOC 9.6G03 ES - PRUEBA"
+    plain_name: "FOC 9.6G03 [ESPANOL]"
     short_name: "FOC"
     preview:
       title: "FOC"
@@ -197,6 +211,20 @@ lobbies:
       accent: "#ffd23f"
       shadow: "#160722"
       motif: tower
+
+  - id: pokemon-defense
+    match: ["Pokemon Defense FINAL*", "PokemonDefense Final*"]
+    display_name: "|cFFFFCC00Pokemon Defense"
+    plain_name: "Pokemon Defense FINAL"
+    short_name: "Pokemon"
+    preview:
+      title: "Pokemon Defense"
+      subtitle: "FINAL - clasico de 2010"
+      bg_top: "#193760"
+      bg_bottom: "#050d18"
+      accent: "#ffdc3d"
+      shadow: "#07182b"
+      motif: bolt
 
   # -------------------------------------------------------------- default --
   # Ultimo entry: matchea cualquier cosa. Sirve para que un mapa nuevo tenga

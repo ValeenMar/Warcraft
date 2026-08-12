@@ -164,14 +164,14 @@ maps:
   - name: Anime Fight
     aliases: [Anime Fight Arena, AF]
     category: aos
-    target_version: "Anime Fight Arena AI"
+    target_version: "Beta 1.39b"
     versions_known: ["Anime Fight Arena AI", "Beta 1.39o9", "Beta 1.39b"]
     size_mb: 5.96
     slots: 10
     teams: null
     min_patch: "1.24"
     return_bug_risk: verde
-    status: descargado
+    status: hosteado
     notes: >-
       El unico del conjunto que es post-1.24 es "Anime Fight Arena AI" de
       PrideTeam. El linaje original (Anime Fight Beta 1.39o9 de Spathis, ene
@@ -179,6 +179,8 @@ maps:
       OJO: "Beta 1.39b" es la que hostea la instancia 2 (maps/lobbies.yaml);
       es del linaje pre-1.24, o sea que arrastra el mismo riesgo — pasarla
       por la prueba de carga en 1.27a antes de darla por buena.
+      "Anime Fight Arena AI" dejo el autohost el 2026-08-12 por ser la entrada
+      menos popular y redundante del conjunto; Beta 1.39b permanece publicada.
     source_url: https://www.epicwar.com/maps/152876/
 
   - name: Anime Character Fight
@@ -191,15 +193,13 @@ maps:
     teams: 2
     min_patch: null
     return_bug_risk: amarillo
-    status: descargado
+    status: archivado
     notes: >-
-      Arena de 2 equipos que se disfruta de a dos; entro al catalogo el
-      2026-08-10 reemplazando a DBZ Tribute en la instancia 8 (DBZ pide 8
-      jugadores para tener sentido). El .w3x esta cargado en el server
-      (por eso descargado), pero la fecha de release y el formato de editor
-      no estan verificados: correr make map-scan para completar size/slots
-      y probar carga en 1.27a antes de marcar validado.
-    source_url: null
+      Arena de 2 equipos. Fue archivada el 2026-08-12 al limpiar el autohost:
+      tenia menos descargas y peor proporcion de votos que X Hero Siege 4.80,
+      que la reemplazo en la instancia 8. El archivo sigue recuperable en los
+      backups de mapas del VPS y en _mapas_archivados del cliente administrador.
+    source_url: https://www.epicwar.com/maps/325461/
 
   - name: X Hero Siege
     aliases: [X Hero Siege 4.80, XHS]
@@ -211,13 +211,15 @@ maps:
     teams: null
     min_patch: "1.24"
     return_bug_risk: verde
-    status: descargado
+    status: hosteado
     notes: >-
       Version 4.80 oficial de Sogat, agosto de 2010: formato 1.24a-1.28c,
       118k descargas y texto ingles. Se eligio sobre la 3.33 (enero 2009,
       pre-1.24) para conservar la jugabilidad clasica sin el riesgo del
       return bug. Archivo verificado: 4.766.066 B, SHA-256
       DE41A82C38A28A1F039B5AB19A0622A249090FD12D225C3BAE54AFBBF3777886.
+      Publicado por hostbot8 el 2026-08-12; Aura calculo CRC/SHA1 y abrio el
+      lobby sin reinicios.
     source_url: https://www.epicwar.com/maps/144663/
 
   - name: Custom Hero Arena
@@ -478,10 +480,10 @@ maps:
       Archivo real verificado en el VPS el 2026-08-11: 18.658.023 B,
       SHA-256 5951ba05701723f7ce68bf8a2bda00a48d47c8a977c0f2bb849890d5b9b9fa4f.
       El header declara Fight Of Characters 9.6G03 y 10 jugadores. El MPQ
-      esta protegido y el inspector no puede descifrarlo. Falta lobby sin
-      error, entrada y partida con dos clientes 1.27b. URL de origen: NO
-      VERIFICADA.
-    source_url: null
+      esta protegido y el inspector no puede descifrarlo. Lobby publicado sin
+      error como "FOC 9.6G03 [ESPANOL]" el 2026-08-12. Falta entrada y partida
+      con dos clientes 1.27b para cerrar la validacion jugable.
+    source_url: https://www.epicwar.com/maps/332392/
 
   # ------------------------------------------------------------------- TD ---
   - name: Marvel TD
@@ -519,7 +521,7 @@ maps:
     teams: null
     min_patch: "1.24"
     return_bug_risk: verde
-    status: descargado
+    status: hosteado
     notes: >-
       Release oficial de FeverMore del 5 de noviembre de 2010: formato
       1.24a-1.28c y mas de un millon de descargas. Es la adicion que mejor
@@ -527,4 +529,6 @@ maps:
       el limite nativo de 8 MiB por 522.419 B, aunque conviene repartirla en
       el kit. Archivo verificado: 7.866.189 B, SHA-256
       96F431A97A40BDAFA5A8F376BB104EEB27E839C03AABD2280CBF720C0FC8AE5C.
+      Publicado por hostbot1 el 2026-08-12; Aura calculo CRC/SHA1 y abrio el
+      lobby sin reinicios.
     source_url: https://www.epicwar.com/maps/153487/
