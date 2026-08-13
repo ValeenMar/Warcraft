@@ -2,15 +2,14 @@
 
 Investigado y verificado en vivo el **2026-08-08**.
 
-**La versión objetivo del proyecto es 1.27a** (ver docs/version-juego.md): es
-la que entrega hoy el instalador oficial de Blizzard, no necesita parcheo, y
-PvPGN la soporta de fábrica. Este documento cubre también 1.26a porque el
-parche oficial sigue disponible y sirve si se quiere esa versión.
+**La versión objetivo del proyecto es 1.27b** (ver docs/version-juego.md).
+El instalador Legacy de Blizzard deja una base 1.27a y después se aplica el
+último parche standalone oficial, 1.27b. PvPGN reconoce ambas versiones de
+fábrica, pero el servidor y todos los jugadores deben quedar en 1.27b.
 
-**Verificación rápida de una instalación 1.27a genuina**: `war3.exe` tiene que
-pesar exactamente **514.536 bytes**, con fecha 05/08/2016. (Para 1.26a son
-471.040 bytes, 18/03/2011.) Los tamaños salen del `versioncheck.json` del
-propio PvPGN.
+**Verificación rápida de una instalación 1.27b genuina**: `war3.exe` tiene que
+pesar exactamente **515.048 bytes**, con fecha 09/12/2016 y versión
+`1.27.1.7085`. Los tamaños salen del `versioncheck.json` de PvPGN.
 
 ## Lo que cambió (y hay que saber antes de empezar)
 
@@ -36,6 +35,8 @@ no cubre ese hostname, así que `https://` falla la verificación.
 
 | Archivo | URL | Tamaño |
 |---|---|---|
+| TFT 1.27b castellano | `http://ftp.blizzard.com/pub/war3x/patches/pc/War3TFT_127b_Castellano.exe` | 185.513.432 B |
+| TFT 1.27b inglés | `http://ftp.blizzard.com/pub/war3x/patches/pc/War3TFT_127b_English.exe` | 84.182.400 B |
 | TFT 1.26a castellano | `http://ftp.blizzard.com/pub/war3x/patches/pc/War3TFT_126a_Castellano.exe` | 66.245.887 B |
 | TFT 1.26a inglés | `http://ftp.blizzard.com/pub/war3x/patches/pc/War3TFT_126a_English.exe` | 58.718.061 B |
 | RoC 1.26a castellano | `http://ftp.blizzard.com/pub/war3/patches/pc/War3ROC_126a_Castellano.exe` | 25.044.132 B |
@@ -50,7 +51,7 @@ desde cualquier versión anterior, pero **se niega a instalarse sobre 1.27+**.
 ## Ruta A (recomendada): tenés los CDs
 
 1. Instalar **RoC desde el CD**, después **TFT desde el CD**, con tus keys.
-2. Bajar el parche 1.26a de la tabla de arriba y correrlo **como
+2. Bajar el parche TFT 1.27b de la tabla de arriba y correrlo **como
    administrador**. Elegí el idioma que coincida con tus CDs.
 3. Copiar los 4 archivos al server (ver abajo).
 4. Para jugar: **solo el loader o el `.reg` de gateway** (ver docs/clientes.md).
@@ -64,19 +65,11 @@ https://us.battle.net/download/getLegacy?product=WAR3&locale=esES&os=WIN   (Reig
 https://us.battle.net/download/getLegacy?product=W3XP&locale=esES&os=WIN   (Frozen Throne)
 ```
 
-La descarga es anónima pero **el instalador pide la CD key de 26 dígitos**
-(la sacás de tu cuenta Battle.net). Te deja en **1.27a v2**.
-
-**Acá está el escalón**: 1.27a no baja a 1.26a con el parche standalone. Dos
-salidas:
-
-- **Warcraft 3 Version Switcher** (gaming-tools.com), guardando el `.exe` del
-  parche 1.26a oficial en su carpeta `wvs`. Es la ruta documentada, aunque la
-  herramienta está vieja y con errores.
-- **Quedarse en 1.27a**, que es prácticamente 1.26a recompilado y anda mejor
-  en Windows moderno (abandonó Direct3D 8). Varios servidores PvPGN lo
-  soportan. Si vas por acá, `WC3_WAR3_VERSION=27` en el `.env` y hay que
-  reverificar el versioncheck de PvPGN.
+La descarga es anónima pero **el instalador pide la CD key de 26 dígitos**.
+Deja una base **1.27a v2**. Después hace falta el parche TFT 1.27b del mismo
+idioma. El `INSTALAR.bat` del kit llama automáticamente a
+`INSTALAR-JUEGO.bat`: descarga ambos instaladores y el actualizador, verifica
+la firma digital de Blizzard y comprueba el tamaño final de `war3.exe`.
 
 ## Ruta C: no tenés ni los CDs ni licencia en Battle.net
 
@@ -129,7 +122,7 @@ Van a `/opt/wc3/mpq/` en el VPS (ver RUNBOOK fase 1). El bot **no ejecuta el
 juego**: solo lee estos archivos para calcular hashes de mapas.
 
 **Regla de oro**: los 4 archivos tienen que ser de la **misma versión que
-usan los jugadores**. Si el server es 1.27a, archivos de 1.27a. Mezclar
+usan los jugadores**. Si el server es 1.27b, archivos de 1.27b. Mezclar
 versiones rompe los hashes y nadie puede entrar a las partidas.
 
 **Mayúsculas: importan en Linux, y no de forma uniforme.** Verificado leyendo
@@ -143,7 +136,7 @@ el código de Aura (`src/bncsutilinterface.cpp` y `src/aura.cpp`):
   extracción de `common.j` y `blizzard.j` falla en silencio y el bot no puede
   calcular los CRC de los mapas.
 - Detalle de versión: a partir de `war3version >= 28` Aura busca `War3.mpq` en
-  vez de `War3Patch.mpq`. Con nuestro 1.27a corresponde `War3Patch.mpq`.
+  vez de `War3Patch.mpq`. Con nuestro 1.27b corresponde `War3Patch.mpq`.
 
 (La ruta de `bot_war3path` sí se normaliza sola: Aura le agrega la barra final
 con `AddPathSeparator`, así que da igual escribirla con o sin `/` al final.)

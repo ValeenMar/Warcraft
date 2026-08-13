@@ -1,0 +1,19 @@
+[Unit]
+Description=Backup verificado de PvPGN y hostbots WC3
+After=mysql.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/opt/wc3/dashboard.env
+ExecStart=/usr/bin/bash -c 'exec "${DASH_REPO_DIR:?falta DASH_REPO_DIR}/scripts/backup.sh"'
+User=root
+Group=root
+UMask=0077
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/opt/wc3/backups

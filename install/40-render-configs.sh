@@ -24,6 +24,8 @@ if [[ ! -f "${ENV_FILE}" ]]; then
     echo "Falta ${ENV_FILE}. Copia .env.example a .env y completalo." >&2
     exit 1
 fi
+# El .env tiene contraseñas; un cp normal lo deja 644 (legible por cualquiera)
+chmod 600 "${ENV_FILE}"
 
 # Cargar .env exportando todo (envsubst solo ve variables exportadas)
 set -a
@@ -41,10 +43,21 @@ source "${ENV_FILE}"
 WC3_BOT_AUTOHOSTNAME="${WC3_BOT_AUTOHOSTNAME:-}"
 if [[ -z "${WC3_BOT_AUTOHOSTOWNER:-}" ]]; then
     # Dueno de las partidas que crea el autohost: el primer admin de la lista.
-    WC3_BOT_AUTOHOSTOWNER="${WC3_BOT_ROOTADMINS%%,*}"
+    # WC3_BOT_ROOTADMINS es separada por ESPACIOS (asi la tokeniza Aura), por
+    # eso se corta en el primer espacio; y con default, para que un .env de
+    # antes de que existiera la variable no aborte con "unbound variable".
+    admins="${WC3_BOT_ROOTADMINS:-admin}"
+    WC3_BOT_AUTOHOSTOWNER="${admins%% *}"
     log "WC3_BOT_AUTOHOSTOWNER no esta en .env: uso '${WC3_BOT_AUTOHOSTOWNER}'"
 fi
 set +a
+
+# Con la contraseña del bot en CAMBIAME el render "funciona" pero los bots
+# fallan el login despues, sin pista de por que. Mejor cortar aca.
+if [[ "${WC3_BOT_PASSWORD:-}" == "CAMBIAME" ]]; then
+    echo "WC3_BOT_PASSWORD sigue en CAMBIAME en .env: los bots no van a poder loguearse." >&2
+    exit 1
+fi
 
 # Whitelist para envsubst: SOLO variables WC3_*. Asi un ${prefix} legitimo de
 # un conf de PvPGN (p. ej. sql_DB_layout.conf) jamas se pisa por accidente.
@@ -85,8 +98,11 @@ render() {
     fi
 
     if [[ -f "${dest}" ]]; then
-        install -d "${BACKUP_DIR}/${STAMP}"
-        cp -a "${dest}" "${BACKUP_DIR}/${STAMP}/$(basename "${dest}")"
+        # Se preserva la ruta completa, no solo el basename: en un mismo run
+        # se renderizan ~20 w3motd.txt (uno por locale de i18n) y con basename
+        # todos colisionarian en el mismo archivo de backup.
+        install -d "${BACKUP_DIR}/${STAMP}/$(dirname "${dest}")"
+        cp -a "${dest}" "${BACKUP_DIR}/${STAMP}${dest}"
     fi
     install -m 640 -o wc3 -g wc3 "${tmp}" "${dest}"
     rm -f "${tmp}"
@@ -114,27 +130,41 @@ for motd in /opt/wc3/pvpgn/etc/pvpgn/i18n/w3motd.txt \
     render "${REPO_DIR}/config/pvpgn/w3motd.txt.tpl" "${motd}"
 done
 
-# El banner en si: lo dibuja make-banner.py (necesita Pillow, que vive en el
-# venv). Si falta, no es fatal: queda el banner default de PvPGN.
-# Si dejaste tu propio diseno en config/pvpgn/banner.png, gana ese; si no, se
-# dibuja uno con el nombre del realm. En los dos casos pasa por make-banner.py,
-# que lo lleva a 468x60 RGB sin alfa, que es lo que el cliente espera.
+# La columna grande "Battle.net News" viene de news.txt. Igual que el MOTD,
+# existe una copia por locale; si no se pisan todas, cada cliente recibe un
+# contenido distinto. El cliente cachea las noticias, pero una entrada con
+# fecha nueva aparece arriba sin tener que borrar el historial anterior.
+for news in /opt/wc3/pvpgn/etc/pvpgn/i18n/news.txt \
+            /opt/wc3/pvpgn/etc/pvpgn/i18n/*/news.txt; do
+    [[ -f "${news}" ]] || continue
+    render "${REPO_DIR}/config/pvpgn/news.txt.tpl" "${news}"
+done
+
+# Los dos banners: Warcraft III siempre manda prev_ad_id=0 y PvPGN elige al
+# azar entre los PNG compatibles del ad.json. banner.png sigue siendo el que
+# reemplaza el uploader; banner-alt.png aporta la segunda variante.
 BANNER_PY=/opt/wc3/venv/bin/python
-BANNER_PROPIO="${REPO_DIR}/config/pvpgn/banner.png"
 if [[ -x "${BANNER_PY}" ]] && "${BANNER_PY}" -c 'import PIL' 2>/dev/null; then
-    banner_args=(--out /opt/wc3/pvpgn/var/pvpgn/files/ad000001.png)
-    if [[ -f "${BANNER_PROPIO}" ]]; then
-        log "usando el banner propio: config/pvpgn/banner.png"
-        banner_args+=(--from-image "${BANNER_PROPIO}")
-    else
-        banner_args+=(--title "${WC3_REALM_NAME}"
-                      --subtitle "${WC3_BANNER_SUBTITLE:-${WC3_SERVER_DESCRIPTION}}")
-    fi
-    "${BANNER_PY}" "${REPO_DIR}/scripts/make-banner.py" "${banner_args[@]}"
-    chown wc3:wc3 /opt/wc3/pvpgn/var/pvpgn/files/ad000001.png
-    log "banner instalado (el cliente lo cachea: puede tardar una reconexion en verse)"
+    banner_num=0
+    for banner_name in banner.png banner-alt.png; do
+        banner_num=$((banner_num + 1))
+        printf -v banner_file 'ad%06d.png' "${banner_num}"
+        banner_source="${REPO_DIR}/config/pvpgn/${banner_name}"
+        banner_dest="/opt/wc3/pvpgn/var/pvpgn/files/${banner_file}"
+        banner_args=(--out "${banner_dest}")
+        if [[ -f "${banner_source}" ]]; then
+            log "usando banner propio: config/pvpgn/${banner_name}"
+            banner_args+=(--from-image "${banner_source}")
+        else
+            banner_args+=(--title "${WC3_REALM_NAME}"
+                          --subtitle "${WC3_BANNER_SUBTITLE:-${WC3_SERVER_DESCRIPTION}}")
+        fi
+        "${BANNER_PY}" "${REPO_DIR}/scripts/make-banner.py" "${banner_args[@]}"
+        chown wc3:wc3 "${banner_dest}"
+    done
+    log "2 banners instalados en rotacion (el cliente los cachea: puede requerir reconexion)"
 else
-    log "Pillow no disponible en /opt/wc3/venv: dejo el banner que este"
+    log "Pillow no disponible en /opt/wc3/venv: dejo los banners que esten"
 fi
 
 # --- Hostbots: una instancia por config/hostbot/instance-N.env ---------------
@@ -143,6 +173,12 @@ found_instance=0
 for inst_env in "${REPO_DIR}"/config/hostbot/instance-*.env; do
     found_instance=1
     n="$(basename "${inst_env}" | sed -E 's/instance-([0-9]+)\.env/\1/')"
+    # Un instance-1b.env matchea el glob pero no el sed: sin este chequeo, n
+    # quedaria como el nombre entero y se crearia instances/instance-1b.env/
+    if ! [[ "${n}" =~ ^[0-9]+$ ]]; then
+        echo "ERROR: $(basename "${inst_env}") no es instance-<numero>.env; lo salteo" >&2
+        continue
+    fi
     inst_dir="/opt/wc3/hostbot/instances/${n}"
     install -d -o wc3 -g wc3 "${inst_dir}"
     # Aura busca ip-to-country.csv en su directorio de trabajo

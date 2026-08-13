@@ -137,8 +137,7 @@ localize_by_country = true
 #   warn
 #   error
 #   fatal
-loglevels = fatal,error,warn,info,debug,trace
-#loglevels = fatal,error,warn,info
+loglevels = fatal,error,warn,info
 
 #                                                                            #
 ##############################################################################
@@ -442,7 +441,7 @@ contact_email = "${WC3_CONTACT_EMAIL}"
 #----------------------------------------------------------------------------#
 
 # Servername by which the server identifies itself (default: "PvPGN Realm")
-#servername = "PvPGN Realm"
+servername = "${WC3_REALM_NAME}"
 
 # Set this to the maximum number of concurrent connections allowed on 
 # this server (minimum 32). This limit sets a general server connection 

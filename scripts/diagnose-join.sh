@@ -4,27 +4,36 @@
 #
 # Mientras el script corre, alguien intenta entrar a una partida desde su
 # cliente. En paralelo se graba:
-#   - tcpdump de 6112 (PvPGN) y 6113/6114 (bots) a un .pcap en /tmp
+#   - tcpdump de 6112 (PvPGN) y todo el rango de los bots (6113-6140) a un .pcap
 #   - el log de aplicacion de PvPGN (bnetd.log)
-#   - el journal del bot (wc3-hostbot@1)
+#   - el journal del bot de la instancia elegida
 # Al final, el resumen que importa: cuantos SYN llegaron al puerto del bot.
 # Si son 0, el cliente NUNCA intento conectarse: el problema esta antes (en
 # el anuncio de la partida), no en la red ni en el firewall.
 #
-# Uso: sudo ./scripts/diagnose-join.sh [segundos]     # default: 90
+# Uso: sudo ./scripts/diagnose-join.sh [instancia] [segundos]
+#      instancia: numero de bot (default 1); su puerto es 6113+(N-1)
+#      segundos:  duracion de la captura (default 90)
 # ============================================================================
 set -euo pipefail
 
-DURATION="${1:-90}"
+INSTANCE="${1:-1}"
+DURATION="${2:-90}"
 BNETD_LOG="/opt/wc3/pvpgn/var/pvpgn/bnetd.log"
-HOSTBOT_UNIT="wc3-hostbot@1"
-BOT_PORT=6113
 
 # --- Validaciones -----------------------------------------------------------
-if [[ ! "${DURATION}" =~ ^[1-9][0-9]*$ ]]; then
-    echo "uso: sudo $0 [segundos]   (entero positivo; default 90)" >&2
+if [[ ! "${INSTANCE}" =~ ^[1-9][0-9]?$ ]]; then
+    echo "uso: sudo $0 [instancia] [segundos]   (instancia: 1-28; default 1)" >&2
     exit 1
 fi
+if [[ ! "${DURATION}" =~ ^[1-9][0-9]*$ ]]; then
+    echo "uso: sudo $0 [instancia] [segundos]   (segundos: entero positivo; default 90)" >&2
+    exit 1
+fi
+
+HOSTBOT_UNIT="wc3-hostbot@${INSTANCE}"
+# Mismas bases que scripts/make-instances.py: host 6113+, reconnect 6133+
+BOT_PORT=$((6113 + INSTANCE - 1))
 
 if [[ "${EUID}" -ne 0 ]]; then
     echo "hay que correrlo con sudo: tcpdump, journalctl y bnetd.log lo necesitan" >&2
@@ -63,13 +72,15 @@ trap cleanup EXIT
 trap 'exit 130' INT TERM
 
 # --- Captura ----------------------------------------------------------------
-echo "== diagnose-join: captura de ${DURATION}s =="
+echo "== diagnose-join: instancia ${INSTANCE} (puerto ${BOT_PORT}), captura de ${DURATION}s =="
 echo "    pcap:      ${PCAP}"
 echo "    bnetd.log: ${BNETD_OUT}"
 echo "    hostbot:   ${BOT_OUT}"
 echo
 
-tcpdump -i any -nn 'tcp port 6112 or tcp port 6113 or tcp port 6114' \
+# Todo el rango de bots (host 6113-6120 y reconnect 6133-6140, con margen):
+# capturar solo el puerto elegido escondia los joins a las otras instancias.
+tcpdump -i any -nn 'tcp port 6112 or tcp portrange 6113-6140' \
     -w "${PCAP}" 2>"${TCPDUMP_ERR}" &
 PIDS+=("$!")
 

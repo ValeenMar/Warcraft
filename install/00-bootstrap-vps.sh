@@ -14,7 +14,10 @@ set -euo pipefail
 ADMIN_USER="${1:-wc3admin}"
 TIMEZONE="${WC3_TIMEZONE:-America/Argentina/Buenos_Aires}"
 # Rango de puertos de los hostbots; mantener en sintonia con WC3_BOT_PORT_RANGE
-BOT_PORT_RANGE="${WC3_BOT_PORT_RANGE:-6113:6140}"
+BOT_PORT_RANGE="${WC3_BOT_PORT_RANGE:-6113:6141}"
+# Algunos proveedores exponen un segundo puerto SSH dentro de la VM. Se pasa
+# al bootstrap para que UFW no corte la sesion al activarse.
+SSH_PORT="${WC3_SSH_PORT:-22}"
 
 log() { printf '[bootstrap] %s\n' "$*"; }
 
@@ -48,12 +51,15 @@ apt-get install -y -q \
 # empaquetadas en Ubuntu (mpyq no instala contra el setuptools parcheado de
 # Debian fuera de un venv; verificado en sandbox 2026-08-08). Pillow se usa
 # para dibujar las previews de los mapas (scripts/make-preview.py).
+# Versiones PINNEADAS: el bootstrap se re-corre, y sin pin cada corrida
+# traeria lo ultimo de PyPI al venv del servidor (irreproducible, y un
+# release roto o comprometido entraria solo). Actualizar a conciencia.
 if [[ ! -x /opt/wc3/venv/bin/python ]]; then
     log "creando venv /opt/wc3/venv (mpyq + pyyaml + pillow)"
     install -d /opt/wc3
     python3 -m venv /opt/wc3/venv
 fi
-/opt/wc3/venv/bin/pip install --quiet --upgrade mpyq pyyaml pillow
+/opt/wc3/venv/bin/pip install --quiet 'mpyq==0.2.5' 'pyyaml==6.0.2' 'pillow==11.0.0'
 
 # --- Timezone ----------------------------------------------------------------
 log "timezone -> ${TIMEZONE}"
@@ -73,6 +79,15 @@ if ! id "${ADMIN_USER}" &>/dev/null; then
 else
     log "usuario ${ADMIN_USER} ya existe, sigo"
 fi
+# El usuario se crea SIN contraseña (entra por clave SSH), asi que sudo no
+# puede pedirle una: sin esto, estar en el grupo sudo no sirve de nada y la
+# unica administracion posible queda siendo root directo.
+if [[ ! -f "/etc/sudoers.d/90-${ADMIN_USER}" ]]; then
+    log "sudo sin contraseña para ${ADMIN_USER} (no tiene password: entra por clave)"
+    echo "${ADMIN_USER} ALL=(ALL) NOPASSWD:ALL" > "/etc/sudoers.d/90-${ADMIN_USER}"
+    chmod 440 "/etc/sudoers.d/90-${ADMIN_USER}"
+    visudo -cf "/etc/sudoers.d/90-${ADMIN_USER}" >/dev/null
+fi
 
 # --- Hardening de SSH: NO se hace aca ---------------------------------------
 # Se movio a install/50-harden-ssh.sh, que hay que correr a mano DESPUES de
@@ -85,11 +100,18 @@ if [[ ! -s "/home/${ADMIN_USER}/.ssh/authorized_keys" ]]; then
 fi
 
 # --- Firewall ----------------------------------------------------------------
-log "configurando ufw (SSH, 6112/tcp, bots ${BOT_PORT_RANGE}/tcp)"
+log "configurando ufw (SSH 22/${SSH_PORT}, 6112/tcp, bots ${BOT_PORT_RANGE}/tcp)"
 ufw default deny incoming
 ufw default allow outgoing
 ufw allow OpenSSH
+if [[ "${SSH_PORT}" != "22" ]]; then
+    ufw allow "${SSH_PORT}/tcp" comment 'SSH alternativo'
+fi
 ufw allow 6112/tcp comment 'PvPGN bnetd'
+# 6200/tcp: w3route de PvPGN. address_translation.conf lo anuncia a los
+# clientes para las partidas PG/AT; anunciarlo con el puerto cerrado hace
+# que fallen igual que sin la regla, pero mas dificil de diagnosticar.
+ufw allow 6200/tcp comment 'PvPGN w3route'
 ufw allow "${BOT_PORT_RANGE}/tcp" comment 'hostbots Aura'
 # 6112/udp: los clientes W3 hacen un test UDP contra el server; sin esto
 # funciona igual pero con latencia de deteccion. Lo abrimos por las dudas.

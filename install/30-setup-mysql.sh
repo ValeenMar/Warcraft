@@ -36,8 +36,29 @@ if [[ "${WC3_DB_PASS}" == "CAMBIAME" ]]; then
     echo "WC3_DB_PASS sigue en CAMBIAME. Genera una con: openssl rand -base64 24" >&2
     exit 1
 fi
+# La contraseña se interpola dentro de un literal SQL: una comilla simple o
+# una barra la romperian (o algo peor). Las de openssl rand -base64 nunca las
+# traen; una elegida a mano puede. Mejor cortar aca con un mensaje claro.
+if [[ "${WC3_DB_PASS}" == *"'"* || "${WC3_DB_PASS}" == *"\\"* ]]; then
+    echo "WC3_DB_PASS no puede contener comillas simples ni barras invertidas." >&2
+    echo "Genera una segura con: openssl rand -base64 24" >&2
+    exit 1
+fi
+
+low_memory_mysql=0
+mem_kb="$(awk '/MemTotal/ {print $2}' /proc/meminfo)"
+if [[ "${mem_kb}" -lt 1500000 ]]; then
+    log "menos de 1.5 GB de RAM: aplicando perfil MySQL de bajo consumo"
+    install -o root -g root -m 0644 \
+        "${REPO_DIR}/config/mysql/90-wc3-low-memory.cnf" \
+        /etc/mysql/mysql.conf.d/90-wc3-low-memory.cnf
+    low_memory_mysql=1
+fi
 
 systemctl enable --now mysql
+if [[ "${low_memory_mysql}" -eq 1 ]]; then
+    systemctl restart mysql
+fi
 
 log "creando base ${WC3_DB_NAME} y usuario ${WC3_DB_USER} (si no existen)"
 mysql --user=root <<SQL
@@ -51,6 +72,7 @@ FLUSH PRIVILEGES;
 SQL
 
 log "verificando acceso con el usuario ${WC3_DB_USER}"
-mysql --user="${WC3_DB_USER}" --password="${WC3_DB_PASS}" \
+# MYSQL_PWD y no --password=: lo segundo queda visible en ps/proc mientras corre
+MYSQL_PWD="${WC3_DB_PASS}" mysql --user="${WC3_DB_USER}" \
       --host=127.0.0.1 --execute="USE \`${WC3_DB_NAME}\`; SELECT 1;" >/dev/null
 log "OK. Proximo paso: install/40-render-configs.sh"

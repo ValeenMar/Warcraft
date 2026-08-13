@@ -55,7 +55,7 @@ def build_w3x(path: Path, extra_bytes: int = 0) -> Path:
         (tmp / "war3map.w3i").write_bytes(build_w3i())
         if extra_bytes:
             # Relleno realmente incompresible (zlib no lo achica) para acercar
-            # el mapa al techo de 8 MiB.
+            # el mapa al techo configurado.
             (tmp / "war3map.j").write_bytes(os.urandom(extra_bytes))
         files = [f.name for f in sorted(tmp.iterdir())]
         mpq = tmp / "inner.mpq"
@@ -182,10 +182,13 @@ class TestBrandMap(unittest.TestCase):
             self.assertEqual(copia.read_bytes(), primera, "lo modifico en vez de copiarlo")
             self.assertEqual(dest.read_bytes(), primera, "piso la preview existente")
 
-    def test_aborta_si_pasa_el_techo_de_8_mib(self):
+    def test_aborta_si_pasa_el_techo_configurado(self):
         brand = _load("brand_map", "brand-map.py")
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
+            # Usar un techo chico en el test evita fabricar un MPQ aleatorio
+            # de 128 MiB solo para probar la misma comparación.
+            brand.MAX_MAP_BYTES = 256 * 1024
             # Relleno incompresible hasta quedar a ~20 KB del techo: la
             # preview pesa mas que eso, asi que tiene que abortar.
             src = build_w3x(tmp / "DotA borde.w3x", extra_bytes=brand.MAX_MAP_BYTES - 20480)

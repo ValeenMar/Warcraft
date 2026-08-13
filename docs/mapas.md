@@ -36,7 +36,7 @@ pendiente -> descargado -> validado
    aparece en la lista, no carga, o crashea al iniciar → probable return bug
    u otra incompatibilidad 1.24+. Probar otra versión del mapa o descartarlo.
    Anotar el resultado en `notes`.
-4. **Tamaño vs los límites:** el techo duro de 1.26a es **8 MiB**; si el
+4. **Tamaño vs los límites:** el techo duro de 1.27b es **128 MiB**; si el
    mapa lo pasa, no carga y se descarta. Si pasa de ~2-3 MB, marcar en
    `notes` que va por map pack: entra igual, pero la transferencia in-lobby
    es tan lenta que en la práctica no sirve (ver docs/version-juego.md).
@@ -58,7 +58,7 @@ pendiente -> descargado -> validado
 
 Los mapas pesados (y por comodidad, todos) se distribuyen como pack:
 
-- Nombre: `wc3revival-maps-vNN.zip` (NN incremental; el contenido de un NN
+- Nombre: `gryzwc3-maps-vNN.zip` (NN incremental; el contenido de un NN
   publicado no se cambia jamás, se publica NN+1).
 - Contenido: los .w3x con `status: validado`, con los nombres de archivo
   EXACTOS que usa el bot (el hash tiene que coincidir).

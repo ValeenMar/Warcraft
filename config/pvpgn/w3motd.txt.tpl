@@ -1,9 +1,1 @@
-|c0033CCFFBienvenido a %s|r
-
-Los mapas estan |c00FFCC00SIEMPRE hosteados|r: anda a Custom Game -> Play Game
-y entra con doble clic. Cuando una partida arranca, el lobby se recrea solo.
-En el lobby escribi |c00FFCC00!ready|r: con todos listos arranca sola en 30s.
-
-Ahora mismo: %u jugador(es) en %g partida(s), %U usuario(s) conectados.
-
-|c00999999Servidor privado - The Frozen Throne 1.27a|r
+|c0033CCFFGRYZ WC3|r |c007FC8FF-|r salas 24/7: Custom Game + doble clic |c007FC8FF-|r todos usan |c00FFCC00!ready|r |c007FC8FF-|r escribi |c00FFCC00/watchall|r una vez |c007FC8FF-|r %u jugando en %g partidas, %U conectados |c008B929E-|r TFT 1.27b

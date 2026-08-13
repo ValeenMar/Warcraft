@@ -192,7 +192,9 @@ si está disponible; el bootstrap crea `/opt/wc3/venv` con mpyq+pyyaml.
   comprar una copia usada (el canje de CD keys clásicas cerró el 21/11/2025).
 - PvPGN lo soporta de fábrica: verificado leyendo el `versioncheck.json` que
   instala el propio build (entradas `W3XP_127A` y `WAR3_127A`).
-- Los 21 mapas del catálogo son formato 1.24a-1.28c, así que andan igual.
+- La gran mayoría del catálogo es formato 1.24a-1.28c (los `verde` y
+  `amarillo` del registry), así que andan igual; los `rojo` pre-1.24 hay que
+  probarlos en cualquiera de las dos versiones.
 - 1.27a anda mejor en Windows moderno: agregó soporte oficial de Windows
   7-10 y abandonó Direct3D 8, de donde salen los crashes de 1.26a en
   Windows 11 24H2.
@@ -581,7 +583,7 @@ construir torres en un TD no se ve afectado).
 
 **Cambio de postura**: la decisión anterior era no incluir WFE (antivirus,
 VC++, soporte). Se revierte a medias: se incluye pero PRECONFIGURADO y
-opcional — el kit trae `extras/WFE` con el perfil `WC3Revival.ini` ya armado
+opcional — el kit trae `extras/WFE` con el perfil `GryzWC3.ini` ya armado
 (QWER en la fila de abajo, DF en los dos botones derechos de la fila del
 medio — se evita la izquierda porque ahí vive Patrol —, ítems en ZXCVBN para
 no pisar los grupos de control) y `TECLAS-LOL.txt` con los 5 pasos de
@@ -599,6 +601,26 @@ sin release, el kit sale sin extras y lo dice.
 real. Las claves y el formato salen del ini real del repo, pero la prueba de
 fuego es de 5 minutos con el juego.
 
+**ACTUALIZACIÓN (2026-08-10): el kit volvió a salir SIN WFE** (commit "Kit
+sin WFE"). El motivo original (inyección en el proceso → falsos positivos de
+antivirus → el kit entero parece un virus) pesó más que la comodidad. Lo que
+queda de esta decisión: `make-wfe-profile.py` sigue generando el perfil
+`GryzWC3.ini`, pero se le pasa al jugador que lo pida, y WFE se baja del
+sitio oficial (github.com/UnryzeC/WFE-Release). El `LEEME.txt` del kit lo
+explica así.
+
+**ACTUALIZACIÓN 2 (2026-08-10): el término medio definitivo.** El operador
+necesita los mapas > 8 MiB (decisión 23), y "que cada amigo se lo baje solo"
+no escala. El kit ahora trae `extras/WFE/` con TRES archivos de texto:
+`INSTALAR-WFE.bat` (baja el zip del **release oficial pinneado** v3.1.13.85
+en la máquina del jugador y verifica su SHA-256 con certutil antes de tocar
+nada), el perfil `GryzWC3.ini` (generado en el build contra el
+`WFEConfigBase.ini` pinneado del repo de WFE; si upstream renombra claves,
+`make-wfe-profile.py` aborta y el kit sale sin extras avisando) y
+`TECLAS-LOL.txt` (el paso a paso). El binario sigue SIN viajar en el kit —
+se respeta el motivo de la actualización anterior — pero instalarlo pasó de
+"bajate esto y pedime el perfil" a un doble clic verificado.
+
 ## 23. Mapas de más de 8 MiB: se pueden, con WFE Unlock Map Size (2026-08-09)
 
 **Pregunta**: ¿hay forma de hostear un mapa que pese más de 8 MiB (FOCS pesa
@@ -608,9 +630,12 @@ fuego es de 5 minutos con el juego.
 calcula el tamaño real y hostea sin límite propio; el que rechaza > 8 MiB es
 el `game.dll` de cada jugador. Y ese límite se levanta de dos formas
 (confirmado en ENT Gaming / Hive): el parche 1.27b lo sacó de fábrica, o WFE
-con `REMOVEMAPSIZELIMIT` (su "Unlock Map Size"). Como WFE ya está en el kit,
-el perfil `WC3Revival` pasó a traer `REMOVEMAPSIZELIMIT = yes` — inofensivo
-para los mapas chicos, habilita los grandes.
+con `REMOVEMAPSIZELIMIT` (su "Unlock Map Size"). El perfil `GryzWC3` de
+`make-wfe-profile.py` trae `REMOVEMAPSIZELIMIT = yes` — inofensivo para los
+mapas chicos, habilita los grandes. (El binario de WFE no viaja en el kit,
+pero el kit trae `extras/WFE/INSTALAR-WFE.bat`, que lo baja verificado del
+sitio oficial en la máquina del jugador — ver la actualización 2 de la
+decisión 22.)
 
 **Costo, y por eso queda OPT-IN**: para un mapa grande, WFE deja de ser
 opcional (lo necesita TODO el que lo juegue), el mapa va sí o sí en el kit
@@ -708,32 +733,114 @@ secundario de "preparar el sistema".
    cualquiera que encuentre la IP puede crearse cuenta. Alternativa anotada
    en docs/operacion.md: cerrar `new_accounts` después de la fase 1.
 
+## 25. Integración reproducible, nueve bots y objetivo 1.27b (2026-08-11)
+
+**Reemplaza la decisión 11 como objetivo vigente y la decisión 23 como
+camino para mapas grandes.** Las decisiones viejas se conservan arriba como
+historial.
+
+- La rama de integración nace de `origin/main`, para conservar los parches
+  propios `aura-autohost.patch` y `aura-readycheck.patch`. Antes de cualquier
+  build, `grep -c readycheck install/20-build-hostbot.sh` debe seguir dando 2.
+- La versión objetivo pasa a **1.27b**. En la PC del operador se verificó
+  `war3.exe` de 515.048 B, versión `1.27.1.7085`, junto a `w3l.exe`,
+  `w3lh.dll` y `wl27.dll`. El loader ya fue usado para entrar al PvPGN; el
+  servidor no registra la etiqueta exacta del cliente, por lo que ese detalle
+  no se inventa en los reportes.
+- 1.27b admite mapas de hasta 128 MiB sin WFE. WFE sale del kit: evitar un
+  inyector marcado como HackTool vale más que conservar teclas estilo LoL.
+- El estado real tiene **nueve** cuentas/instancias. Los puertos son 6113-6121
+  para host y 6133-6141 para reconexión; firewall, generador y documentación
+  deben moverse juntos.
+- El checkout que había en el VPS no era reproducible: rama vieja, 47 cambios
+  sin registrar y fuente sin `readycheck`, aunque el binario instalado sí lo
+  contenía. Se respaldó completo antes de reemplazarlo. No se recompila Aura
+  hasta validar esta integración y desplegar primero una sola instancia.
+- La instancia 9 no se considera estable todavía: el proceso está activo pero
+  el sandbox montó `/opt/wc3/maps` como sólo lectura y StormLib devolvió
+  `invalid map_crc`. La corrección es devolver esa ruta a `ReadWritePaths`,
+  no parchear Aura a ciegas.
+
+## 26. Cierre inmediato y limpio de PvPGN (2026-08-11)
+
+- En producción, `systemctl restart pvpgn` demostró que bnetd 1.99.7.2.1-PRO
+  ignora SIGTERM durante 90 segundos; systemd acababa enviando SIGKILL y
+  marcaba el reinicio como fallo.
+- El código fuente instalado registra SIGQUIT como `immediate shutdown`. La
+  prueba en vivo cerró el proceso en el acto con `Deactivated successfully` y
+  el servicio volvió por `Restart=always`.
+- La unidad fija `KillSignal=SIGQUIT`. No se baja el timeout a ciegas ni se
+  acepta un falso fallo operativo en cada reinicio normal.
+
+## 27. Despliegue y recuperación verificados (2026-08-11)
+
+- La integración se desplegó desde un clon limpio y el checkout anterior se
+  conservó completo en `/opt/wc3-repo-old-20260811-d6f970c`. No se recompiló
+  Aura: el binario ya contenía los dos puntos del parche `readycheck`.
+- La instancia 9 calculó `map_crc` y `map_sha1` para FOC 9.6G03 ES, abrió
+  6121/6141 y publicó el lobby. Luego las nueve instancias autenticaron su
+  cuenta y emitieron su propio `Creating public game`, con cero reinicios y
+  sin errores críticos en el ciclo observado.
+- El panel respondió por loopback, su chat conectó como `panel` y la acción
+  real de backup terminó con exit 0. El tar contiene dump SQL, nueve
+  `aura.dbs`, `.env` de recuperación y la configuración de Discord.
+- El backup `wc3-backup-20260811-120545.tar.gz` se descargó a Windows, pasó
+  `tar -tzf` y coincidió con el VPS en SHA-256
+  `e9b5c26d83d3b8e916ca25cb8a87f1230f455030bbd4fe93492b043a35bfda6b`.
+- El kit 1.27b pasó `unzip -t`, incluye 19 mapas y no incluye WFE. El archivo
+  entregado tiene SHA-256
+  `91b24048195155b52a081d40501370b01087f4bd62fba0fa6da49dd03cad3db8`.
+- En 30 segundos ociosos, MySQL promedió 0,50 % CPU, PvPGN 0,30 %, cada Aura
+  entre 0,03 y 0,10 %, el panel 0,03 % y Discord 0,00 %. La verificación bajo
+  carga real sigue separada porque requiere jugadores.
+
+## 28. Causa de la tormenta de reinicios y defensa de CPU (2026-08-11)
+
+- El journal persistente mostró el incidente: las unidades viejas de PvPGN y
+  dashboard fallaron juntas con `status=200/CHDIR` y reiniciaron cada cinco
+  segundos, 22 veces, mientras faltó temporalmente `/opt/wc3-repo` durante un
+  cambio de checkout. No apareció un proceso desconocido ni evidencia de
+  minero en procesos, servicios o puertos activos.
+- Las unidades actuales ya no usan ese checkout como directorio de trabajo:
+  PvPGN ejecuta desde `/opt/wc3/pvpgn` y el panel desde `/opt/wc3/dashboard`.
+  El intercambio de repositorio conserva el anterior y activa el nuevo sin
+  borrar datos.
+- PvPGN queda limitado al 50 % de un vCPU, el panel al 10 %, Aura al 15 % por
+  instancia y Discord al 10 %. PvPGN, panel, Aura y Discord tienen además una
+  ráfaga máxima de diez arranques cada cinco minutos.
+- Otra prueba en vivo mostró que Aura no vuelve a autenticar ni republica el
+  lobby después de perder PvPGN: queda `active` pero invisible. El botón de
+  reinicio de PvPGN ahora recicla también las nueve instancias, y el monitor
+  sólo acepta un `Creating public game` posterior al último arranque tanto de
+  PvPGN como del bot; un evento viejo de 30 minutos ya no da un falso verde.
+
+## 29. Un solo BAT para instalar, actualizar y configurar (2026-08-11)
+
+- Los dos instaladores oficiales `getLegacy` que usa el kit dejan la base
+  Legacy 1.27a; para este camino hay que aplicar después el parche oficial
+  1.27b del mismo idioma.
+- `INSTALAR.bat` pasa a ser la única entrada visible. Si no encuentra el juego,
+  llama al asistente que descarga e instala RoC y TFT; si reconoce 1.27a por el
+  tamaño exacto de `war3.exe`, descarga y aplica el actualizador; si ya es
+  1.27b, sólo instala loader, gateway y mapas.
+- Las versiones desconocidas siguen fallando cerrado. El parche descargado se
+  ejecuta únicamente si Windows valida la firma de Blizzard Entertainment, y
+  el resultado final debe ser `war3.exe` de 515.048 bytes.
+
 ---
 
 ## TODO(verificar) — lista completa, ordenada por qué bloquea primero
 
-1. ~~**Aura + PvPGN 1.27a**~~ — **RESUELTO el 2026-08-08**: `cd keys
-   accepted` en el log del bot contra el PvPGN real (ver decisión 13). Queda
-   pendiente solo la mitad del cliente: que un cliente 1.27a real entre a un
-   lobby hosteado por el bot.
-2. **PvPGN + MySQL en runtime** (bloquea fase 1): primer arranque crea las
-   tablas desde `sql_DB_layout.conf`. Compiló, pero no se ejecutó contra un
-   mysqld real.
-3. **Autenticación de clientes 1.27a reales** (bloquea fase 1): el
-   versioncheck de fábrica trae `W3XP_127A` con el `war3.exe` esperado de
-   514.536 bytes; con `allow_bad_version=true` y `allow_unknown_version=true`
-   (defaults) debería entrar cualquier 1.27a, pero solo un cliente real lo
-   confirma.
-4. **Descarga in-lobby: hasta qué tamaño es tolerable** (fase 1-2): el techo
-   duro de 1.26a son 8 MiB (el límite de 4 MB era pre-1.24, corregido el
-   2026-08-08). Falta medir con qué tamaño la espera en el lobby se vuelve
-   insoportable y a partir de ahí el map pack es obligatorio.
-5. **Parser de war3map.w3i contra mapas reales** (fase 2): validado solo
-   contra .w3i sintéticos; probar con 2-3 mapas reales (uno RoC fmt 18, uno
-   TFT fmt 25, uno protegido).
-6. **Hardening de systemd vs StormLib** (fase 1): `ProtectSystem=strict` con
-   `ReadWritePaths` puede pisar algún acceso inesperado de Aura (p. ej.
-   escribir logs junto al binario). Si una instancia muere al arrancar,
-   relajar primero `ProtectSystem` y reportar.
-7. **`MemoryMax=384M` por instancia de bot** (fase 2): estimación
-   conservadora; medir con `systemctl status` bajo carga real de 2 partidas.
+1. **Instancia 9 / FOC 9.6G03 ES**: CRC y lobby público ya pasaron; falta la
+   entrada con cliente 1.27b y una partida real. Hasta entonces el nombre
+   lleva `PRUEBA` y no se anuncia como mapa estable.
+2. **`!ready` funcional**: probar con dos jugadores que arma/cancela la cuenta
+   de 30 segundos y que `!start` sólo acelera cuando todos están listos.
+3. **Desincronización**: jugar desde dos redes distintas al menos diez minutos
+   en FOC y en un mapa clásico ya validado.
+4. **Latencia**: probar `!latency 70` y `!sl 90` durante varias partidas antes
+   de fijar valores nuevos en `aura.cfg.tpl`.
+5. **Catálogo restante**: validar o descartar cada mapa pendiente con versión,
+   hash y prueba de juego real; no inferir compatibilidad por fecha.
+6. **Recursos bajo carga**: medir `MemoryCurrent` y CPU de los nueve bots con
+   dos partidas simultáneas antes de bajar `MemoryMax=384M`.

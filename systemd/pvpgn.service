@@ -10,18 +10,29 @@ After=network-online.target mysql.service
 Wants=network-online.target
 # PvPGN necesita MySQL levantado, pero no queremos que un reinicio de MySQL
 # tumbe PvPGN: por eso After= sin Requires= (bnetd reintenta la conexion).
+StartLimitIntervalSec=300
+StartLimitBurst=10
 
 [Service]
 Type=simple
 User=wc3
 Group=wc3
 ExecStart=/opt/wc3/pvpgn/sbin/bnetd -f -c /opt/wc3/pvpgn/etc/pvpgn/bnetd.conf
-Restart=on-failure
+# bnetd bloquea SIGINT/SIGTERM en su bucle principal y puede tardar 90 s en
+# salir. Su propio codigo define SIGQUIT como "immediate shutdown"; en la
+# version 1.99.7.2.1-PRO instalada se verifico que termina limpio con esta
+# senal y systemd informa "Deactivated successfully".
+KillSignal=SIGQUIT
+Restart=always
 RestartSec=5
 
 # --- Limites de recursos (VPS de 2 GB) --------------------------------------
 MemoryMax=512M
 TasksMax=128
+CPUAccounting=yes
+# En reposo usa ~0,3 % del vCPU. Este techo permite picos amplios de juego y
+# evita que una regresion del daemon vuelva a monopolizar el plan compartido.
+CPUQuota=50%
 
 # --- Hardening ---------------------------------------------------------------
 NoNewPrivileges=true

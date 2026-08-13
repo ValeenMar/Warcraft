@@ -1,0 +1,31 @@
+[Unit]
+Description=Resumen semanal del backup hacia Discord
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=wc3
+Group=wc3
+EnvironmentFile=/opt/wc3/discord-avisos.env
+Environment=WC3_DISCORD_STATE=/var/lib/wc3-discord
+ExecStart=/usr/bin/python3 /opt/wc3/discord-avisos/avisos.py backup-ok
+CPUQuota=10%
+MemoryMax=64M
+TasksMax=16
+StateDirectory=wc3-discord
+StateDirectoryMode=0750
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+UMask=0027

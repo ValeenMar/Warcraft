@@ -39,16 +39,30 @@ if ($null -eq $list) {
     $list = [System.Collections.ArrayList]@('1001', '00')
 }
 
-# --- agregar el server si no estaba -----------------------------------------
-$pos = $list.IndexOf($Ip)
-if ($pos -lt 2) {
-    [void]$list.Add($Ip)
-    [void]$list.Add($Tz)
-    [void]$list.Add($Title)
-    $pos = $list.Count - 3
-    Write-Host "        OK: `"$Title`" agregado a la lista"
+# --- agregar o actualizar el server -----------------------------------------
+# Si el servidor se mudó de VPS, la IP cambia pero el título queda igual.
+# Quitamos tanto la entrada vieja con ese título como cualquier duplicado de
+# la IP nueva, conservando intactos los demás gateways.
+$clean = [System.Collections.ArrayList]@($list[0], $list[1])
+$replaced = $false
+for ($i = 2; $i + 2 -lt $list.Count; $i += 3) {
+    if ($list[$i] -eq $Ip -or $list[$i + 2] -eq $Title) {
+        $replaced = $true
+        continue
+    }
+    [void]$clean.Add($list[$i])
+    [void]$clean.Add($list[$i + 1])
+    [void]$clean.Add($list[$i + 2])
+}
+$list = $clean
+[void]$list.Add($Ip)
+[void]$list.Add($Tz)
+[void]$list.Add($Title)
+$pos = $list.Count - 3
+if ($replaced) {
+    Write-Host "        OK: `"$Title`" actualizado sin dejar gateways viejos"
 } else {
-    Write-Host "        Ya estaba en la lista, no lo duplico"
+    Write-Host "        OK: `"$Title`" agregado a la lista"
 }
 
 # --- dejarlo seleccionado ----------------------------------------------------

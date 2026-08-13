@@ -9,15 +9,16 @@ set SERVER_TZ=${WC3_KIT_GATEWAY_TZ}
 
 echo.
 echo   ================================================
-echo      WC3 REVIVAL - Instalador del cliente
+echo      GRYZ WC3 - Instalador del cliente
 echo   ================================================
 echo.
-echo   Esto configura tu Warcraft III para entrar al
-echo   servidor. No instala el juego: tenes que tenerlo
-echo   ya instalado, en la version 1.27a.
+echo   Este es el unico instalador que necesitas:
+echo     - si no tenes el juego, instala la base oficial;
+echo     - si tenes 1.27a, la actualiza a 1.27b;
+echo     - si ya tenes 1.27b, configura el servidor.
 echo.
-echo   No modifica ningun archivo del juego. Solo copia
-echo   el loader y agrega el servidor a tu lista.
+echo   El juego no viene dentro del kit. Las descargas son
+echo   oficiales de Blizzard y vas a usar TUS propias CD keys.
 echo.
 pause
 
@@ -36,8 +37,12 @@ if not defined WC3DIR if exist "%ProgramFiles%\Warcraft III\war3.exe" set WC3DIR
 if not defined WC3DIR (
     echo.
     echo   No encontre Warcraft III automaticamente.
+    echo   Si lo tenes en otra carpeta, pega la ruta.
+    echo   Si no lo tenes instalado, deja vacio y apreta Enter:
+    echo   voy a bajar la base oficial y el parche 1.27b.
     echo.
-    set /p WC3DIR=  Pega aca la ruta de tu carpeta Warcraft III: 
+    set /p "WC3DIR=  Ruta o Enter para instalar: "
+    if not defined WC3DIR goto :instalar_juego
 )
 
 if not exist "!WC3DIR!\war3.exe" (
@@ -53,24 +58,33 @@ if not exist "!WC3DIR!\war3.exe" (
 echo         OK: !WC3DIR!
 
 :: ---------------------------------------------------------------
-:: 2. Verificar la version (1.27a = war3.exe de 514.536 bytes)
+:: 2. Verificar la version (1.27b = war3.exe de 515.048 bytes)
 :: ---------------------------------------------------------------
 echo.
 echo   [2/4] Verificando la version del juego...
 
 for %%f in ("!WC3DIR!\war3.exe") do set WC3SIZE=%%~zf
-if "!WC3SIZE!"=="514536" (
-    echo         OK: 1.27a confirmado
+if "!WC3SIZE!"=="515048" (
+    echo         OK: 1.27b confirmado
+) else if "!WC3SIZE!"=="514536" (
+    echo.
+    echo   Encontre Warcraft III 1.27a. Voy a descargar y
+    echo   aplicar automaticamente el parche oficial 1.27b.
+    echo.
+    goto :instalar_juego
 ) else (
     echo.
     echo   AVISO: tu war3.exe pesa !WC3SIZE! bytes.
-    echo   El de la version 1.27a pesa 514536.
+    echo   El de la version 1.27b pesa 515048.
     echo.
-    echo   El servidor usa 1.27a. Con otra version es muy
-    echo   probable que no puedas entrar a las partidas.
-    echo   Si segui adelante y no funciona, ya sabes por que.
+    echo   El servidor usa 1.27b. Con otra version no vas a
+    echo   poder entrar a las partidas.
+    echo.
+    echo   No voy a parchear una version desconocida a ciegas.
+    echo   Usa una instalacion limpia o consulta LEEME.txt.
     echo.
     pause
+    exit /b 1
 )
 
 :: ---------------------------------------------------------------
@@ -110,7 +124,7 @@ if errorlevel 1 (
 :: Mapas
 :: ---------------------------------------------------------------
 :: OJO con la ruta: recien desde el parche 1.28 Warcraft III lee los mapas de
-:: Documentos. En 1.27a, que es la version de este servidor, los busca adentro
+:: Documentos. En 1.27b, que es la version de este servidor, los busca adentro
 :: de la carpeta de instalacion. Copiarlos a Documentos no rompe nada, pero el
 :: juego no los ve nunca.
 set MAPDIR=!WC3DIR!\Maps\Download
@@ -131,7 +145,6 @@ powershell -NoProfile -Command ^
   "$s=(New-Object -ComObject WScript.Shell).CreateShortcut([Environment]::GetFolderPath('Desktop')+'\${WC3_REALM_NAME}.lnk');" ^
   "$s.TargetPath='!WC3DIR!\w3l.exe'; $s.WorkingDirectory='!WC3DIR!';" ^
   "$s.Description='Entrar al servidor ${WC3_REALM_NAME}'; $s.Save()" >nul 2>&1
-
 echo.
 echo   ================================================
 echo      LISTO
@@ -151,3 +164,20 @@ echo.
 echo   Leelo todo en LEEME.txt si algo no sale.
 echo.
 pause
+exit /b 0
+
+:: ---------------------------------------------------------------
+:: Instalacion/actualizacion oficial. El helper vuelve a llamar a
+:: este BAT cuando war3.exe ya quedo exactamente en 1.27b.
+:: ---------------------------------------------------------------
+:instalar_juego
+if not exist "%~dp0INSTALAR-JUEGO.bat" (
+    echo.
+    echo   ERROR: falta INSTALAR-JUEGO.bat dentro del kit.
+    echo   Volve a descomprimir el ZIP completo y proba otra vez.
+    echo.
+    pause
+    exit /b 1
+)
+call "%~dp0INSTALAR-JUEGO.bat"
+exit /b !errorlevel!

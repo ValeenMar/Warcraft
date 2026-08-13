@@ -14,13 +14,15 @@ máquina.
       **Ubuntu 24.04 LTS x64**. Facturación por hora, así que probarlo sale
       centavos. Al crearla: subí tu clave SSH en el paso "SSH Keys" y NO
       habilites el firewall de Vultr (lo maneja `ufw` desde el bootstrap).
-- [ ] Instalación de W3 TFT **1.27a** (build `1.27.0.52240`): de ella salen
+- [ ] Instalación de W3 TFT **1.27b** (build visible `1.27.1.7085`): de ella salen
       `war3.exe`, `Storm.dll`, `Game.dll` y `War3Patch.mpq` para
       `/opt/wc3/mpq/`. Verificación rápida de que es genuina: `war3.exe` tiene
-      que pesar **514.536 bytes**. El paso a paso y los errores típicos están
+      que pesar **515.048 bytes**. El paso a paso y los errores típicos están
       en **docs/conseguir-el-juego.md**.
-- [ ] Los primeros 3 mapas (sugeridos: DotA 6.83d, Footmen Frenzy, Sheep Tag
-      — los tres `verde` en el registry).
+- [ ] Los primeros 3 mapas (sugeridos: DotA 6.83d, Footmen Frenzy, Sheep Tag.
+      Footmen y Sheep Tag son `verde` en el registry; DotA 6.83d es
+      `amarillo` — casi seguro anda, pero es de los que la fase 1 tiene que
+      confirmar).
 - [ ] Dos personas con el juego instalado para la prueba de sincronía.
 
 ---
@@ -108,7 +110,7 @@ Lo mínimo a completar en `.env`: `WC3_PUBLIC_IP` (la IP que asignó Vultr),
 ### Archivos del juego
 
 ```bash
-# desde tu maquina (sacados de una instalacion 1.27a):
+# desde tu maquina (sacados de una instalacion 1.27b):
 scp war3.exe storm.dll game.dll War3Patch.mpq vps:/tmp/
 # en el VPS:
 sudo mv /tmp/{war3.exe,storm.dll,game.dll,War3Patch.mpq} /opt/wc3/mpq/
@@ -137,7 +139,7 @@ journalctl -u wc3-hostbot@1 -f               # ver: login al PvPGN OK
 
 Para cada mapa, el protocolo completo de docs/mapas.md:
 
-1. Cargar en Custom Game **single player en 1.27a**; anotar que carga.
+1. Cargar en Custom Game **single player en 1.27b**; anotar que carga.
 2. `inspect-map.py --update-registry`: tamaño y slots al registry.
 3. Copiar a `/opt/wc3/maps/`, `!map ElMapa` en el canal del bot: el bot
    calcula el hash sin quejarse.
@@ -160,6 +162,12 @@ registry. Para el cierre formal de la fase quedan: la prueba de
 desincronización con **dos clientes desde redes distintas**, el test de
 `sudo reboot`, y correr `install/50-harden-ssh.sh`.
 
+**2026-08-11, migración**: la instalación del operador quedó en 1.27b
+(`war3.exe` 515.048 B, versión de archivo `1.27.1.7085`) con w3l y `wl27.dll`.
+PvPGN, MySQL y ocho lobbies siguen activos. La instancia 9 carga FOCS
+9.6G03 ES pero todavía debe pasar el canario de CRC y una partida real antes
+de anunciarse como estable.
+
 ### Criterio de listo
 
 - [ ] `systemctl status pvpgn wc3-hostbot@1` ambos `active (running)` y
@@ -174,13 +182,14 @@ desincronización con **dos clientes desde redes distintas**, el test de
 
 ## Fase 2: biblioteca de mapas + map pack distribuible
 
-- Conseguir y validar el resto del catálogo (los 21 del registry), en orden:
+- Conseguir y validar el resto del catálogo (todos los entries del registry),
+  en orden:
   primero los `verde`, después `amarillo`, y los `rojo` al final (con plan B
   de remakes — ver notas del registry).
 - Cada mapa pasa por el protocolo de docs/mapas.md; los que pasen de
-  ~2-3 MB quedan marcados "solo map pack" (el techo duro de carga son
-  8 MiB).
-- Armar `wc3revival-maps-v01.zip` con todos los `validado` (docs/mapas.md,
+  ~2-3 MB quedan marcados "solo map pack" (el techo duro de 1.27b son
+  128 MiB, pero la transferencia del lobby sigue siendo lenta).
+- Armar `gryzwc3-maps-v01.zip` con todos los `validado` (docs/mapas.md,
   sección map pack) y publicarlo donde el grupo lo baje.
 - Segunda instancia de bot arriba (`wc3-hostbot@2`, arena) con su canal.
 
@@ -219,8 +228,8 @@ desincronización con **dos clientes desde redes distintas**, el test de
 - Web mínima (estática + un backend chico) con:
   - registro de cuenta PvPGN (escribiendo el hash a la base con el mismo
     formato que usa bnetd — verificar formato de `acct_passhash1` antes),
-  - instrucciones de conexión (docs/clientes.md destilado + descarga del
-    `.reg` de gateway),
+  - instrucciones de conexión (docs/clientes.md destilado; el alta del
+    gateway ya la resuelve el kit con `herramientas/gateway.ps1`),
   - link al map pack vigente y al Discord.
 - HTTPS con caddy o nginx + certbot; abrir 80/443 en ufw recién acá.
 
@@ -228,3 +237,44 @@ desincronización con **dos clientes desde redes distintas**, el test de
 
 - [ ] Un amigo sin ayuda: entra a la web, se registra, configura el gateway,
       baja el pack y juega. Cero intervención manual del admin.
+
+---
+
+## Apéndice: restaurar un backup
+
+Los backups los genera `sudo make backup` (o `scripts/backup.sh`): un tar
+fechado en `/opt/wc3/backups/` con el dump de MySQL, `etc/pvpgn` completo,
+el `aura.cfg` + `aura.dbs` de cada instancia y el registry. Para restaurar
+en un VPS nuevo (o en el mismo, tras un desastre), **en este orden**:
+
+```bash
+# 0. VPS con el stack instalado (fases del principio: bootstrap, build,
+#    30-setup-mysql con el MISMO .env — misma base, mismo usuario y password)
+
+# 1. descomprimir el backup
+tar -xzf wc3-backup-FECHA.tar.gz -C /tmp/restore
+
+# 2. la base: 30-setup-mysql ya creo la base vacia; importar el dump
+sudo mysql pvpgn < /tmp/restore/dump/pvpgn.sql
+
+# 3. configs de PvPGN (o mejor: re-renderizar con make render-config,
+#    que las regenera desde los templates + .env)
+sudo cp -a /tmp/restore/configs/pvpgn/. /opt/wc3/pvpgn/etc/pvpgn/
+
+# 4. los bots: el aura.dbs de cada instancia (admins/bans de cada bot)
+for d in /tmp/restore/configs/hostbot/instance-*/; do
+    n="$(basename "$d" | sed 's/instance-//')"
+    sudo install -o wc3 -g wc3 "$d/aura.dbs" "/opt/wc3/hostbot/instances/$n/aura.dbs" 2>/dev/null || true
+done
+
+# 5. mapas: NO estan en el backup; se recuperan del map pack / kit
+#    (dist/*.zip trae los .w3x) o se vuelven a subir y brandear
+
+# 6. arrancar y verificar
+sudo systemctl restart pvpgn 'wc3-hostbot@*'
+systemctl status pvpgn 'wc3-hostbot@*' --no-pager
+```
+
+Con qué criterio darlo por bueno: un login con una cuenta vieja funciona
+(la base volvió), y un `!addadmin` viejo sigue vigente en su bot (los
+`aura.dbs` volvieron).

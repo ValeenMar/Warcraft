@@ -34,7 +34,7 @@ de las que ya existen. Si una clave esperada no aparece en el base (WFE nuevo
 que renombro algo), el script ABORTA en vez de generar un perfil a medias.
 
 Uso:
-    make-wfe-profile.py WFEConfigBase.ini --out Profiles/WC3Revival.ini
+    make-wfe-profile.py WFEConfigBase.ini --out Profiles/GryzWC3.ini
 """
 
 import argparse

@@ -5,7 +5,11 @@
 # ============================================================================
 
 .PHONY: help bootstrap build install render-config validate map-scan test backup \
-	lobby-names brand-maps kit recibir
+	lobby-names brand-maps kit recibir dashboard maintenance
+
+# install = bootstrap + build + mysql, EN ORDEN: con make -j los prerequisitos
+# correrian en paralelo y el build arrancaria sin las dependencias del bootstrap.
+.NOTPARALLEL:
 
 help:
 	@echo "Targets:"
@@ -16,11 +20,13 @@ help:
 	@echo "  validate       valida todo en seco (sin VPS ni juego)"
 	@echo "  test           tests de inspect-map.py"
 	@echo "  map-scan       inspecciona todos los .w3x de maps/ y actualiza el registry"
+	@echo "  dashboard      instala/prende el panel web de admin, permanente (sudo)"
 	@echo "  recibir        abre una pagina web para subir mapas desde el navegador (sudo)"
 	@echo "  kit            arma dist/<realm>-Kit.zip para repartir a los amigos"
 	@echo "  lobby-names    chuleta de nombres de partida con color, para pegar"
 	@echo "  brand-maps     mete la preview propia a los .w3x de /opt/wc3/incoming"
 	@echo "  backup         dump de MySQL + configs a tar fechado (sudo)"
+	@echo "  maintenance    limita journald y rota bnetd.log (sudo)"
 
 bootstrap:
 	sudo ./install/00-bootstrap-vps.sh
@@ -67,6 +73,11 @@ kit:
 recibir:
 	sudo ./scripts/recibir-mapas.sh
 
+# Panel web de admin permanente: estado de servicios, jugadores conectados,
+# mapas, backups, disco, y subida de mapas. Ver docs/dashboard.md.
+dashboard:
+	sudo ./install/60-setup-dashboard.sh
+
 lobby-names:
 	@PY=/opt/wc3/venv/bin/python; [ -x $$PY ] || PY=python3; \
 	$$PY scripts/lobby-names.py
@@ -88,3 +99,6 @@ brand-maps:
 
 backup:
 	sudo ./scripts/backup.sh
+
+maintenance:
+	sudo ./install/70-setup-maintenance.sh

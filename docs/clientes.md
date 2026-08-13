@@ -2,7 +2,7 @@
 
 ## Qué necesita el jugador
 
-1. **Warcraft III: The Frozen Throne 1.27a** instalado (RoC + TFT). Todos
+1. **Warcraft III: The Frozen Throne 1.27b** instalado (RoC + TFT). Todos
    los jugadores tienen que estar en la MISMA versión: versiones distintas no
    juegan entre sí. La instalación la consigue cada uno por su lado; este
    proyecto no distribuye archivos del juego. El camino concreto está en
@@ -40,7 +40,7 @@ el firewall están bien: el corte es decisión del cliente.
 
 **Solución**: [Warcraft 3 Loader (w3l)](https://pvpgn.pro/w3l.html), GPL v3.
 Se baja el paquete de la versión que corresponda (soporta de 1.22a a 1.28f),
-se copian `w3l.exe`, `w3lh.dll` y la DLL de la versión (para 1.27a es
+se copian `w3l.exe`, `w3lh.dll` y la DLL de la versión (para 1.27b es
 `wl27.dll`) a la carpeta de Warcraft III, y se abre el juego con **`w3l.exe`**
 en vez del ejecutable normal. Los zips del sitio traen contraseña: `pvpgn`.
 
@@ -58,23 +58,25 @@ Dos herramientas libres, verificadas vigentes en 2026:
   distribuye nada del juego: parchea en memoria tu `war3.exe` para que apunte
   a un PvPGN. Soporta de 1.22a a 1.28f.
 - **Warcraft Feature Extender (WFE)** — https://github.com/UnryzeC/WFE-Release
-  — soporta 1.26a y 1.27a explícitamente, y además suma widescreen, borderless y
+  — soporta la familia 1.27 y además suma widescreen, borderless y
   smartcast.
 
 También sirven los editores de gateway clásicos ("BNGatewayEditor", "W3
 Gateway Editor"). Datos a cargar:
 
-- **Nombre**: WC3 Revival (o el `WC3_REALM_NAME` que quede en el .env)
+- **Nombre**: Gryz WC3 (o el `WC3_REALM_NAME` que quede en el .env)
 - **Dirección**: la IP pública del VPS
 - **Puerto**: 6112
 - **Timezone**: -3 (Argentina) — solo afecta cómo se muestra la hora
 
 ### Opción B: registro de Windows a mano
 
-Los gateways viven en
-`HKEY_CURRENT_USER\Software\Blizzard Entertainment\Warcraft III\Gateways`
-(valor multi-string). Se puede exportar un `.reg` de ejemplo y pasárselo a
-los amigos — queda para la fase 4 armar ese `.reg` con la IP definitiva.
+Los gateways viven en el valor multi-string **`Battle.net Gateways`** de
+`HKEY_CURRENT_USER\Software\Blizzard Entertainment\Warcraft III`
+(ojo: el valor se llama así, con espacio; un valor `Gateways` a secas el
+juego lo ignora). Esto ya lo resuelve solo el kit: `INSTALAR.bat` llama a
+`herramientas/gateway.ps1`, que agrega el server a esa lista sin pisar los
+gateways existentes.
 
 ### Opción C: DNS local / hosts (la más rápida para probar)
 
@@ -101,17 +103,19 @@ se queda colgada en "Security Check" al intentar hablar HTTPS con ese dominio.
 El juego clásico no la necesita (se abre directo con `Frozen Throne.exe` o con
 `w3l.exe`), pero si molesta, se revierte quitando la línea.
 
-Ojo: el valor `Gateways` del registro **puede no existir**; en ese caso el
-cliente usa la lista que trae compilada adentro del ejecutable, y editar el
-registro no sirve de nada. Por eso el `hosts` es más confiable para probar.
+Ojo: el valor `Battle.net Gateways` del registro **puede no existir**; en ese
+caso el cliente usa la lista que trae compilada adentro del ejecutable
+(`gateway.ps1` lo crea si falta). Por eso el `hosts` es más confiable para
+una prueba rápida a mano.
 
 ## Flujo del jugador
 
 1. Abrir W3 → Battle.net → elegir el gateway nuevo.
 2. **Crear cuenta**: con `new_accounts = true` (default actual), alcanza con
    poner usuario/contraseña nuevos en la pantalla de login la primera vez.
-3. Entrar al canal (ej. `AoS`) donde está el bot, y usar sus comandos:
-   `!games` (qué hay hosteado), o pedir una partida.
+3. Entrar al canal `W3` (`/join W3`), donde viven todos los bots, y usar sus
+   comandos:
+   `!getgames` por susurro a un bot (su lobby actual) y `!gp 0` (quién espera).
 4. Entrar a la partida desde Custom Games; si el mapa es chico (hasta ~2-3 MB)
    lo baja del bot ahí mismo; si es más pesado, la descarga in-lobby es
    impracticable y hace falta el map pack.

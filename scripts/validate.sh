@@ -2,6 +2,7 @@
 # ============================================================================
 # validate.sh — valida el repo entero EN SECO: sin VPS, sin archivos del juego
 #   - shellcheck de todos los .sh
+#   - todos los .sh instalables conservan el bit ejecutable
 #   - systemd-analyze verify de las unidades (si systemd esta disponible)
 #   - registry.yaml contra maps/schema.json
 #   - render de templates con .env.example (no debe quedar ${WC3_*} vivo)
@@ -30,6 +31,11 @@ for sh in "${REPO_DIR}"/install/*.sh "${REPO_DIR}"/scripts/*.sh; do
     check "shellcheck $(basename "${sh}")" shellcheck "${sh}"
 done
 
+echo "== permisos ejecutables =="
+for sh in "${REPO_DIR}"/install/*.sh "${REPO_DIR}"/scripts/*.sh; do
+    check "ejecutable $(basename "${sh}")" test -x "${sh}"
+done
+
 echo "== systemd =="
 if command -v systemd-analyze >/dev/null; then
     # verify exige que las unidades esten en un directorio de busqueda: las
@@ -38,7 +44,8 @@ if command -v systemd-analyze >/dev/null; then
     # stubbeamos SOLO en la copia temporal, para seguir verificando sintaxis
     # y opciones de las unidades reales.
     tmpunits="$(mktemp -d)"
-    cp "${REPO_DIR}"/systemd/*.service "${tmpunits}/"
+    cp "${REPO_DIR}"/systemd/*.service "${REPO_DIR}"/systemd/*.path \
+        "${REPO_DIR}"/systemd/*.timer "${tmpunits}/"
     if [[ ! -x /opt/wc3/hostbot/aura++ ]]; then
         sed -i 's|^ExecStart=/opt/wc3/hostbot/aura++|ExecStart=/bin/true|' \
             "${tmpunits}/wc3-hostbot@.service"
@@ -53,8 +60,17 @@ if command -v systemd-analyze >/dev/null; then
             "${tmpunits}/pvpgn.service"
         echo "  (bnetd no instalado: ExecStart stubbeado solo para el verify)"
     fi
-    # la unidad instanciada se verifica con una instancia concreta
-    for unit in pvpgn.service wc3-hostbot@1.service; do
+    if [[ ! -x /opt/wc3/dashboard/acciones.sh ]]; then
+        sed -i 's|^ExecStart=/opt/wc3/dashboard/acciones.sh|ExecStart=/bin/true|' \
+            "${tmpunits}/wc3-dashboard-acciones.service"
+    fi
+    # Las plantillas se verifican con una instancia concreta; el resto se
+    # descubre solo para que una unidad nueva nunca quede fuera del chequeo.
+    for path in "${tmpunits}"/*.service "${tmpunits}"/*.path "${tmpunits}"/*.timer; do
+        unit="$(basename "${path}")"
+        [[ "${unit}" == "wc3-hostbot@.service" ]] && unit=wc3-hostbot@1.service
+        [[ "${unit}" == "wc3-discord-fallo@.service" ]] && \
+            unit=wc3-discord-fallo@prueba.service
         check "systemd-analyze verify ${unit}" \
             systemd-analyze verify --recursive-errors=no "${tmpunits}/${unit}"
     done
